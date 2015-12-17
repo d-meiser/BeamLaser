@@ -16,9 +16,17 @@ int blRingBufferSize(struct BLRingBuffer buffer) {
 
 int blRingBufferNext(struct BLRingBuffer buffer, int index) {
   int next = index + 1;
-  if (next >= buffer.capacity) {
-    next -= buffer.capacity;
+  if (next > buffer.capacity) {
+    next = 0;
   }
   return next;
+}
+
+int blRingBufferPrev(struct BLRingBuffer buffer, int index) {
+  int prev = index - 1;
+  if (prev < 0) {
+    prev += buffer.capacity;
+  }
+  return prev;
 }
 

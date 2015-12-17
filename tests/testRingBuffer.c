@@ -48,9 +48,23 @@ Ensure(RingBuffer, nextIndexIsGreater) {
 
 Ensure(RingBuffer, nextIndexWrapsCorrectly) {
   struct BLRingBuffer buffer = {5, 1, 10};
-  int index = 9;
+  int index = 10;
   int nextIndex = blRingBufferNext(buffer, index);
   assert_that(nextIndex, is_equal_to(0));
+}
+
+Ensure(RingBuffer, prevIndexIsSmaller) {
+  struct BLRingBuffer buffer = {0, 8, 10};
+  int index = buffer.begin + 2;
+  int prevIndex = blRingBufferPrev(buffer, index);
+  assert_that(prevIndex, is_less_than(index));
+}
+
+Ensure(RingBuffer, prevIndexWrapsCorrectly) {
+  struct BLRingBuffer buffer = {5, 1, 10};
+  int index = 0;
+  int prevIndex = blRingBufferPrev(buffer, index);
+  assert_that(prevIndex, is_equal_to(9));
 }
 
 int main(int argc, char **argv)
@@ -64,6 +78,8 @@ int main(int argc, char **argv)
   add_test_with_context(suite, RingBuffer, hasCorrectSizeWithWrapping);
   add_test_with_context(suite, RingBuffer, nextIndexIsGreater);
   add_test_with_context(suite, RingBuffer, nextIndexWrapsCorrectly);
+  add_test_with_context(suite, RingBuffer, prevIndexIsSmaller);
+  add_test_with_context(suite, RingBuffer, prevIndexWrapsCorrectly);
   int result = run_test_suite(suite, create_text_reporter());
   destroy_test_suite(suite);
   return result;
