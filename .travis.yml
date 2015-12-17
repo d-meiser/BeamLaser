@@ -1,0 +1,24 @@
+sudo: false
+virtualenv:
+  system_site_packages: true
+language: c
+ddons:
+  apt:
+    packages:
+    - cmake
+    - lcov
+before_install:
+  - gem install coveralls-lcov
+  - sh ./utilities/get_cgreen.sh
+script:
+  - mkdir -p build
+  - cd build
+  - cmake -DWITH_UNIT_TESTS=OFF -DBL_BUILD_TESTS=ON ..
+  - make -j2
+  - ctest -j2 --output-on-failure
+after_success:
+  - lcov -d tests -base-directory .. -c -o coverage.info
+  - lcov --remove coverage.info '/usr/*' -o coverage.info
+  - lcov --remove coverage.info 'cgreen/*' -o coverage.info
+  - cd ..
+  - coveralls-lcov build/coverage.info
