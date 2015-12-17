@@ -1,8 +1,11 @@
 cmake_minimum_required(VERSION 2.6.2)
-project(BeamLaser)
-set(PROJECT_VERSION_MAJOR 0)
-set(PROJECT_VERSION_MINOR 0)
-set(PROJECT_VERSION_PATCH 0)
-set(PROJECT_VERSION_TWEAK 0)
+cmake_policy(SET CMP0048 NEW)
+project(BeamLaser VERSION 0.0.0.0)
+
+option(BL_BUILD_TESTS "Whether to build tests" ON)
+
+if(BL_BUILD_TESTS)
+  add_subdirectory(cgreen)
+endif()
 
 add_subdirectory(src)
