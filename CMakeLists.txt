@@ -6,8 +6,9 @@ enable_testing()
 
 option(BL_BUILD_TESTS "Whether to build tests" ON)
 
+add_subdirectory(src)
 if(BL_BUILD_TESTS)
   add_subdirectory(cgreen)
+  add_subdirectory(tests)
 endif()
 
-add_subdirectory(src)
