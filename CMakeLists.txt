@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.6.2)
-cmake_policy(SET CMP0048 NEW)
+if (NOT(CMAKE_MAJOR_VERSION LESS 3))
+  cmake_policy(SET CMP0048 NEW)
+endif ()
 project(BeamLaser VERSION 0.0.0.0)
 
 enable_testing()
