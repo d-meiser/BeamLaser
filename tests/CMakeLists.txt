@@ -4,7 +4,9 @@ include_directories(
     )
 
 set(TESTS
-    testRingBuffer)
+    testRingBuffer
+    testPartition
+    )
 
 foreach(t ${TESTS})
   add_executable(${t} ${t}.c)
