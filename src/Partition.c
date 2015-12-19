@@ -1,4 +1,5 @@
 #include <Partition.h>
+#include <stdio.h>
 
 static int find_if(struct BLRingBuffer buffer, struct BLPredicateClosure pred) {
   while (buffer.begin != buffer.end && !pred.f(buffer.begin, pred.ctx)) {
