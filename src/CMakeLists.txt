@@ -1,7 +1,7 @@
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
 set(BeamLaserLibSources
-    ensemble.c
+    Ensemble.c
     RingBuffer.c
     Partition.c
    )
