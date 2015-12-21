@@ -6,6 +6,7 @@ include_directories(
 set(TESTS
     testRingBuffer
     testPartition
+    testBSP
     )
 
 foreach(t ${TESTS})

@@ -15,6 +15,8 @@ struct BLSwapClosure {
 
 int blPartition(struct BLRingBuffer buffer, struct BLPredicateClosure pred,
     struct BLSwapClosure swap);
+int blBSP(struct BLRingBuffer buffer, double pivot, const double* positions,
+    struct BLSwapClosure swap);
 
 #endif
 
