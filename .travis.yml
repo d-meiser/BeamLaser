@@ -2,7 +2,7 @@ sudo: false
 virtualenv:
   system_site_packages: true
 language: c
-ddons:
+addons:
   apt:
     packages:
     - cmake
