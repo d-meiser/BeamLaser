@@ -17,8 +17,9 @@ script:
   - make -j2
   - ctest -j2 --output-on-failure
 after_success:
-  - lcov -d tests -base-directory .. -c -o coverage.info
+  - lcov -d tests -d src -base-directory .. -c -o coverage.info
   - lcov --remove coverage.info '/usr/*' -o coverage.info
   - lcov --remove coverage.info 'cgreen/*' -o coverage.info
+  - lcov --remove coverage.info 'tests/*' -o coverage.info
   - cd ..
   - coveralls-lcov build/coverage.info
