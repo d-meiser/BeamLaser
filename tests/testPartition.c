@@ -19,7 +19,7 @@ static struct BLPredicateClosure samplePredicate;
 static struct BLSwapClosure sampleSwap;
 static struct BLRingBuffer buffer;
 
-Describe(Partition);
+Describe(Partition)
 BeforeEach(Partition) {
   samplePredicate.f = samplePredicate_;
   samplePredicate.ctx = 0;
@@ -92,7 +92,7 @@ Ensure(Partition, putsBadElementsAtBeginning) {
   assert_that(arr[7], is_equal_to(1));
 }
 
-int main(int argc, char **argv)
+int main()
 {
   TestSuite *suite = create_test_suite();
   add_test_with_context(suite, Partition, worksForAllBadElements);

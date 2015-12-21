@@ -67,7 +67,7 @@ Ensure(RingBuffer, prevIndexWrapsCorrectly) {
   assert_that(prevIndex, is_equal_to(9));
 }
 
-int main(int argc, char **argv)
+int main()
 {
   TestSuite *suite = create_test_suite();
   add_test_with_context(suite, RingBuffer, canBeConstructedFromSize);

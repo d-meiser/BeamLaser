@@ -1,4 +1,4 @@
-int main(int argn, char **argv)
+int main()
 {
   return 0;
 }
