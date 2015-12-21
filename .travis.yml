@@ -13,7 +13,7 @@ before_install:
 script:
   - mkdir -p build
   - cd build
-  - cmake -DWITH_CXX=OFF -DWITH_UNIT_TESTS=OFF -DBL_BUILD_TESTS=ON -DL_ENABLE_COVERAGE=ON -DBL_WITH_PEDANTIC_FLAGS=OFF -DBL_WITH_WALL_FLAGS=ON ..
+  - cmake -DWITH_CXX=OFF -DWITH_UNIT_TESTS=OFF -DBL_BUILD_TESTS=ON -DBL_ENABLE_COVERAGE=ON -DBL_WITH_PEDANTIC_FLAGS=OFF -DBL_WITH_WALL_FLAGS=ON ..
   - make -j2
   - ctest -j2 --output-on-failure
 after_success:
