@@ -11,6 +11,7 @@ before_install:
   - gem install coveralls-lcov
   - sh ./utilities/get_cgreen.sh
 script:
+  - export CGREEN_CHILD_EXIT_WITH_FLUSH=TRUE
   - mkdir -p build
   - cd build
   - cmake -DWITH_CXX=OFF -DWITH_UNIT_TESTS=OFF -DBL_BUILD_TESTS=ON -DBL_ENABLE_COVERAGE=ON -DBL_WITH_PEDANTIC_FLAGS=OFF -DBL_WITH_WALL_FLAGS=ON ..
