@@ -4,9 +4,10 @@ include_directories(
     )
 
 set(TESTS
-    testRingBuffer
-    testPartition
     testBSP
+    testEnsemble
+    testPartition
+    testRingBuffer
     )
 
 foreach(t ${TESTS})

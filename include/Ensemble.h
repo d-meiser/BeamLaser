@@ -1,24 +1,25 @@
 #ifndef ENSEMBLE_H
 #define ENSEMBLE_H
 
-struct Vec3 {
-  double x;
-  double y;
-  double z;
+#include <RingBuffer.h>
+#include <Errors.h>
+
+
+struct BLEnsemble {
+  struct BLRingBuffer buffer;
+  double *x;
+  double *y;
+  double *z;
+  double *vx;
+  double *vy;
+  double *vz;
+  double *internalState;
 };
 
-struct ComplexNumber {
-  double re;
-  double im;
-};
+BL_STATUS blEnsembleInitialize(int capacity, int internalStateSize,
+                         struct BLEnsemble *ensemble);
+void blEnsembleFree(struct BLEnsemble *ensemble);
 
-struct Ensemble {
-  int numPtcls;
-  int maxNumPtcls;
-  struct Vec3 *positions;
-  struct Vec3 *velocities;
-  struct ComplexNumber *states;
-};
 
 #endif
 
