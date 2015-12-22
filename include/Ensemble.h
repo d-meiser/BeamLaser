@@ -7,6 +7,7 @@
 
 struct BLEnsemble {
   struct BLRingBuffer buffer;
+  int internalStateSize;
   double *x;
   double *y;
   double *z;
@@ -17,8 +18,10 @@ struct BLEnsemble {
 };
 
 BL_STATUS blEnsembleInitialize(int capacity, int internalStateSize,
-                         struct BLEnsemble *ensemble);
+                               struct BLEnsemble *ensemble);
 void blEnsembleFree(struct BLEnsemble *ensemble);
+void blEnsembleRemoveBelow(double cutoff, double *positions,
+                           struct BLEnsemble *ensemble);
 
 
 #endif
