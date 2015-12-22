@@ -7,6 +7,7 @@ set(TESTS
     testBSP
     testEnsemble
     testPartition
+    testPushParticles
     testRemoveParticles
     testRingBuffer
     )

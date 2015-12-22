@@ -73,3 +73,12 @@ void blEnsembleRemoveBelow(double cutoff, double *positions,
   swap.ctx = ensemble;
   ensemble->buffer.begin = blBSP(ensemble->buffer, cutoff, positions, swap);
 }
+
+void blEnsemblePush(double dt, struct BLEnsemble *ensemble) {
+  int i;
+  for (i = ensemble->buffer.begin; i != ensemble->buffer.end; i = blRingBufferNext(ensemble->buffer, i)) {
+    ensemble->x[i] += dt * ensemble->vx[i];
+    ensemble->y[i] += dt * ensemble->vy[i];
+    ensemble->z[i] += dt * ensemble->vz[i];
+  }
+}
