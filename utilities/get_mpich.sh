@@ -3,7 +3,7 @@
 if [ -f mpich/lib/libmpich.so ]; then
   echo "libmpich.so found -- nothing to build."
 else
-  if [ -e mpich-3.2 ]; then
+  if [ -f mpich-3.2/src/mpi/init/mpi_init.h ]; then
     echo "mpich sources found -- don't need to download"
   else
     echo "Downloading mpich source."
