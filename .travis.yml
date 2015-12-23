@@ -10,6 +10,7 @@ addons:
 before_install:
   - gem install coveralls-lcov
   - sh ./utilities/get_cgreen.sh
+  - sh ./utilities/get_sprng.sh
 script:
   - export CGREEN_CHILD_EXIT_WITH_FLUSH=TRUE
   - mkdir -p build
