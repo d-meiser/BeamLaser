@@ -51,6 +51,7 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 endif()
 
 add_subdirectory(src)
+add_subdirectory(examples)
 if(BL_BUILD_TESTS)
   add_subdirectory(cgreen)
   add_subdirectory(tests)
