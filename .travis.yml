@@ -7,6 +7,10 @@ addons:
     packages:
     - cmake
     - lcov
+cache:
+  directories:
+  - sprng2.0
+  - mpich
 before_install:
   - gem install coveralls-lcov
   - sh ./utilities/get_cgreen.sh
