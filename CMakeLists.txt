@@ -4,9 +4,13 @@ if (NOT(CMAKE_MAJOR_VERSION LESS 3))
 endif ()
 project(BeamLaser C)
 
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
+
 enable_testing()
 
 include(CheckCCompilerFlag)
+
+find_package(SPRNG REQUIRED)
 
 option(BL_BUILD_TESTS "Whether to build tests" ON)
 option(BL_ENABLE_COVERAGE "Instrument tests for coverage" OFF)
