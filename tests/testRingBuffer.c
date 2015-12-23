@@ -67,6 +67,20 @@ Ensure(RingBuffer, prevIndexWrapsCorrectly) {
   assert_that(prevIndex, is_equal_to(9));
 }
 
+Ensure(RingBuffer, appendOneAppendsAtEnd) {
+  struct BLRingBuffer buffer = {5, 1, 10};
+  int i = blRingBufferAppendOne(&buffer);
+  assert_that(i, is_equal_to(1));
+}
+
+Ensure(RingBuffer, appendOneIncreasesSizeByOne) {
+  struct BLRingBuffer buffer = {5, 1, 10};
+  int oldSize = blRingBufferSize(buffer);
+  blRingBufferAppendOne(&buffer);
+  int newSize = blRingBufferSize(buffer);
+  assert_that(newSize, is_equal_to(oldSize + 1));
+}
+
 int main()
 {
   TestSuite *suite = create_test_suite();
@@ -80,6 +94,8 @@ int main()
   add_test_with_context(suite, RingBuffer, nextIndexWrapsCorrectly);
   add_test_with_context(suite, RingBuffer, prevIndexIsSmaller);
   add_test_with_context(suite, RingBuffer, prevIndexWrapsCorrectly);
+  add_test_with_context(suite, RingBuffer, appendOneAppendsAtEnd);
+  add_test_with_context(suite, RingBuffer, appendOneIncreasesSizeByOne);
   int result = run_test_suite(suite, create_text_reporter());
   destroy_test_suite(suite);
   return result;

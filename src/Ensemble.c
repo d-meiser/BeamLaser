@@ -84,6 +84,12 @@ void blEnsembleRemoveBelow(double cutoff, double *positions,
   ensemble->buffer.begin = blBSP(ensemble->buffer, cutoff, positions, swap);
 }
 
+int blRingBufferAppendOne(struct BLRingBuffer *buffer) {
+  int i = buffer->end;
+  buffer->end = blRingBufferNext(*buffer, buffer->end);
+  return i;
+}
+
 void blEnsemblePush(double dt, struct BLEnsemble *ensemble) {
   int i;
   for (i = ensemble->buffer.begin; i != ensemble->buffer.end; i = blRingBufferNext(ensemble->buffer, i)) {
