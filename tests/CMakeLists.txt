@@ -5,6 +5,7 @@ include_directories(
 
 set(TESTS
     testBSP
+    testCreateParticle
     testEnsemble
     testPartition
     testPushParticles
@@ -14,7 +15,7 @@ set(TESTS
 
 foreach(t ${TESTS})
   add_executable(${t} ${t}.c)
-  target_link_libraries(${t} beamlaserlib cgreen_shared)
+  target_link_libraries(${t} beamlaserlib cgreen_shared ${SPRNG_LIB})
   add_test(${t} ${t})
 endforeach()
 

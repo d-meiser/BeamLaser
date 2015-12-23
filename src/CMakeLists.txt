@@ -1,4 +1,7 @@
-include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(
+    ${PROJECT_SOURCE_DIR}/include
+    ${SPRNG_INCLUDE_DIR}
+    )
 
 set(BeamLaserLibSources
     Ensemble.c
