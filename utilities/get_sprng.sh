@@ -3,7 +3,7 @@
 if [ -f sprng2.0/lib/libsprng.a ]; then
   echo "libsprng.a found -- nothing  to build."
 else
-  if [ -e sprng2.0 ]; then
+  if [ -f sprng2.0/SRC/sprng.h ]; then
     echo "Already have sprng source -- no need to download."
   else
     echo "Downloading sprng source."
