@@ -1,13 +1,16 @@
 #!/bin/sh
 
-if [ ! -e sprng5 ]; then
+if [ ! -e sprng2.0 ]; then
   echo "Downloading sprng source."
-  wget http://www.sprng.org/Version5.0/sprng5.tar.bz2
-  tar xjf sprng5.tar.bz2
-  rm sprng5.tar.bz2
+  wget http://www.sprng.org/Version2.0/sprng2.0b.tar.gz
+  tar xfz sprng2.0b.tar.gz
+  rm sprng2.0b.tar.gz
 fi
 
-cd sprng5
-./configure
-make
+cd sprng2.0
+sed -i.bak s/^PMLCGDEF/#PMLCGDEF/ make.CHOICES
+sed -i.bak s/^GMPLIB/#GMPLIB/ make.CHOICES
+sed -i.bak s/g77/echo/ SRC/make.INTEL
+make src
 cd -
+
