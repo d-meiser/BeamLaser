@@ -1,17 +1,16 @@
 #!/bin/sh
 
-if [ -e mpich-3.2 ]; then
-  echo "mpich sources found -- don't need to download"
-else
-  echo "Downloading mpich source."
-  wget http://www.mpich.org/static/downloads/3.2/mpich-3.2.tar.gz
-  tar xfz mpich-3.2.tar.gz
-  rm mpich-3.2.tar.gz
-fi
-
 if [ -f mpich/lib/libmpich.so ]; then
-  echo "libmpich.so found -- nothing  to build."
+  echo "libmpich.so found -- nothing to build."
 else
+  if [ -e mpich-3.2 ]; then
+    echo "mpich sources found -- don't need to download"
+  else
+    echo "Downloading mpich source."
+    wget http://www.mpich.org/static/downloads/3.2/mpich-3.2.tar.gz
+    tar xfz mpich-3.2.tar.gz
+    rm mpich-3.2.tar.gz
+  fi
   echo "configuring and building mpich."
   cd mpich-3.2
   ./configure \
