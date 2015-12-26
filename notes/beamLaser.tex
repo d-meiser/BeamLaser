@@ -1,5 +1,4 @@
-\documentclass[aps,
-superscriptaddress,groupedaddress]{revtex4}
+\documentclass[aps, superscriptaddress, groupedaddress]{revtex4}
 
 \usepackage{amssymb}
 \usepackage{amsmath}
@@ -10,7 +9,53 @@ superscriptaddress,groupedaddress]{revtex4}
 
 \section{Model}
 
+Atoms move ballistically.  Emitted from an oven at a temperature
+$T$ with mean velocity $\bar{v}$.  Collimated to an angle
+$\alpha$ in direction transverse to beam.  With flux $\dot N$,
+density $\rho$.
+
+We model them with particles of weight $w$, meaning that a
+particle in the simulation corresponds to $w$ real particles.
+There is an assumption here about how the dipoles due to the
+different atoms add up: Coherent addition.  Good above threshold
+but needs to be verified by scaling $w$ down.
+
+Field: single mode with resonance frequency $\omega_c$ and decay
+rate $\gamma$.  Mode function,
+$\vec{\epsilon}(\vec{x})\varphi(\vec{x})$, with $\vec{\epsilon}$
+the polarization unit vector and $\varphi$ normalized to unity in
+$L_2$,
+\begin{equation}
+\int d^3\mathbf{x} \left|\varphi(\mathbf{x})\right|^2 = 1\;.
+\end{equation}
+
+Dipole interaction between atoms and cavity:
+
+\begin{equation}
+\hat H_I=\mathbf{d}\cdot\mathbf{E}(\mathbf{x})
+\end{equation}
+Inserting $\mathbf{E}=\epsilon\varphi\hat a +
+\epsilon^*\varphi^* \hat a^\dagger$ we find
+\begin{equation}
+\hat H_I =
+\frac{\hbar g_{ F^\prime, m_F^\prime;F, m_F}(\vec{x})}{2}
+\left|F^\prime,m_F^\prime\right>\left<F, m_F\right|\hat a
++
+\frac{\hbar g_{F, m_F;F^\prime, m_F^\prime}(\vec{x})}{2}
+\left|F, m_F\right>\left<F^\prime,m_F^\prime\right|\hat a^\dagger
+\end{equation}
+where
+\begin{equation}
+g_{ F^\prime, m_F^\prime;F, m_F}=
+\left<F^\prime,m_F^\prime\right|
+\vec{\epsilon}\cdot\vec{d}(\vec{x})\varphi(\vec{x})
+\left|F,m_F\right>
+\end{equation}
+
+
 \section{Simulation algorithm}
 
 \end{document}
+
+% vim: nocindent tw=65 spell
 
