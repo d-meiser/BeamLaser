@@ -7,6 +7,7 @@ set(TESTS
     testBSP
     testCreateParticle
     testEnsemble
+    testIntegrator
     testPartition
     testPushParticles
     testRemoveParticles

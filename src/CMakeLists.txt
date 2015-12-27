@@ -5,6 +5,7 @@ include_directories(
 
 set(BeamLaserLibSources
     Ensemble.c
+    Integrator.c
     RingBuffer.c
     Partition.c
    )

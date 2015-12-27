@@ -1,0 +1,96 @@
+\documentclass[aps, superscriptaddress, groupedaddress, preprint]{revtex4}
+
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{float}
+\usepackage{graphicx}
+
+\begin{document}
+
+\section{Model}
+
+Atoms move ballistically.  Emitted from an oven at a temperature
+$T$ with mean velocity $\bar{v}$.  Collimated to an angle
+$\alpha$ in direction transverse to beam.  With flux $\dot N$,
+density $\rho$.
+
+We model them with particles of weight $w$, meaning that a
+particle in the simulation corresponds to $w$ real particles.
+There is an assumption here about how the dipoles due to the
+different atoms add up: Coherent addition.  Good above threshold
+but needs to be verified by scaling $w$ down.
+
+Field: single mode with resonance frequency $\omega_c$ and decay
+rate $\gamma$.  Mode function,
+$\vec{\epsilon}(\vec{x})\varphi(\vec{x})$, with $\vec{\epsilon}$
+the polarization unit vector and $\varphi$ normalized to unity in
+$L_2$,
+\begin{equation}
+\int d^3\mathbf{x} \left|\varphi(\mathbf{x})\right|^2 = 1\;.
+\end{equation}
+
+Dipole interaction between atoms and cavity:
+
+\begin{equation}
+\hat H_I=\mathbf{d}\cdot\mathbf{E}(\mathbf{x})
+\end{equation}
+Inserting $\mathbf{E}=\epsilon\varphi\hat a +
+\epsilon^*\varphi^* \hat a^\dagger$ we find
+\begin{equation}
+\hat H_I =
+\frac{\hbar g_{ F^\prime, m_F^\prime;F, m_F}(\vec{x})}{2}
+\left|F^\prime,m_F^\prime\right>\left<F, m_F\right|\hat a
++
+\frac{\hbar g_{F, m_F;F^\prime, m_F^\prime}(\vec{x})}{2}
+\left|F, m_F\right>\left<F^\prime,m_F^\prime\right|\hat a^\dagger
+\end{equation}
+where
+\begin{equation}
+g_{ F^\prime, m_F^\prime;F, m_F}=
+\left<F^\prime,m_F^\prime\right|
+\vec{\epsilon}\cdot\vec{d}(\vec{x})\varphi(\vec{x})
+\left|F,m_F\right>
+\end{equation}
+
+\paragraph{Equation of motion for the field} We find the
+interaction piece of the equation of motion for the field using
+the Heisenberg equation of motion
+\begin{equation}
+i\frac{d\hat a}{dt}=
+\frac{1}{2}\sum_{m_F,m_F^\prime}
+g_{F, m_F;F^\prime, m_F^\prime}
+\left<\psi|F^\prime, m_F^\prime\right>
+\left<F, m_F|\psi\right>
+\end{equation}
+We work in the frame rotating at the frequency of the cavity
+field.  In addition to the interaction piece there are damping
+and fluctuations.
+\begin{equation}
+i\frac{d\hat a}{dt}=
+\frac{1}{2}\sum_{m_F,m_F^\prime}
+g_{F, m_F;F^\prime, m_F^\prime}
+\left<\psi|F^\prime, m_F^\prime\right>
+\left<F, m_F|\psi\right>
+-\frac{\kappa}{2}\hat a + \hat F_a\;.
+\end{equation}
+The noise term has zero mean and has correlations
+%TODO: need to check factors of two here
+\begin{eqnarray}
+\left<\hat F_a\hat F_a^\dagger\right>&=&\delta(t-t^\prime)\kappa\\
+\left<\hat F_a^\dagger\hat F_a\right>&=&0\;.
+\end{eqnarray}
+Now we need to go over to semiclassical equations of motion by
+introducing c-number stochastic variables.  Need to find the
+diffusion matrix for the corresponding semiclassical noise terms.
+And then we need to do an operator splitting.  The free damped
+equations can be integrated analytically.  The interaction piece
+has to be dealt with using a numerical integrator, e.g. RK4.
+
+
+
+\section{Simulation algorithm}
+
+\end{document}
+
+% vim: nocindent tw=65 spell
+
