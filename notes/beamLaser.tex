@@ -1,4 +1,4 @@
-\documentclass[aps, superscriptaddress, groupedaddress]{revtex4}
+\documentclass[aps, superscriptaddress, groupedaddress, preprint]{revtex4}
 
 \usepackage{amssymb}
 \usepackage{amsmath}
@@ -51,6 +51,41 @@ g_{ F^\prime, m_F^\prime;F, m_F}=
 \vec{\epsilon}\cdot\vec{d}(\vec{x})\varphi(\vec{x})
 \left|F,m_F\right>
 \end{equation}
+
+\paragraph{Equation of motion for the field} We find the
+interaction piece of the equation of motion for the field using
+the Heisenberg equation of motion
+\begin{equation}
+i\frac{d\hat a}{dt}=
+\frac{1}{2}\sum_{m_F,m_F^\prime}
+g_{F, m_F;F^\prime, m_F^\prime}
+\left<\psi|F^\prime, m_F^\prime\right>
+\left<F, m_F|\psi\right>
+\end{equation}
+We work in the frame rotating at the frequency of the cavity
+field.  In addition to the interaction piece there are damping
+and fluctuations.
+\begin{equation}
+i\frac{d\hat a}{dt}=
+\frac{1}{2}\sum_{m_F,m_F^\prime}
+g_{F, m_F;F^\prime, m_F^\prime}
+\left<\psi|F^\prime, m_F^\prime\right>
+\left<F, m_F|\psi\right>
+-\frac{\kappa}{2}\hat a + \hat F_a\;.
+\end{equation}
+The noise term has zero mean and has correlations
+%TODO: need to check factors of two here
+\begin{eqnarray}
+\left<\hat F_a\hat F_a^\dagger\right>&=&\delta(t-t^\prime)\kappa\\
+\left<\hat F_a^\dagger\hat F_a\right>&=&0\;.
+\end{eqnarray}
+Now we need to go over to semiclassical equations of motion by
+introducing c-number stochastic variables.  Need to find the
+diffusion matrix for the corresponding semiclassical noise terms.
+And then we need to do an operator splitting.  The free damped
+equations can be integrated analytically.  The interaction piece
+has to be dealt with using a numerical integrator, e.g. RK4.
+
 
 
 \section{Simulation algorithm}
