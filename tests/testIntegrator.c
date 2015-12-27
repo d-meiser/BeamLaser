@@ -28,6 +28,7 @@ struct DecayCtx {
 
 void exponentialDecay(double t, int n, const double* x,
                       double* y, void* ctx) {
+  (void)t;
   struct DecayCtx* decCtx = (struct DecayCtx*)ctx;
   int i;
   for (i = 0; i < n; ++i) {

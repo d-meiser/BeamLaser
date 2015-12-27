@@ -149,6 +149,7 @@ void blFieldUpdate(double dt, double kappa, struct FieldState *fieldState) {
 void blFieldAtomInteraction(double dt, struct FieldState *fieldState,
         struct BLEnsemble *ensemble, struct RK4WorkSpace *work) {
   int i, ip;
+  (void)dt;
   for (i = 0, ip = ensemble->buffer.begin; ip != ensemble->buffer.end;
       ++i, ip = blRingBufferNext(ensemble->buffer, ip)) {
     memcpy(&work->tmp[2 + i * INTERNAL_STATE_DIM],
@@ -178,6 +179,9 @@ void scatterFieldEnd(MPI_Request req, const struct FieldState *fieldState,
     double *fieldDest) {
 #ifdef WITH_MPI
 #else
+  (void)req;
+  (void)fieldState;
+  (void)fieldDest;
 #endif
 }
 
@@ -207,6 +211,7 @@ MPI_Request gatherPolarizationBegin(const double *internalState,
       double *polarization) {
 #ifdef WITH_MPI
 #else
+  (void)internalState;
   polarization[0] = 0;
   polarization[1] = 0;
   return 0;
@@ -217,8 +222,13 @@ void gatherPolarizationEnd(MPI_Request polarizationRequest,
     const double *internalState, double *polarization) {
 #ifdef WITH_MPI
 #else
+  (void)polarizationRequest;
+  (void)internalState;
+  (void)polarization;
 #endif
 }
 
 void computeDipoleInteractions(const double *field, double *internalState) {
+  (void)field;
+  (void)internalState;
 }
