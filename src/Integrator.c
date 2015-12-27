@@ -1,17 +1,18 @@
 #include <Integrator.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 static BL_STATUS integratorCreateRK4(BLIntegrator integrator);
 static void integratorDestroyRK4(BLIntegrator integrator);
 static void integratorTakeStepRK4(BLIntegrator integrator, double t, double dt,
-    BLIntegratorRHS rhs, void *ctx);
+    BLIntegratorRHS rhs, const double *x, double *y, void *ctx);
 
 struct BLIntegrator_ {
   int n;
   void (*destroy)(struct BLIntegrator_ *this);
   void (*takeStep)(struct BLIntegrator_ *this, double t, double dt,
-        BLIntegratorRHS rhs, void *ctx);
+        BLIntegratorRHS rhs, const double *x, double *y, void *ctx);
   void *intCtx;
 };
 
@@ -34,7 +35,9 @@ void blIntegratorDestroy(BLIntegrator *integrator) {
 }
 
 void blIntegratorTakeStep(BLIntegrator integrator, double t, double dt,
-    BLIntegratorRHS rhs, void *ctx);
+    BLIntegratorRHS rhs, const double *x, double *y, void *ctx) {
+  integrator->takeStep(integrator, t, dt, rhs, x, y, ctx);
+}
 
 
 /*
@@ -76,6 +79,32 @@ static void integratorDestroyRK4(BLIntegrator integrator) {
   integrator->intCtx = 0;
 }
 
+static void zaxpy(double *w, double alpha,
+    const double *x, const double*y,
+    int dim)
+{
+  int i;
+  for (i = 0; i < dim; ++i) {
+    w[i] = alpha * x[i] + y[i];
+  }
+}
+
 static void integratorTakeStepRK4(BLIntegrator integrator, double t, double dt,
-    BLIntegratorRHS rhs, void *ctx) {
+    BLIntegratorRHS rhs, const double *x, double *y, void *ctx) {
+  struct RK4Ctx *rk4Ctx = integrator->intCtx;
+  double prefactor;
+  int i;
+
+  rhs(t, integrator->n, x, rk4Ctx->k1, ctx);
+  zaxpy(rk4Ctx->tmp, 0.5 * dt, rk4Ctx->k1, x, integrator->n);
+  rhs(t + 0.5 * dt, integrator->n, rk4Ctx->tmp, rk4Ctx->k2, ctx);
+  zaxpy(rk4Ctx->tmp, 0.5 * dt, rk4Ctx->k3, x, integrator->n);
+  rhs(t + 0.5 * dt, integrator->n, rk4Ctx->tmp, rk4Ctx->k3, ctx);
+  zaxpy(rk4Ctx->tmp, dt, rk4Ctx->k3, x, integrator->n);
+  rhs(t + dt, integrator->n, rk4Ctx->tmp, rk4Ctx->k4, ctx);
+  prefactor = dt / 6.0;
+  for (i = 0; i < integrator->n; ++i) {
+    y[i] = x[i] + prefactor * (
+        rk4Ctx->k1[i] + 2.0 * (rk4Ctx->k2[i] + rk4Ctx->k3[i]) + rk4Ctx->k4[i]);
+  }
 }
