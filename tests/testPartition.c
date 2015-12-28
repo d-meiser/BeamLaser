@@ -27,7 +27,7 @@ BeforeEach(Partition) {
   sampleSwap.ctx = 0;
   buffer.begin = 0;
   buffer.end = 4;
-  buffer.capacity = 4;
+  buffer.capacity = 5;
 }
 AfterEach(Partition) {}
 
@@ -65,7 +65,7 @@ Ensure(Partition, swapsTwoElementsInWrongOrder) {
   sampleSwap.ctx = arr;
   buffer.begin = 0;
   buffer.end = 2;
-  buffer.capacity = 2;
+  buffer.capacity = 3;
   int partitionPt = blPartition(buffer, samplePredicate, sampleSwap);
   assert_that(partitionPt, is_equal_to(1));
   assert_that(arr[0], is_equal_to(0));

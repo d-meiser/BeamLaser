@@ -48,9 +48,10 @@ Ensure(RingBuffer, nextIndexIsGreater) {
 
 Ensure(RingBuffer, nextIndexWrapsCorrectly) {
   struct BLRingBuffer buffer = {5, 1, 10};
-  int index = 10;
+  int index = 9;
   int nextIndex = blRingBufferNext(buffer, index);
-  assert_that(nextIndex, is_equal_to(0));
+  nextIndex = blRingBufferNext(buffer, nextIndex);
+  assert_that(nextIndex, is_equal_to(1));
 }
 
 Ensure(RingBuffer, prevIndexIsSmaller) {

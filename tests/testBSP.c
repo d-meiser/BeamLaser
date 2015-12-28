@@ -19,7 +19,7 @@ BeforeEach(BSP) {
   bspSwap.ctx = 0;
   buffer.begin = 0;
   buffer.end = 4;
-  buffer.capacity = 4;
+  buffer.capacity = 5;
 }
 AfterEach(BSP) {}
 
@@ -38,7 +38,7 @@ Ensure(BSP, swapsTwoEntriesOnWrongSidesOfPivot) {
   double positions[2] = {1.0, 0.0};
   buffer.begin = 0;
   buffer.end = 2;
-  buffer.capacity = 2;
+  buffer.capacity = 3;
 
   bspSwap.ctx = positions;
   int partitionPt = blBSP(buffer, 0.5, positions, bspSwap);
