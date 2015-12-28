@@ -11,7 +11,7 @@ typedef void (*BLIntegratorRHS)(double t, int n, const double *x, double *y,
 
 BL_STATUS blIntegratorCreate(const char* name, int n, BLIntegrator *integrator);
 void blIntegratorDestroy(BLIntegrator *integrator);
-void blIntegratorTakeStep(BLIntegrator integrator, double t, double dt,
+void blIntegratorTakeStep(BLIntegrator integrator, double t, double dt, int n,
     BLIntegratorRHS rhs, const double *x, double *y, void *ctx);
 
 #endif

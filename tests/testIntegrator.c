@@ -43,7 +43,7 @@ Ensure(Integrator, accuratelyIntegratesExponentialDecay) {
   double y = 0.0;
   struct DecayCtx ctx = {2.0};
   double dt = 0.001;
-  blIntegratorTakeStep(integrator, 0.0, dt, exponentialDecay, &x, &y, &ctx);
+  blIntegratorTakeStep(integrator, 0.0, dt, 1, exponentialDecay, &x, &y, &ctx);
   assert_that_double(y, is_equal_to_double(x * exp(-dt * ctx.gamma)));
   blIntegratorDestroy(&integrator);
 }
@@ -55,7 +55,7 @@ Ensure(Integrator, worksForVectors) {
   double y[2] = {0.0, 0.0};
   struct DecayCtx ctx = {2.0};
   double dt = 0.001;
-  blIntegratorTakeStep(integrator, 0.0, dt, exponentialDecay, x, y, &ctx);
+  blIntegratorTakeStep(integrator, 0.0, dt, 2, exponentialDecay, x, y, &ctx);
   assert_that_double(y[0], is_equal_to_double(x[0] * exp(-dt * ctx.gamma)));
   assert_that_double(y[1], is_equal_to_double(x[1] * exp(-dt * ctx.gamma)));
   blIntegratorDestroy(&integrator);

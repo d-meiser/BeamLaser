@@ -146,12 +146,8 @@ void blFieldUpdate(double dt, double kappa, struct FieldState *fieldState) {
 void blFieldAtomInteraction(double dt, struct FieldState *fieldState,
         struct BLEnsemble *ensemble, BLIntegrator integrator) {
   int i, ip;
-  printf("size == %ld\n", (blRingBufferSize(ensemble->buffer) *
-                      ensemble->internalStateSize + 2) *
-                     sizeof(double));
-  double *x = malloc((blRingBufferSize(ensemble->buffer) *
-                      ensemble->internalStateSize + 2) *
-                     sizeof(double));
+  int n = blRingBufferSize(ensemble->buffer) * ensemble->internalStateSize + 2;
+  double *x = malloc(n * sizeof(double));
 
   /* 
    * Pack field and internal state data in contiguous buffer;
@@ -166,7 +162,7 @@ void blFieldAtomInteraction(double dt, struct FieldState *fieldState,
   }
   scatterFieldEnd(fieldRequest, fieldState, x);
 
-  blIntegratorTakeStep(integrator, 0.0, dt, interactionRHS, x, x, ensemble);
+  blIntegratorTakeStep(integrator, 0.0, dt, n, interactionRHS, x, x, ensemble);
 
   for (i = 0, ip = ensemble->buffer.begin; ip != ensemble->buffer.end;
       ++i, ip = blRingBufferNext(ensemble->buffer, ip)) {
