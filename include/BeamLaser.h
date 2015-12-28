@@ -3,6 +3,7 @@
 
 #include <Ensemble.h>
 #include <Errors.h>
+#include <Integrator.h>
 #include <Partition.h>
 #include <RingBuffer.h>
 
