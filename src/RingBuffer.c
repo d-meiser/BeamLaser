@@ -30,3 +30,9 @@ int blRingBufferPrev(struct BLRingBuffer buffer, int index) {
   return prev;
 }
 
+int blRingBufferAppendOne(struct BLRingBuffer *buffer) {
+  int i = buffer->end;
+  buffer->end = blRingBufferNext(*buffer, buffer->end);
+  return i;
+}
+
