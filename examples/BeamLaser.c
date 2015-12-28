@@ -1,4 +1,5 @@
 #include <BeamLaser.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,6 +9,8 @@
 #define MPI_Request int
 #endif
 
+#define BL_UNUSED(a) (void)(a)
+
 static const int INTERNAL_STATE_DIM = 4;
 
 struct FieldState {
@@ -16,12 +19,9 @@ struct FieldState {
 };
 
 struct SimulationState {
+  double t;
   struct FieldState fieldState;
   struct BLEnsemble ensemble;
-};
-
-struct RK4WorkSpace {
-  double *k1, *k2, *k3, *k4, *tmp;
 };
 
 struct Configuration {
@@ -44,35 +44,32 @@ void particleSink(const struct Configuration *conf, struct BLEnsemble *ensemble)
 void particleSource(const struct Configuration *conf, struct BLEnsemble *ensemble);
 void blFieldUpdate(double dt, double kappa, struct FieldState *fieldState);
 void blFieldAtomInteraction(double dt, struct FieldState *fieldState,
-        struct BLEnsemble *ensemble, struct RK4WorkSpace *work);
-static BL_STATUS rk4WorkSpaceCreate(int n, struct RK4WorkSpace *work);
-void rk4WorkSpaceDestroy(struct RK4WorkSpace *work);
+        struct BLEnsemble *ensemble, BLIntegrator integrator);
 void scatterFieldEnd(MPI_Request req, const struct FieldState *fieldState,
     double *fieldDest);
 MPI_Request scatterFieldBegin(const struct FieldState *fieldState,
     double *fieldDest);
-MPI_Request gatherPolarizationBegin(const double *internalState,
-      double *polarization);
-void gatherPolarizationEnd(MPI_Request polarizationRequest,
-    const double *internalState, double *polarization);
 void computeDipoleInteractions(const double *field, double *internalState);
+void interactionRHS(double t, int n, const double *x, double *y,
+                    void *ctx);
 
 int main() {
   struct SimulationState simulationState;
   struct Configuration conf;
-  struct RK4WorkSpace work;
+  BLIntegrator integrator;
   BL_STATUS stat;
   int i;
 
   setDefaults(&conf);
   computeSourceVolume(&conf);
+  blIntegratorCreate("RK4", conf.maxNumParticles * INTERNAL_STATE_DIM,
+                     &integrator);
   
   stat = blEnsembleInitialize(conf.maxNumParticles, INTERNAL_STATE_DIM,
       &simulationState.ensemble);
   if (stat != BL_SUCCESS) return stat;
   simulationState.fieldState.q = 0.0;
   simulationState.fieldState.p = 0.0;
-  stat = rk4WorkSpaceCreate(conf.maxNumParticles * INTERNAL_STATE_DIM + 2, &work);
   if (stat != BL_SUCCESS) return stat;
 
   for (i = 0; i < conf.numSteps; ++i) {
@@ -81,13 +78,13 @@ int main() {
     blEnsemblePush(0.5 * conf.dt, &simulationState.ensemble);
     blFieldUpdate(0.5 * conf.dt, conf.kappa, &simulationState.fieldState);
     blFieldAtomInteraction(conf.dt, &simulationState.fieldState,
-        &simulationState.ensemble, &work);
+        &simulationState.ensemble, integrator);
     blFieldUpdate(0.5 * conf.dt, conf.kappa, &simulationState.fieldState);
     blEnsemblePush(0.5 * conf.dt, &simulationState.ensemble);
     printf("%5d %5d\n", i, blRingBufferSize(simulationState.ensemble.buffer));
   }
 
-  rk4WorkSpaceDestroy(&work);
+  blIntegratorDestroy(&integrator);
   blEnsembleFree(&simulationState.ensemble);
 
   return BL_SUCCESS;
@@ -147,22 +144,66 @@ void blFieldUpdate(double dt, double kappa, struct FieldState *fieldState) {
 }
 
 void blFieldAtomInteraction(double dt, struct FieldState *fieldState,
-        struct BLEnsemble *ensemble, struct RK4WorkSpace *work) {
+        struct BLEnsemble *ensemble, BLIntegrator integrator) {
   int i, ip;
-  (void)dt;
+  printf("size == %ld\n", (blRingBufferSize(ensemble->buffer) *
+                      ensemble->internalStateSize + 2) *
+                     sizeof(double));
+  double *x = malloc((blRingBufferSize(ensemble->buffer) *
+                      ensemble->internalStateSize + 2) *
+                     sizeof(double));
+
+  /* 
+   * Pack field and internal state data in contiguous buffer;
+   * Field is replicated and integrated redundantly
+   */
+  MPI_Request fieldRequest = scatterFieldBegin(fieldState, x);
   for (i = 0, ip = ensemble->buffer.begin; ip != ensemble->buffer.end;
       ++i, ip = blRingBufferNext(ensemble->buffer, ip)) {
-    memcpy(&work->tmp[2 + i * INTERNAL_STATE_DIM],
+    memcpy(&x[2 + i * INTERNAL_STATE_DIM],
         &ensemble->internalState[ip * INTERNAL_STATE_DIM],
         INTERNAL_STATE_DIM * sizeof(double));
   }
+  scatterFieldEnd(fieldRequest, fieldState, x);
 
-  MPI_Request fieldRequest = scatterFieldBegin(fieldState, work->tmp);
-  MPI_Request polarizationRequest = gatherPolarizationBegin(work->tmp + 2,
-      work->k1);
-  scatterFieldEnd(fieldRequest, fieldState, work->tmp);
-  computeDipoleInteractions(work->tmp, work->k1 + 2);
-  gatherPolarizationEnd(polarizationRequest, work->tmp, work->k1);
+  blIntegratorTakeStep(integrator, 0.0, dt, interactionRHS, x, x, ensemble);
+
+  for (i = 0, ip = ensemble->buffer.begin; ip != ensemble->buffer.end;
+      ++i, ip = blRingBufferNext(ensemble->buffer, ip)) {
+    memcpy(&ensemble->internalState[ip * ensemble->internalStateSize],
+           &x[2 + i * ensemble->internalStateSize],
+           ensemble->internalStateSize * sizeof(double));
+  }
+
+  free(x);
+}
+
+void interactionRHS(double t, int n, const double *x, double *y,
+                    void *ctx) {
+  BL_UNUSED(t);
+  BL_UNUSED(n);
+  struct BLEnsemble *ensemble = ctx;
+  int numPtcls, i;
+  struct FieldState *polarization = (struct FieldState*)y;
+  struct FieldState *field = (struct FieldState*)x;
+
+  /* For all particles:
+   *   compute polarization
+   *   compute dipole interaction
+   * MPI_Allreduce polarization
+   *
+   * Scalability can be improved by first computing the polarization,
+   * doing an asynchronous all-reduce, then doing the computation of the
+   * dipole interaction, and finally finishing the all-reduce.  However,
+   * this entails traversing the state arrays twice and evaluating the
+   * mode function twice.
+   * */
+  numPtcls = blRingBufferSize(ensemble->buffer);
+  for (i = 0; i < numPtcls; ++i) {
+    polarization->q += x[2 + i * ensemble->internalStateSize];
+    polarization->p += x[2 + i * ensemble->internalStateSize + 1];
+    y[2 + i * ensemble->internalStateSize] = field->q;
+  }
 }
 
 MPI_Request scatterFieldBegin(const struct FieldState *fieldState,
@@ -179,56 +220,13 @@ void scatterFieldEnd(MPI_Request req, const struct FieldState *fieldState,
     double *fieldDest) {
 #ifdef WITH_MPI
 #else
-  (void)req;
-  (void)fieldState;
-  (void)fieldDest;
-#endif
-}
-
-BL_STATUS rk4WorkSpaceCreate(int n, struct RK4WorkSpace *work) {
-  work->k1 = malloc(n * sizeof(*work->k1));
-  if (!work->k1) return BL_OUT_OF_MEMORY;
-  work->k2 = malloc(n * sizeof(*work->k2));
-  if (!work->k2) return BL_OUT_OF_MEMORY;
-  work->k3 = malloc(n * sizeof(*work->k3));
-  if (!work->k3) return BL_OUT_OF_MEMORY;
-  work->k4 = malloc(n * sizeof(*work->k4));
-  if (!work->k4) return BL_OUT_OF_MEMORY;
-  work->tmp = malloc(n * sizeof(*work->tmp));
-  if (!work->tmp) return BL_OUT_OF_MEMORY;
-  return BL_SUCCESS;
-}
-
-void rk4WorkSpaceDestroy(struct RK4WorkSpace *work) {
-  free(work->k1);
-  free(work->k2);
-  free(work->k3);
-  free(work->k4);
-  free(work->tmp);
-}
-
-MPI_Request gatherPolarizationBegin(const double *internalState,
-      double *polarization) {
-#ifdef WITH_MPI
-#else
-  (void)internalState;
-  polarization[0] = 0;
-  polarization[1] = 0;
-  return 0;
-#endif
-}
-
-void gatherPolarizationEnd(MPI_Request polarizationRequest,
-    const double *internalState, double *polarization) {
-#ifdef WITH_MPI
-#else
-  (void)polarizationRequest;
-  (void)internalState;
-  (void)polarization;
+  BL_UNUSED(req);
+  BL_UNUSED(fieldState);
+  BL_UNUSED(fieldDest);
 #endif
 }
 
 void computeDipoleInteractions(const double *field, double *internalState) {
-  (void)field;
-  (void)internalState;
+  BL_UNUSED(field);
+  BL_UNUSED(internalState);
 }
