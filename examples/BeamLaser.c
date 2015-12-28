@@ -27,6 +27,7 @@ struct SimulationState {
 struct Configuration {
   int numSteps;
   double particleWeight;
+  double dipoleMatrixElement;
   double nbar;
   int maxNumParticles;
   double dt;
@@ -49,9 +50,10 @@ void scatterFieldEnd(MPI_Request req, const struct FieldState *fieldState,
     double *fieldDest);
 MPI_Request scatterFieldBegin(const struct FieldState *fieldState,
     double *fieldDest);
-void computeDipoleInteractions(const double *field, double *internalState);
 void interactionRHS(double t, int n, const double *x, double *y,
                     void *ctx);
+static void modeFunction(double x, double y, double z,
+                         double *fx, double *fy, double *fz);
 
 int main() {
   struct SimulationState simulationState;
@@ -92,6 +94,7 @@ int main() {
 void setDefaults(struct Configuration *conf) {
   conf->numSteps = 10;
   conf->particleWeight = 1.0;
+  conf->dipoleMatrixElement = 1.0e-5 * 1.0e-29;
   conf->nbar = 1.0e3;
   conf->maxNumParticles = 10000;
   conf->dt = 1.0e-7;
@@ -196,9 +199,32 @@ void interactionRHS(double t, int n, const double *x, double *y,
   polarization->q = 0;
   polarization->p = 0;
   for (i = 0; i < numPtcls; ++i) {
-    polarization->q += x[2 + i * ensemble->internalStateSize];
-    polarization->p += x[2 + i * ensemble->internalStateSize + 1];
-    y[2 + i * ensemble->internalStateSize] = field->q;
+    double mode[3];
+    int ip = blRingBufferAddress(ensemble->buffer, i);
+    modeFunction(ensemble->x[ip], ensemble->y[ip], ensemble->z[i],
+                 mode + 0, mode + 1, mode + 2);
+    polarization->q -= mode[0] * (
+        x[2 + i * ensemble->internalStateSize + 0] *
+        x[2 + i * ensemble->internalStateSize + 2] -
+        x[2 + i * ensemble->internalStateSize + 1] *
+        x[2 + i * ensemble->internalStateSize + 3]
+        );
+    polarization->p += mode[0] * (
+        x[2 + i * ensemble->internalStateSize + 0] *
+        x[2 + i * ensemble->internalStateSize + 3] +
+        x[2 + i * ensemble->internalStateSize + 1] *
+        x[2 + i * ensemble->internalStateSize + 2]
+        );
+    /* dpsi/dt = -i H psi 
+     * H \propto \sigma_x*/
+    y[2 + i * ensemble->internalStateSize + 0] =
+        mode[0] * field->q * x[2 + i * ensemble->internalStateSize + 3];
+    y[2 + i * ensemble->internalStateSize + 1] =
+        -mode[0] * field->q * x[2 + i * ensemble->internalStateSize + 2];
+    y[2 + i * ensemble->internalStateSize + 2] =
+        mode[0] * field->q * x[2 + i * ensemble->internalStateSize + 1];
+    y[2 + i * ensemble->internalStateSize + 3] =
+        -mode[0] * field->q * x[2 + i * ensemble->internalStateSize + 0];
   }
 }
 
@@ -222,7 +248,11 @@ void scatterFieldEnd(MPI_Request req, const struct FieldState *fieldState,
 #endif
 }
 
-void computeDipoleInteractions(const double *field, double *internalState) {
-  BL_UNUSED(field);
-  BL_UNUSED(internalState);
+static void modeFunction(double x, double y, double z,
+                         double *fx, double *fy, double *fz) {
+  const double sigmaE = 3.0e-5;
+  const double waveNumber = 2.0 * M_PI / 1.0e-6;
+  *fx = exp(-(x * x + y * y) / (sigmaE * sigmaE)) * sin(waveNumber * z);
+  *fy = 0;
+  *fz = 0;
 }
