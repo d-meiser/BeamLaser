@@ -12,4 +12,3 @@ set(BeamLaserLibSources
 
 add_library(beamlaserlib ${BeamLaserLibSources})
 
-add_executable(beamlaser beamlaser.c)
