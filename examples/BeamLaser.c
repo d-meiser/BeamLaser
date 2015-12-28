@@ -81,7 +81,6 @@ int main() {
         &simulationState.ensemble, integrator);
     blFieldUpdate(0.5 * conf.dt, conf.kappa, &simulationState.fieldState);
     blEnsemblePush(0.5 * conf.dt, &simulationState.ensemble);
-    printf("%5d %5d\n", i, blRingBufferSize(simulationState.ensemble.buffer));
   }
 
   blIntegratorDestroy(&integrator);
@@ -91,7 +90,7 @@ int main() {
 }
 
 void setDefaults(struct Configuration *conf) {
-  conf->numSteps = 15;
+  conf->numSteps = 10;
   conf->particleWeight = 1.0;
   conf->nbar = 1.0e3;
   conf->maxNumParticles = 10000;
@@ -128,7 +127,6 @@ void particleSource(const struct Configuration *conf,
       (conf->dt * conf->vbar) /
       (conf->simulationDomain.zmax - conf->simulationDomain.zmin)
       );
-  printf("numCreate: %d\n", numCreate);
   int i;
   while (numCreate > 0) {
     i = blRingBufferAppendOne(&ensemble->buffer);
@@ -195,6 +193,8 @@ void interactionRHS(double t, int n, const double *x, double *y,
    * mode function twice.
    * */
   numPtcls = blRingBufferSize(ensemble->buffer);
+  polarization->q = 0;
+  polarization->p = 0;
   for (i = 0; i < numPtcls; ++i) {
     polarization->q += x[2 + i * ensemble->internalStateSize];
     polarization->p += x[2 + i * ensemble->internalStateSize + 1];
