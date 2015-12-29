@@ -70,7 +70,7 @@ int main() {
   stat = blEnsembleInitialize(conf.maxNumParticles, INTERNAL_STATE_DIM,
       &simulationState.ensemble);
   if (stat != BL_SUCCESS) return stat;
-  simulationState.fieldState.q = 0.0;
+  simulationState.fieldState.q = 1.0;
   simulationState.fieldState.p = 0.0;
   if (stat != BL_SUCCESS) return stat;
 
@@ -83,6 +83,7 @@ int main() {
         &simulationState.ensemble, integrator);
     blFieldUpdate(0.5 * conf.dt, conf.kappa, &simulationState.fieldState);
     blEnsemblePush(0.5 * conf.dt, &simulationState.ensemble);
+    printf("\n");
   }
 
   blIntegratorDestroy(&integrator);
@@ -96,11 +97,12 @@ void setDefaults(struct Configuration *conf) {
   conf->particleWeight = 1.0;
   conf->dipoleMatrixElement = 1.0e-5 * 1.0e-29;
   conf->nbar = 1.0e3;
-  conf->maxNumParticles = 10000;
+  conf->maxNumParticles = 2000;
   conf->dt = 1.0e-7;
   conf->vbar = 3.0e2;
   conf->deltaV = 1.0e1;
   conf->alpha = 1.0e-2;
+  conf->kappa = 2.0 * M_PI * 1.0e6;
   conf->simulationDomain.xmin = -1.0e-4;
   conf->simulationDomain.xmax = 1.0e-4;
   conf->simulationDomain.ymin = -1.0e-4;
@@ -130,18 +132,22 @@ void particleSource(const struct Configuration *conf,
       (conf->dt * conf->vbar) /
       (conf->simulationDomain.zmax - conf->simulationDomain.zmin)
       );
-  int i;
+  int i, j;
   while (numCreate > 0) {
     i = blRingBufferAppendOne(&ensemble->buffer);
     blEnsembleCreateParticle(conf->sourceVolume, conf->vbar, conf->deltaV,
                              conf->alpha, i, ensemble);
+    for (j = 0; j < ensemble->internalStateSize; ++j) {
+      ensemble->internalState[i * ensemble->internalStateSize + j] = 0;
+    }
+    ensemble->internalState[i * ensemble->internalStateSize + 2] = 1.0;
     --numCreate;
   }
 }
 
 void blFieldUpdate(double dt, double kappa, struct FieldState *fieldState) {
   fieldState->q = fieldState->q * exp(-0.5 * kappa * dt);
-  fieldState->p = fieldState->q * exp(-0.5 * kappa * dt);
+  fieldState->p = fieldState->p * exp(-0.5 * kappa * dt);
 }
 
 void blFieldAtomInteraction(double dt, struct FieldState *fieldState,
@@ -165,6 +171,8 @@ void blFieldAtomInteraction(double dt, struct FieldState *fieldState,
 
   blIntegratorTakeStep(integrator, 0.0, dt, n, interactionRHS, x, x, ensemble);
 
+  fieldState->q = x[0];
+  fieldState->p = x[1];
   for (i = 0, ip = ensemble->buffer.begin; ip != ensemble->buffer.end;
       ++i, ip = blRingBufferNext(ensemble->buffer, ip)) {
     memcpy(&ensemble->internalState[ip * ensemble->internalStateSize],
@@ -201,7 +209,7 @@ void interactionRHS(double t, int n, const double *x, double *y,
   for (i = 0; i < numPtcls; ++i) {
     double mode[3];
     int ip = blRingBufferAddress(ensemble->buffer, i);
-    modeFunction(ensemble->x[ip], ensemble->y[ip], ensemble->z[i],
+    modeFunction(ensemble->x[ip], ensemble->y[ip], ensemble->z[ip],
                  mode + 0, mode + 1, mode + 2);
     polarization->q -= mode[0] * (
         x[2 + i * ensemble->internalStateSize + 0] *
@@ -218,13 +226,21 @@ void interactionRHS(double t, int n, const double *x, double *y,
     /* dpsi/dt = -i H psi 
      * H \propto \sigma_x*/
     y[2 + i * ensemble->internalStateSize + 0] =
-        mode[0] * field->q * x[2 + i * ensemble->internalStateSize + 3];
+        mode[0] * (
+            field->q * x[2 + i * ensemble->internalStateSize + 3] +
+            field->p * x[2 + i * ensemble->internalStateSize + 2]);
     y[2 + i * ensemble->internalStateSize + 1] =
-        -mode[0] * field->q * x[2 + i * ensemble->internalStateSize + 2];
+        -mode[0] * (
+            field->q * x[2 + i * ensemble->internalStateSize + 2] -
+            field->p * x[2 + i * ensemble->internalStateSize + 3]);
     y[2 + i * ensemble->internalStateSize + 2] =
-        mode[0] * field->q * x[2 + i * ensemble->internalStateSize + 1];
+        mode[0] * (
+            field->q * x[2 + i * ensemble->internalStateSize + 1] +
+            field->p * x[2 + i * ensemble->internalStateSize + 0]);
     y[2 + i * ensemble->internalStateSize + 3] =
-        -mode[0] * field->q * x[2 + i * ensemble->internalStateSize + 0];
+        -mode[0] * (
+            field->q * x[2 + i * ensemble->internalStateSize + 0] -
+            field->p * x[2 + i * ensemble->internalStateSize + 1]);
   }
 }
 
