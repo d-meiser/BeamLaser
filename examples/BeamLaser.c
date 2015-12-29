@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <complex.h>
 
 #ifndef WITH_MPI
 #define MPI_Request int
@@ -83,7 +84,6 @@ int main() {
         &simulationState.ensemble, integrator);
     blFieldUpdate(0.5 * conf.dt, conf.kappa, &simulationState.fieldState);
     blEnsemblePush(0.5 * conf.dt, &simulationState.ensemble);
-    printf("\n");
   }
 
   blIntegratorDestroy(&integrator);
@@ -94,7 +94,7 @@ int main() {
 
 void setDefaults(struct Configuration *conf) {
   conf->numSteps = 10;
-  conf->particleWeight = 1.0;
+  conf->particleWeight = 1.0e6;
   conf->dipoleMatrixElement = 1.0e-5 * 1.0e-29;
   conf->nbar = 1.0e3;
   conf->maxNumParticles = 2000;
@@ -189,8 +189,8 @@ void interactionRHS(double t, int n, const double *x, double *y,
   BL_UNUSED(n);
   struct BLEnsemble *ensemble = ctx;
   int numPtcls, i;
-  struct FieldState *polarization = (struct FieldState*)y;
-  struct FieldState *field = (struct FieldState*)x;
+  double complex *polarization = (double complex*)y;
+  const double complex field = *((const double complex*)x);
 
   /* For all particles:
    *   compute polarization
@@ -204,43 +204,21 @@ void interactionRHS(double t, int n, const double *x, double *y,
    * mode function twice.
    * */
   numPtcls = blRingBufferSize(ensemble->buffer);
-  polarization->q = 0;
-  polarization->p = 0;
+  *polarization = 0;
   for (i = 0; i < numPtcls; ++i) {
     double mode[3];
     int ip = blRingBufferAddress(ensemble->buffer, i);
     modeFunction(ensemble->x[ip], ensemble->y[ip], ensemble->z[ip],
                  mode + 0, mode + 1, mode + 2);
-    polarization->q -= mode[0] * (
-        x[2 + i * ensemble->internalStateSize + 0] *
-        x[2 + i * ensemble->internalStateSize + 2] -
-        x[2 + i * ensemble->internalStateSize + 1] *
-        x[2 + i * ensemble->internalStateSize + 3]
-        );
-    polarization->p += mode[0] * (
-        x[2 + i * ensemble->internalStateSize + 0] *
-        x[2 + i * ensemble->internalStateSize + 3] +
-        x[2 + i * ensemble->internalStateSize + 1] *
-        x[2 + i * ensemble->internalStateSize + 2]
-        );
+    const double complex *psiX =
+      (const double complex *)&x[2 + i * ensemble->internalStateSize];
+    double complex *psiY =
+      (double complex *)&y[2 + i * ensemble->internalStateSize];
+    *polarization -= I * mode[0] * 1.0e7 * conj(psiX[0]) * psiX[1];
     /* dpsi/dt = -i H psi 
-     * H \propto \sigma_x*/
-    y[2 + i * ensemble->internalStateSize + 0] =
-        mode[0] * (
-            field->q * x[2 + i * ensemble->internalStateSize + 3] +
-            field->p * x[2 + i * ensemble->internalStateSize + 2]);
-    y[2 + i * ensemble->internalStateSize + 1] =
-        -mode[0] * (
-            field->q * x[2 + i * ensemble->internalStateSize + 2] -
-            field->p * x[2 + i * ensemble->internalStateSize + 3]);
-    y[2 + i * ensemble->internalStateSize + 2] =
-        mode[0] * (
-            field->q * x[2 + i * ensemble->internalStateSize + 1] +
-            field->p * x[2 + i * ensemble->internalStateSize + 0]);
-    y[2 + i * ensemble->internalStateSize + 3] =
-        -mode[0] * (
-            field->q * x[2 + i * ensemble->internalStateSize + 0] -
-            field->p * x[2 + i * ensemble->internalStateSize + 1]);
+     * H \propto a */
+    psiY[0] = -I * mode[0] * 1.0e2 * conj(field) * psiX[1];
+    psiY[1] = -I * mode[0] * 1.0e2 * field * psiX[0];
   }
 }
 
