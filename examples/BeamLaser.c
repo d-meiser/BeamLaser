@@ -236,7 +236,6 @@ void interactionRHS(double t, int n, const double *x, double *y,
   struct IntegratorCtx *integratorCtx = ctx;
   struct BLEnsemble *ensemble = integratorCtx->ensemble;
   int numPtcls, i;
-  double complex *polarization = (double complex*)y;
   const double complex field = *((const double complex*)x);
 
   /* For all particles:
@@ -251,7 +250,7 @@ void interactionRHS(double t, int n, const double *x, double *y,
    * mode function twice.
    * */
   numPtcls = blRingBufferSize(ensemble->buffer);
-  *polarization = 0;
+  double complex polarization = 0;
   for (i = 0; i < numPtcls; ++i) {
     double mode[3];
     mode[0] = integratorCtx->ex[i];
@@ -261,15 +260,17 @@ void interactionRHS(double t, int n, const double *x, double *y,
       (const double complex *)&x[2 + i * ensemble->internalStateSize];
     double complex *psiY =
       (double complex *)&y[2 + i * ensemble->internalStateSize];
-    *polarization -= I * mode[1] * 1.0e7 * conj(psiX[0]) * psiX[1];
+    polarization -= I * mode[1] * 1.0e7 * conj(psiX[0]) * psiX[1];
     /* dpsi/dt = -i H psi 
      * H \propto a */
     psiY[0] = -I * mode[1] * 1.0e2 * conj(field) * psiX[1];
     psiY[1] = -I * mode[1] * 1.0e2 * field * psiX[0];
   }
 #ifdef BL_WITH_MPI
-  MPI_Allreduce(polarization, polarization, 2, MPI_DOUBLE, MPI_SUM,
+  MPI_Allreduce(&polarization, y, 2, MPI_DOUBLE, MPI_SUM,
                 MPI_COMM_WORLD);
+#else
+  *((double complex*)y) = polarization;
 #endif
 }
 
