@@ -1,6 +1,11 @@
 #include <BeamLaser.h>
 #include <config.h>
 
+#ifdef BL_WITH_MPI
+#include <mpi.h>
+#endif
+
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
@@ -69,7 +74,13 @@ void interactionRHS(double t, int n, const double *x, double *y,
 static void modeFunction(double x, double y, double z,
                          double *fx, double *fy, double *fz);
 
-int main() {
+int main(int argn, char **argv) {
+#ifdef BL_WITH_MPI
+  MPI_Initialize(&argn, &argv);
+#else
+  BL_UNUSED(argn);
+  BL_UNUSED(argv);
+#endif
   struct SimulationState simulationState;
   struct Configuration conf;
   struct IntegratorCtx integratorCtx;
@@ -115,6 +126,9 @@ int main() {
   blIntegratorDestroy(&integrator);
   blEnsembleFree(&simulationState.ensemble);
 
+#ifdef BL_WITH_MPI
+  MPI_Finalize();
+#endif
   return BL_SUCCESS;
 }
 
@@ -253,11 +267,18 @@ void interactionRHS(double t, int n, const double *x, double *y,
     psiY[0] = -I * mode[1] * 1.0e2 * conj(field) * psiX[1];
     psiY[1] = -I * mode[1] * 1.0e2 * field * psiX[0];
   }
+#ifdef BL_WITH_MPI
+  MPI_Allreduce(polarization, polarization, 2, MPI_DOUBLE, MPI_SUM,
+                MPI_COMM_WORLD);
+#endif
 }
 
 MPI_Request scatterFieldBegin(const struct FieldState *fieldState,
     double *fieldDest) {
 #ifdef BL_WITH_MPI
+  fieldDest[0] = fieldState->q;
+  fieldDest[1] = fieldState->p;
+  return 0;
 #else
   fieldDest[0] = fieldState->q;
   fieldDest[1] = fieldState->p;
@@ -268,6 +289,9 @@ MPI_Request scatterFieldBegin(const struct FieldState *fieldState,
 void scatterFieldEnd(MPI_Request req, const struct FieldState *fieldState,
     double *fieldDest) {
 #ifdef BL_WITH_MPI
+  BL_UNUSED(req);
+  BL_UNUSED(fieldState);
+  BL_UNUSED(fieldDest);
 #else
   BL_UNUSED(req);
   BL_UNUSED(fieldState);
