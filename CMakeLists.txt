@@ -18,6 +18,7 @@ option(BL_WITH_ADDRESS_SANITIZER "Whether to build with address sanitizer enable
 option(BL_WITH_WALL_FLAGS "Whether to compile with all warning flags." ON)
 option(BL_WITH_PEDANTIC_FLAGS "Whether to compile with pedantic flags." ON)
 option(BL_WITH_WARNING_AS_ERRORS "Whether to treat compiler warnings as errors." ON)
+option(BL_WITH_MPI "Whether we're building with MPI support" OFF)
 
 if(BL_WITH_ADDRESS_SANITIZER)
   set(OLD_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
@@ -57,3 +58,4 @@ if(BL_BUILD_TESTS)
   add_subdirectory(tests)
 endif()
 
+configure_file(config.h.in ${PROJECT_BINARY_DIR}/config.h)

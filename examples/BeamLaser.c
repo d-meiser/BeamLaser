@@ -1,4 +1,5 @@
 #include <BeamLaser.h>
+#include <config.h>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -10,7 +11,7 @@
 #include <math.h>
 #include <complex.h>
 
-#ifndef WITH_MPI
+#ifndef BL_WITH_MPI
 #define MPI_Request int
 #endif
 
@@ -256,7 +257,7 @@ void interactionRHS(double t, int n, const double *x, double *y,
 
 MPI_Request scatterFieldBegin(const struct FieldState *fieldState,
     double *fieldDest) {
-#ifdef WITH_MPI
+#ifdef BL_WITH_MPI
 #else
   fieldDest[0] = fieldState->q;
   fieldDest[1] = fieldState->p;
@@ -266,7 +267,7 @@ MPI_Request scatterFieldBegin(const struct FieldState *fieldState,
 
 void scatterFieldEnd(MPI_Request req, const struct FieldState *fieldState,
     double *fieldDest) {
-#ifdef WITH_MPI
+#ifdef BL_WITH_MPI
 #else
   BL_UNUSED(req);
   BL_UNUSED(fieldState);
