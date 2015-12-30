@@ -76,7 +76,7 @@ static void modeFunction(double x, double y, double z,
 
 int main(int argn, char **argv) {
 #ifdef BL_WITH_MPI
-  MPI_Initialize(&argn, &argv);
+  MPI_Init(&argn, &argv);
 #else
   BL_UNUSED(argn);
   BL_UNUSED(argv);
