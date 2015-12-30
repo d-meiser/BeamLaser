@@ -86,7 +86,13 @@ int main(int argn, char **argv) {
   struct IntegratorCtx integratorCtx;
   BLIntegrator integrator;
   BL_STATUS stat;
-  int i;
+  int i, rank;
+
+#ifdef BL_WITH_MPI
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+#else
+  rank = 0;
+#endif
 
   setDefaults(&conf);
   computeSourceVolume(&conf);
@@ -116,7 +122,10 @@ int main(int argn, char **argv) {
         &integratorCtx, integrator);
     blFieldUpdate(0.5 * conf.dt, conf.kappa, &simulationState.fieldState);
     blEnsemblePush(0.5 * conf.dt, &simulationState.ensemble);
-    printf("%d %le %le\n", i, simulationState.fieldState.q, simulationState.fieldState.p);
+    if (!rank) {
+      printf("%d %le %le\n", i,
+             simulationState.fieldState.q, simulationState.fieldState.p);
+    }
   }
 
   free(integratorCtx.x);
