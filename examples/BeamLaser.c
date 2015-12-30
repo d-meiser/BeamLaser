@@ -84,6 +84,7 @@ int main() {
         &simulationState.ensemble, integrator);
     blFieldUpdate(0.5 * conf.dt, conf.kappa, &simulationState.fieldState);
     blEnsemblePush(0.5 * conf.dt, &simulationState.ensemble);
+    printf("%d %le %le\n", i, simulationState.fieldState.q, simulationState.fieldState.p);
   }
 
   blIntegratorDestroy(&integrator);
@@ -98,7 +99,7 @@ void setDefaults(struct Configuration *conf) {
   conf->dipoleMatrixElement = 1.0e-5 * 1.0e-29;
   conf->nbar = 1.0e3;
   conf->maxNumParticles = 2000;
-  conf->dt = 1.0e-7;
+  conf->dt = 1.0e-10;
   conf->vbar = 3.0e2;
   conf->deltaV = 1.0e1;
   conf->alpha = 1.0e-2;
@@ -214,11 +215,11 @@ void interactionRHS(double t, int n, const double *x, double *y,
       (const double complex *)&x[2 + i * ensemble->internalStateSize];
     double complex *psiY =
       (double complex *)&y[2 + i * ensemble->internalStateSize];
-    *polarization -= I * mode[0] * 1.0e7 * conj(psiX[0]) * psiX[1];
+    *polarization -= I * mode[1] * 1.0e7 * conj(psiX[0]) * psiX[1];
     /* dpsi/dt = -i H psi 
      * H \propto a */
-    psiY[0] = -I * mode[0] * 1.0e2 * conj(field) * psiX[1];
-    psiY[1] = -I * mode[0] * 1.0e2 * field * psiX[0];
+    psiY[0] = -I * mode[1] * 1.0e2 * conj(field) * psiX[1];
+    psiY[1] = -I * mode[1] * 1.0e2 * field * psiX[0];
   }
 }
 
@@ -246,7 +247,7 @@ static void modeFunction(double x, double y, double z,
                          double *fx, double *fy, double *fz) {
   const double sigmaE = 3.0e-5;
   const double waveNumber = 2.0 * M_PI / 1.0e-6;
-  *fx = exp(-(x * x + y * y) / (sigmaE * sigmaE)) * sin(waveNumber * z);
-  *fy = 0;
+  *fx = 0;
+  *fy = exp(-(y * y + z * z) / (sigmaE * sigmaE)) * sin(waveNumber * x);
   *fz = 0;
 }
