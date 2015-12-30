@@ -31,6 +31,7 @@ if (BL_WITH_ADDRESS_SANITIZER)
 endif ()
 
 if (CMAKE_COMPILER_IS_GNUCC OR "${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
   if (BL_ENABLE_COVERAGE)
     add_definitions("-ftest-coverage -fprofile-arcs")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ftest-coverage -fprofile-arcs")
