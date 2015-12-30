@@ -40,13 +40,21 @@ struct Configuration {
   struct BBox sourceVolume;
 };
 
+struct IntegratorCtx {
+  struct BLEnsemble *ensemble;
+  double *x;
+  double *ex;
+  double *ey;
+  double *ez;
+};
+
 void setDefaults(struct Configuration *conf);
 void computeSourceVolume(struct Configuration *conf);
 void particleSink(const struct Configuration *conf, struct BLEnsemble *ensemble);
 void particleSource(const struct Configuration *conf, struct BLEnsemble *ensemble);
 void blFieldUpdate(double dt, double kappa, struct FieldState *fieldState);
 void blFieldAtomInteraction(double dt, struct FieldState *fieldState,
-        struct BLEnsemble *ensemble, BLIntegrator integrator);
+        struct IntegratorCtx *integratorCtx, BLIntegrator integrator);
 void scatterFieldEnd(MPI_Request req, const struct FieldState *fieldState,
     double *fieldDest);
 MPI_Request scatterFieldBegin(const struct FieldState *fieldState,
@@ -59,6 +67,7 @@ static void modeFunction(double x, double y, double z,
 int main() {
   struct SimulationState simulationState;
   struct Configuration conf;
+  struct IntegratorCtx integratorCtx;
   BLIntegrator integrator;
   BL_STATUS stat;
   int i;
@@ -70,6 +79,13 @@ int main() {
   
   stat = blEnsembleInitialize(conf.maxNumParticles, INTERNAL_STATE_DIM,
       &simulationState.ensemble);
+  integratorCtx.ensemble = &simulationState.ensemble;
+  integratorCtx.x = malloc(
+      INTERNAL_STATE_DIM * conf.maxNumParticles * sizeof(double));
+  integratorCtx.ex = malloc(conf.maxNumParticles * sizeof(double));
+  integratorCtx.ey = malloc(conf.maxNumParticles * sizeof(double));
+  integratorCtx.ez = malloc(conf.maxNumParticles * sizeof(double));
+
   if (stat != BL_SUCCESS) return stat;
   simulationState.fieldState.q = 1.0;
   simulationState.fieldState.p = 0.0;
@@ -81,12 +97,16 @@ int main() {
     blEnsemblePush(0.5 * conf.dt, &simulationState.ensemble);
     blFieldUpdate(0.5 * conf.dt, conf.kappa, &simulationState.fieldState);
     blFieldAtomInteraction(conf.dt, &simulationState.fieldState,
-        &simulationState.ensemble, integrator);
+        &integratorCtx, integrator);
     blFieldUpdate(0.5 * conf.dt, conf.kappa, &simulationState.fieldState);
     blEnsemblePush(0.5 * conf.dt, &simulationState.ensemble);
     printf("%d %le %le\n", i, simulationState.fieldState.q, simulationState.fieldState.p);
   }
 
+  free(integratorCtx.x);
+  free(integratorCtx.ex);
+  free(integratorCtx.ey);
+  free(integratorCtx.ez);
   blIntegratorDestroy(&integrator);
   blEnsembleFree(&simulationState.ensemble);
 
@@ -152,10 +172,11 @@ void blFieldUpdate(double dt, double kappa, struct FieldState *fieldState) {
 }
 
 void blFieldAtomInteraction(double dt, struct FieldState *fieldState,
-        struct BLEnsemble *ensemble, BLIntegrator integrator) {
+        struct IntegratorCtx *integratorCtx, BLIntegrator integrator) {
   int i, ip;
+  struct BLEnsemble *ensemble = integratorCtx->ensemble;
   int n = blRingBufferSize(ensemble->buffer) * ensemble->internalStateSize + 2;
-  double *x = malloc(n * sizeof(double));
+  double *x = integratorCtx->x;
 
   /* 
    * Pack field and internal state data in contiguous buffer;
@@ -168,9 +189,16 @@ void blFieldAtomInteraction(double dt, struct FieldState *fieldState,
         &ensemble->internalState[ip * INTERNAL_STATE_DIM],
         INTERNAL_STATE_DIM * sizeof(double));
   }
+  for (i = 0, ip = ensemble->buffer.begin; ip != ensemble->buffer.end;
+      ++i, ip = blRingBufferNext(ensemble->buffer, ip)) {
+    modeFunction(ensemble->x[ip], ensemble->y[ip], ensemble->z[ip],
+        &integratorCtx->ex[i], &integratorCtx->ey[i], &integratorCtx->ez[i]);
+  }
+
   scatterFieldEnd(fieldRequest, fieldState, x);
 
-  blIntegratorTakeStep(integrator, 0.0, dt, n, interactionRHS, x, x, ensemble);
+  blIntegratorTakeStep(integrator, 0.0, dt, n, interactionRHS, x, x,
+      integratorCtx);
 
   fieldState->q = x[0];
   fieldState->p = x[1];
@@ -180,15 +208,14 @@ void blFieldAtomInteraction(double dt, struct FieldState *fieldState,
            &x[2 + i * ensemble->internalStateSize],
            ensemble->internalStateSize * sizeof(double));
   }
-
-  free(x);
 }
 
 void interactionRHS(double t, int n, const double *x, double *y,
                     void *ctx) {
   BL_UNUSED(t);
   BL_UNUSED(n);
-  struct BLEnsemble *ensemble = ctx;
+  struct IntegratorCtx *integratorCtx = ctx;
+  struct BLEnsemble *ensemble = integratorCtx->ensemble;
   int numPtcls, i;
   double complex *polarization = (double complex*)y;
   const double complex field = *((const double complex*)x);
@@ -208,9 +235,9 @@ void interactionRHS(double t, int n, const double *x, double *y,
   *polarization = 0;
   for (i = 0; i < numPtcls; ++i) {
     double mode[3];
-    int ip = blRingBufferAddress(ensemble->buffer, i);
-    modeFunction(ensemble->x[ip], ensemble->y[ip], ensemble->z[ip],
-                 mode + 0, mode + 1, mode + 2);
+    mode[0] = integratorCtx->ex[i];
+    mode[1] = integratorCtx->ey[i];
+    mode[2] = integratorCtx->ez[i];
     const double complex *psiX =
       (const double complex *)&x[2 + i * ensemble->internalStateSize];
     double complex *psiY =
