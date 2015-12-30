@@ -79,8 +79,8 @@ static void integratorDestroyRK4(BLIntegrator integrator) {
   integrator->intCtx = 0;
 }
 
-static void zaxpy(double *w, double alpha,
-    const double *x, const double*y,
+static void daxpy(double * restrict w, double alpha,
+    const double * restrict x, const double * restrict y,
     int dim)
 {
   int i;
@@ -95,17 +95,29 @@ static void integratorTakeStepRK4(BLIntegrator integrator, double t, double dt,
   struct RK4Ctx *rk4Ctx = integrator->intCtx;
   double prefactor;
   int i;
+  double * restrict k1 = rk4Ctx->k1;
+  double * restrict k2 = rk4Ctx->k2;
+  double * restrict k3 = rk4Ctx->k3;
+  double * restrict k4 = rk4Ctx->k4;
 
-  rhs(t, n, x, rk4Ctx->k1, ctx);
-  zaxpy(rk4Ctx->tmp, 0.5 * dt, rk4Ctx->k1, x, n);
-  rhs(t + 0.5 * dt, n, rk4Ctx->tmp, rk4Ctx->k2, ctx);
-  zaxpy(rk4Ctx->tmp, 0.5 * dt, rk4Ctx->k3, x, n);
-  rhs(t + 0.5 * dt, n, rk4Ctx->tmp, rk4Ctx->k3, ctx);
-  zaxpy(rk4Ctx->tmp, dt, rk4Ctx->k3, x, n);
-  rhs(t + dt, n, rk4Ctx->tmp, rk4Ctx->k4, ctx);
+  rhs(t, n, x, k1, ctx);
+  daxpy(rk4Ctx->tmp, 0.5 * dt, k1, x, n);
+  rhs(t + 0.5 * dt, n, rk4Ctx->tmp, k2, ctx);
+  daxpy(rk4Ctx->tmp, 0.5 * dt, k2, x, n);
+  rhs(t + 0.5 * dt, n, rk4Ctx->tmp, k3, ctx);
+  daxpy(rk4Ctx->tmp, dt, k3, x, n);
+  rhs(t + dt, n, rk4Ctx->tmp, k4, ctx);
   prefactor = dt / 6.0;
-  for (i = 0; i < n; ++i) {
-    y[i] = x[i] + prefactor * (
-        rk4Ctx->k1[i] + 2.0 * (rk4Ctx->k2[i] + rk4Ctx->k3[i]) + rk4Ctx->k4[i]);
+  if (y == x) {
+    double * restrict yp = y;
+    for (i = 0; i < n; ++i) {
+      yp[i] += prefactor * (k1[i] + 2.0 * (k2[i] + k3[i]) + k4[i]);
+    }
+  } else {
+    const double * restrict xp = x;
+    double * restrict yp = y;
+    for (i = 0; i < n; ++i) {
+      yp[i] = xp[i] + prefactor * (k1[i] + 2.0 * (k2[i] + k3[i]) + k4[i]);
+    }
   }
 }

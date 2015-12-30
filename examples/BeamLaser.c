@@ -1,5 +1,9 @@
 #include <BeamLaser.h>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -119,7 +123,7 @@ void setDefaults(struct Configuration *conf) {
   conf->dipoleMatrixElement = 1.0e-5 * 1.0e-29;
   conf->nbar = 1.0e3;
   conf->maxNumParticles = 2000;
-  conf->dt = 1.0e-10;
+  conf->dt = 1.0e-8;
   conf->vbar = 3.0e2;
   conf->deltaV = 1.0e1;
   conf->alpha = 1.0e-2;
