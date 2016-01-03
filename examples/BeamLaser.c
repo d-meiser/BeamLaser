@@ -183,7 +183,8 @@ void particleSource(const struct Configuration *conf,
       );
   int i, j;
   while (numCreate > 0) {
-    i = blRingBufferAppendOne(&ensemble->buffer);
+    i = ensemble->numPtcls;
+    ++ensemble->numPtcls;
     blEnsembleCreateParticle(conf->sourceVolume, conf->vbar, conf->deltaV,
                              conf->alpha, i, ensemble);
     for (j = 0; j < ensemble->internalStateSize; ++j) {
@@ -201,9 +202,9 @@ void blFieldUpdate(double dt, double kappa, struct FieldState *fieldState) {
 
 void blFieldAtomInteraction(double dt, struct FieldState *fieldState,
         struct IntegratorCtx *integratorCtx, BLIntegrator integrator) {
-  int i, ip;
+  int i;
   struct BLEnsemble *ensemble = integratorCtx->ensemble;
-  int n = blRingBufferSize(ensemble->buffer) * ensemble->internalStateSize + 2;
+  int n = ensemble->numPtcls * ensemble->internalStateSize + 2;
   double *x = integratorCtx->x;
 
   /* 
@@ -211,15 +212,13 @@ void blFieldAtomInteraction(double dt, struct FieldState *fieldState,
    * Field is replicated and integrated redundantly
    */
   MPI_Request fieldRequest = scatterFieldBegin(fieldState, x);
-  for (i = 0, ip = ensemble->buffer.begin; ip != ensemble->buffer.end;
-      ++i, ip = blRingBufferNext(ensemble->buffer, ip)) {
+  for (i = 0; i < ensemble->numPtcls; ++i) {
     memcpy(&x[2 + i * INTERNAL_STATE_DIM],
-        &ensemble->internalState[ip * INTERNAL_STATE_DIM],
+        &ensemble->internalState[i * INTERNAL_STATE_DIM],
         INTERNAL_STATE_DIM * sizeof(double));
   }
-  for (i = 0, ip = ensemble->buffer.begin; ip != ensemble->buffer.end;
-      ++i, ip = blRingBufferNext(ensemble->buffer, ip)) {
-    modeFunction(ensemble->x[ip], ensemble->y[ip], ensemble->z[ip],
+  for (i = 0; i < ensemble->numPtcls; ++i) {
+    modeFunction(ensemble->x[i], ensemble->y[i], ensemble->z[i],
         &integratorCtx->ex[i], &integratorCtx->ey[i], &integratorCtx->ez[i]);
   }
 
@@ -230,9 +229,8 @@ void blFieldAtomInteraction(double dt, struct FieldState *fieldState,
 
   fieldState->q = x[0];
   fieldState->p = x[1];
-  for (i = 0, ip = ensemble->buffer.begin; ip != ensemble->buffer.end;
-      ++i, ip = blRingBufferNext(ensemble->buffer, ip)) {
-    memcpy(&ensemble->internalState[ip * ensemble->internalStateSize],
+  for (i = 0; i < ensemble->numPtcls; ++i) {
+    memcpy(&ensemble->internalState[i * ensemble->internalStateSize],
            &x[2 + i * ensemble->internalStateSize],
            ensemble->internalStateSize * sizeof(double));
   }
@@ -258,7 +256,7 @@ void interactionRHS(double t, int n, const double *x, double *y,
    * this entails traversing the state arrays twice and evaluating the
    * mode function twice.
    * */
-  numPtcls = blRingBufferSize(ensemble->buffer);
+  numPtcls = ensemble->numPtcls;
   double complex polarization = 0;
   for (i = 0; i < numPtcls; ++i) {
     double mode[3];

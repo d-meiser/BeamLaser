@@ -11,34 +11,32 @@ BeforeEach(RemoveBelow) {
   for (i = 0; i < numPtcls; ++i) {
     ensemble.x[i] = rand() / (double)RAND_MAX;
   }
-  ensemble.buffer.end = numPtcls;
+  ensemble.numPtcls = numPtcls;
 }
 AfterEach(RemoveBelow) {
   blEnsembleFree(&ensemble);
 }
 
 Ensure(RemoveBelow, doesNotIncreaseNumberOfParticles) {
-  int numPtclsOld = blRingBufferSize(ensemble.buffer);
+  int numPtclsOld = ensemble.numPtcls;
   blEnsembleRemoveBelow(0.5, ensemble.x, &ensemble);
-  int numPtclsNew = blRingBufferSize(ensemble.buffer);
+  int numPtclsNew = ensemble.numPtcls;
   assert_that(numPtclsOld >= numPtclsNew, is_true);
 }
 
 Ensure(RemoveBelow, removesParticlesBelow) {
   int i;
   blEnsembleRemoveBelow(0.5, ensemble.x, &ensemble);
-  for (i = ensemble.buffer.begin; i != ensemble.buffer.end;
-       i = blRingBufferNext(ensemble.buffer, i)) {
+  for (i = 0; i != ensemble.numPtcls; ++i) {
     assert_that_double(ensemble.x[i], is_greater_than_double(0.4999));
   }
 }
 
 Ensure(RemoveBelow, leavesParticlesAbove) {
-  struct BLRingBuffer buffOld = ensemble.buffer;
+  int numPtclsOld = ensemble.numPtcls;
   blEnsembleRemoveBelow(0.5, ensemble.x, &ensemble);
   int i;
-  for (i = buffOld.begin; i != ensemble.buffer.begin;
-       i = blRingBufferNext(buffOld, i)) {
+  for (i = ensemble.numPtcls; i != numPtclsOld; ++i) {
     assert_that_double(ensemble.x[i], is_less_than_double(0.500001));
   }
 }
