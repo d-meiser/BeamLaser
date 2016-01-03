@@ -32,7 +32,7 @@ int blPartition(int begin, int end, struct BLPredicateClosure pred,
 }
 
 static int find_if_bsp(int begin, int end, double pivot, const double *positions) {
-  while (begin != end && positions[begin] < pivot) {
+  while (begin != end && positions[begin] > pivot) {
     ++begin;
   }
   return begin;
@@ -44,7 +44,7 @@ static int find_backward_if_not_bsp(int begin, int end, double pivot, const doub
       return end;
     }
     --end;
-  } while (positions[end] > pivot);
+  } while (positions[end] < pivot);
   return ++end;
 }
 

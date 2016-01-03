@@ -88,25 +88,6 @@ Ensure(Partition, putsBadElementsAtBeginning) {
   assert_that(arr[7], is_equal_to(1));
 }
 
-Ensure(Partition, dealsWithWrapAround) {
-  /*            0  1  2  3  4  5  6  7 */
-  int arr[8] = {1, 0, 0, 1, 1, 1, 0, 1};
-  samplePredicate.ctx = arr;
-  sampleSwap.ctx = arr;
-  begin = 3;
-  end = 2;
-  int partitionPt = blPartition(begin, end, samplePredicate, sampleSwap);
-  assert_that(partitionPt, is_equal_to(5));
-  assert_that(arr[0], is_equal_to(1));
-  assert_that(arr[1], is_equal_to(1));
-  assert_that(arr[2], is_equal_to(0));
-  assert_that(arr[3], is_equal_to(0));
-  assert_that(arr[4], is_equal_to(0));
-  assert_that(arr[5], is_equal_to(1));
-  assert_that(arr[6], is_equal_to(1));
-  assert_that(arr[7], is_equal_to(1));
-}
-
 int main()
 {
   TestSuite *suite = create_test_suite();
@@ -115,7 +96,6 @@ int main()
   add_test_with_context(suite, Partition, leavesPartitionedSequenceUnchanged);
   add_test_with_context(suite, Partition, swapsTwoElementsInWrongOrder);
   add_test_with_context(suite, Partition, putsBadElementsAtBeginning);
-  add_test_with_context(suite, Partition, dealsWithWrapAround);
   int result = run_test_suite(suite, create_text_reporter());
   destroy_test_suite(suite);
   return result;
