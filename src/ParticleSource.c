@@ -42,6 +42,9 @@ void blParticleSourceDestroy(struct ParticleSource *particleSource) {
   }
 }
 
+/*
+ * Implementation of the uniform particle source
+ */
 struct UniformCtx {
   struct BBox volume;
   int nbar;
@@ -50,11 +53,13 @@ struct UniformCtx {
   int internalStateSize;
   double *internalState;
 };
+
 static int uniformGetNumParticles(void *ctx) {
   struct UniformCtx *uctx = ctx;
   return uctx->nbar;
 }
-void uniformCreateParticles(double *x, double *y, double *z,
+
+static void uniformCreateParticles(double *x, double *y, double *z,
       double *vx, double *vy, double *vz, double *internalState, void *ctx) {
   struct UniformCtx *uCtx = ctx;
   const struct BBox *box = &uCtx->volume;
