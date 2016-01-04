@@ -5,7 +5,6 @@ include_directories(
 
 set(TESTS
     testBSP
-    testCreateParticle
     testEnsemble
     testIntegrator
     testParticleSource

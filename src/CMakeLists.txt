@@ -8,6 +8,7 @@ set(BeamLaserLibSources
     Integrator.c
     ParticleSource.c
     Partition.c
+    Utilities.c
    )
 
 add_library(beamlaserlib ${BeamLaserLibSources})

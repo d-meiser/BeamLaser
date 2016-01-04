@@ -181,7 +181,6 @@ void particleSource(const struct Configuration *conf,
       (conf->dt * conf->vbar) /
       (conf->simulationDomain.zmax - conf->simulationDomain.zmin)
       );
-  int i, j;
   memmove(ensemble->x + numCreate, ensemble->x,
       ensemble->numPtcls * sizeof(*ensemble->x));
   memmove(ensemble->y + numCreate, ensemble->y,
@@ -197,14 +196,6 @@ void particleSource(const struct Configuration *conf,
   memmove(ensemble->internalState + numCreate * ensemble->internalStateSize,
       ensemble->internalState,
       ensemble->numPtcls * sizeof(double) * ensemble->internalStateSize);
-  for (i = 0; i < numCreate; ++i) {
-    blEnsembleCreateParticle(conf->sourceVolume, conf->vbar, conf->deltaV,
-                             conf->alpha, i, ensemble);
-    for (j = 0; j < ensemble->internalStateSize; ++j) {
-      ensemble->internalState[i * ensemble->internalStateSize + j] = 0;
-    }
-    ensemble->internalState[i * ensemble->internalStateSize + 2] = 1.0;
-  }
   ensemble->numPtcls += numCreate;
 }
 
