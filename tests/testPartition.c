@@ -17,7 +17,7 @@ static void sampleSwap_(int i, int j, void *ctx) {
 
 static struct BLPredicateClosure samplePredicate;
 static struct BLSwapClosure sampleSwap;
-static struct BLRingBuffer buffer;
+static int begin, end;
 
 Describe(Partition)
 BeforeEach(Partition) {
@@ -25,9 +25,8 @@ BeforeEach(Partition) {
   samplePredicate.ctx = 0;
   sampleSwap.f = sampleSwap_;
   sampleSwap.ctx = 0;
-  buffer.begin = 0;
-  buffer.end = 4;
-  buffer.capacity = 5;
+  begin = 0;
+  end = 4;
 }
 AfterEach(Partition) {}
 
@@ -36,7 +35,7 @@ Ensure(Partition, worksForAllBadElements) {
   int arr[4] = {0, 0, 0, 0};
   samplePredicate.ctx = arr;
   sampleSwap.ctx = arr;
-  int partitionPt = blPartition(buffer, samplePredicate, sampleSwap);
+  int partitionPt = blPartition(begin, end, samplePredicate, sampleSwap);
   assert_that(partitionPt, is_equal_to(4));
 }
 
@@ -44,7 +43,7 @@ Ensure(Partition, givesZeroForAllGoodElements) {
   int arr[4] = {1, 1, 1, 1};
   samplePredicate.ctx = arr;
   sampleSwap.ctx = arr;
-  int partitionPt = blPartition(buffer, samplePredicate, sampleSwap);
+  int partitionPt = blPartition(begin, end, samplePredicate, sampleSwap);
   assert_that(partitionPt, is_equal_to(0));
 }
 
@@ -52,10 +51,9 @@ Ensure(Partition, leavesPartitionedSequenceUnchanged) {
   int arr[7] = {0, 0, 0, 1, 1, 1, 1};
   samplePredicate.ctx = arr;
   sampleSwap.ctx = arr;
-  buffer.begin = 0;
-  buffer.end = 7;
-  buffer.capacity = 7;
-  int partitionPt = blPartition(buffer, samplePredicate, sampleSwap);
+  begin = 0;
+  end = 7;
+  int partitionPt = blPartition(begin, end, samplePredicate, sampleSwap);
   assert_that(partitionPt, is_equal_to(3));
 }
 
@@ -63,10 +61,9 @@ Ensure(Partition, swapsTwoElementsInWrongOrder) {
   int arr[2] = {1, 0};
   samplePredicate.ctx = arr;
   sampleSwap.ctx = arr;
-  buffer.begin = 0;
-  buffer.end = 2;
-  buffer.capacity = 3;
-  int partitionPt = blPartition(buffer, samplePredicate, sampleSwap);
+  begin = 0;
+  end = 2;
+  int partitionPt = blPartition(begin, end, samplePredicate, sampleSwap);
   assert_that(partitionPt, is_equal_to(1));
   assert_that(arr[0], is_equal_to(0));
   assert_that(arr[1], is_equal_to(1));
@@ -77,36 +74,15 @@ Ensure(Partition, putsBadElementsAtBeginning) {
   int arr[8] = {1, 0, 0, 1, 1, 1, 0, 1};
   samplePredicate.ctx = arr;
   sampleSwap.ctx = arr;
-  buffer.begin = 0;
-  buffer.end = 8;
-  buffer.capacity = 8;
-  int partitionPt = blPartition(buffer, samplePredicate, sampleSwap);
+  begin = 0;
+  end = 8;
+  int partitionPt = blPartition(begin, end, samplePredicate, sampleSwap);
   assert_that(partitionPt, is_equal_to(3));
   assert_that(arr[0], is_equal_to(0));
   assert_that(arr[1], is_equal_to(0));
   assert_that(arr[2], is_equal_to(0));
   assert_that(arr[3], is_equal_to(1));
   assert_that(arr[4], is_equal_to(1));
-  assert_that(arr[5], is_equal_to(1));
-  assert_that(arr[6], is_equal_to(1));
-  assert_that(arr[7], is_equal_to(1));
-}
-
-Ensure(Partition, dealsWithWrapAround) {
-  /*            0  1  2  3  4  5  6  7 */
-  int arr[8] = {1, 0, 0, 1, 1, 1, 0, 1};
-  samplePredicate.ctx = arr;
-  sampleSwap.ctx = arr;
-  buffer.begin = 3;
-  buffer.end = 2;
-  buffer.capacity = 8;
-  int partitionPt = blPartition(buffer, samplePredicate, sampleSwap);
-  assert_that(partitionPt, is_equal_to(5));
-  assert_that(arr[0], is_equal_to(1));
-  assert_that(arr[1], is_equal_to(1));
-  assert_that(arr[2], is_equal_to(0));
-  assert_that(arr[3], is_equal_to(0));
-  assert_that(arr[4], is_equal_to(0));
   assert_that(arr[5], is_equal_to(1));
   assert_that(arr[6], is_equal_to(1));
   assert_that(arr[7], is_equal_to(1));
@@ -120,7 +96,6 @@ int main()
   add_test_with_context(suite, Partition, leavesPartitionedSequenceUnchanged);
   add_test_with_context(suite, Partition, swapsTwoElementsInWrongOrder);
   add_test_with_context(suite, Partition, putsBadElementsAtBeginning);
-  add_test_with_context(suite, Partition, dealsWithWrapAround);
   int result = run_test_suite(suite, create_text_reporter());
   destroy_test_suite(suite);
   return result;

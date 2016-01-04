@@ -1,12 +1,12 @@
 #ifndef ENSEMBLE_H
 #define ENSEMBLE_H
 
-#include <RingBuffer.h>
 #include <Errors.h>
 
 
 struct BLEnsemble {
-  struct BLRingBuffer buffer;
+  int numPtcls;
+  int maxNumPtcls;
   int internalStateSize;
   double *x;
   double *y;

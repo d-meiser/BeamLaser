@@ -1,62 +1,63 @@
 #include <Partition.h>
 #include <stdio.h>
 
-static int find_if(struct BLRingBuffer buffer, struct BLPredicateClosure pred) {
-  while (buffer.begin != buffer.end && !pred.f(buffer.begin, pred.ctx)) {
-    buffer.begin = blRingBufferNext(buffer, buffer.begin);
+static int find_if(int begin, int end, struct BLPredicateClosure pred) {
+  while (begin != end && !pred.f(begin, pred.ctx)) {
+    ++begin;
   }
-  return buffer.begin;
+  return begin;
 }
 
-static int find_backward_if_not(struct BLRingBuffer buffer, struct BLPredicateClosure pred) {
+static int find_backward_if_not(int begin, int end, struct BLPredicateClosure pred) {
   do {
-    if (buffer.begin == buffer.end) {
-      return buffer.end;
+    if (begin == end) {
+      return end;
     }
-    buffer.end = blRingBufferPrev(buffer, buffer.end);
-  } while (pred.f(buffer.end, pred.ctx));
-  return blRingBufferNext(buffer, buffer.end);
+    --end;
+  } while (pred.f(end, pred.ctx));
+  return ++end;
 }
 
-int blPartition(struct BLRingBuffer buffer, struct BLPredicateClosure pred,
+int blPartition(int begin, int end, struct BLPredicateClosure pred,
     struct BLSwapClosure swap) {
   while (1) {
-    buffer.begin = find_if(buffer, pred);
-    buffer.end = find_backward_if_not(buffer, pred);
+    begin = find_if(begin, end, pred);
+    end = find_backward_if_not(begin, end, pred);
 
-    if (buffer.begin == buffer.end) return buffer.begin;
+    if (begin == end) return begin;
 
-    buffer.end = blRingBufferPrev(buffer, buffer.end);
-    swap.f(buffer.begin, buffer.end, swap.ctx);
+    --end;
+    swap.f(begin, end, swap.ctx);
   }
 }
 
-static int find_if_bsp(struct BLRingBuffer buffer, double pivot, const double *positions) {
-  while (buffer.begin != buffer.end && positions[buffer.begin] < pivot) {
-    buffer.begin = blRingBufferNext(buffer, buffer.begin);
+static int find_if_bsp(int begin, int end, double pivot, const double *positions) {
+  while (begin != end && positions[begin] > pivot) {
+    ++begin;
   }
-  return buffer.begin;
+  return begin;
 }
 
-static int find_backward_if_not_bsp(struct BLRingBuffer buffer, double pivot, const double *positions) {
+static int find_backward_if_not_bsp(int begin, int end, double pivot, const double *positions) {
   do {
-    if (buffer.begin == buffer.end) {
-      return buffer.end;
+    if (begin == end) {
+      return end;
     }
-    buffer.end = blRingBufferPrev(buffer, buffer.end);
-  } while (positions[buffer.end] > pivot);
-  return blRingBufferNext(buffer, buffer.end);
+    --end;
+  } while (positions[end] < pivot);
+  return ++end;
 }
 
-int blBSP(struct BLRingBuffer buffer, double pivot, const double* positions,
+int blBSP(int begin, int end, double pivot, const double* positions,
     struct BLSwapClosure swap) {
   while (1) {
-    buffer.begin = find_if_bsp(buffer, pivot, positions);
-    buffer.end = find_backward_if_not_bsp(buffer, pivot, positions);
+    begin = find_if_bsp(begin, end, pivot, positions);
+    end = find_backward_if_not_bsp(begin, end, pivot, positions);
 
-    if (buffer.begin == buffer.end) return buffer.begin;
+    if (begin == end) return begin;
 
-    buffer.end = blRingBufferPrev(buffer, buffer.end);
-    swap.f(buffer.begin, buffer.end, swap.ctx);
+    --end;
+    swap.f(begin, end, swap.ctx);
   }
 }
+

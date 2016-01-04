@@ -8,7 +8,7 @@ static const int numPtcls = 10;
 Describe(CreateParticle)
 BeforeEach(CreateParticle) {
   blEnsembleInitialize(numPtcls + 1, 2, &ensemble);
-  ensemble.buffer.end = numPtcls;
+  ensemble.numPtcls = numPtcls;
 }
 AfterEach(CreateParticle) {
   blEnsembleFree(&ensemble);

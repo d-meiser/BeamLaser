@@ -1,7 +1,6 @@
 #ifndef PARTITION_H
 #define PARTITION_H
 
-#include <RingBuffer.h>
 
 struct BLPredicateClosure {
   int (*f)(int i, const void *ctx);
@@ -13,9 +12,9 @@ struct BLSwapClosure {
   void *ctx;
 };
 
-int blPartition(struct BLRingBuffer buffer, struct BLPredicateClosure pred,
+int blPartition(int begin, int end, struct BLPredicateClosure pred,
     struct BLSwapClosure swap);
-int blBSP(struct BLRingBuffer buffer, double pivot, const double* positions,
+int blBSP(int begin, int end, double pivot, const double* positions,
     struct BLSwapClosure swap);
 
 #endif

@@ -11,9 +11,8 @@ static double generateGaussianNoise(double mu, double sigma);
 
 BL_STATUS blEnsembleInitialize(int capacity, int internalStateSize,
                                struct BLEnsemble *ensemble) {
-  ensemble->buffer.begin = 0;
-  ensemble->buffer.end = 0;
-  ensemble->buffer.capacity = capacity;
+  ensemble->numPtcls = 0;
+  ensemble->maxNumPtcls = capacity;
 
   ensemble->internalStateSize = internalStateSize;
 
@@ -36,9 +35,8 @@ BL_STATUS blEnsembleInitialize(int capacity, int internalStateSize,
 }
 
 void blEnsembleFree(struct BLEnsemble *ensemble) {
-  ensemble->buffer.begin = 0;
-  ensemble->buffer.end = 0;
-  ensemble->buffer.capacity = 0;
+  ensemble->numPtcls = 0;
+  ensemble->maxNumPtcls = 0;
 
   free(ensemble->x);
   free(ensemble->y);
@@ -73,20 +71,17 @@ static void ensembleSwap_(int i, int j, void *ctx) {
   }
 }
 
-
-
-
 void blEnsembleRemoveBelow(double cutoff, double *positions,
                            struct BLEnsemble *ensemble) {
   struct BLSwapClosure swap;
   swap.f = ensembleSwap_;
   swap.ctx = ensemble;
-  ensemble->buffer.begin = blBSP(ensemble->buffer, cutoff, positions, swap);
+  ensemble->numPtcls = blBSP(0, ensemble->numPtcls, cutoff, positions, swap);
 }
 
 void blEnsemblePush(double dt, struct BLEnsemble *ensemble) {
   int i;
-  for (i = ensemble->buffer.begin; i != ensemble->buffer.end; i = blRingBufferNext(ensemble->buffer, i)) {
+  for (i = 0; i < ensemble->numPtcls; ++i) {
     ensemble->x[i] += dt * ensemble->vx[i];
     ensemble->y[i] += dt * ensemble->vy[i];
     ensemble->z[i] += dt * ensemble->vz[i];

@@ -11,7 +11,6 @@ set(TESTS
     testPartition
     testPushParticles
     testRemoveParticles
-    testRingBuffer
     )
 
 foreach(t ${TESTS})
