@@ -8,6 +8,7 @@ set(TESTS
     testCreateParticle
     testEnsemble
     testIntegrator
+    testParticleSource
     testPartition
     testPushParticles
     testRemoveParticles
