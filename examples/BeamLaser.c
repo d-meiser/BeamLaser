@@ -182,17 +182,30 @@ void particleSource(const struct Configuration *conf,
       (conf->simulationDomain.zmax - conf->simulationDomain.zmin)
       );
   int i, j;
-  while (numCreate > 0) {
-    i = ensemble->numPtcls;
-    ++ensemble->numPtcls;
+  memmove(ensemble->x + numCreate, ensemble->x,
+      ensemble->numPtcls * sizeof(*ensemble->x));
+  memmove(ensemble->y + numCreate, ensemble->y,
+      ensemble->numPtcls * sizeof(*ensemble->y));
+  memmove(ensemble->z + numCreate, ensemble->z,
+      ensemble->numPtcls * sizeof(*ensemble->z));
+  memmove(ensemble->vx + numCreate, ensemble->vx,
+      ensemble->numPtcls * sizeof(*ensemble->vx));
+  memmove(ensemble->vy + numCreate, ensemble->vy,
+      ensemble->numPtcls * sizeof(*ensemble->vy));
+  memmove(ensemble->vz + numCreate, ensemble->vz,
+      ensemble->numPtcls * sizeof(*ensemble->vz));
+  memmove(ensemble->internalState + numCreate * ensemble->internalStateSize,
+      ensemble->internalState,
+      ensemble->numPtcls * sizeof(double) * ensemble->internalStateSize);
+  for (i = 0; i < numCreate; ++i) {
     blEnsembleCreateParticle(conf->sourceVolume, conf->vbar, conf->deltaV,
                              conf->alpha, i, ensemble);
     for (j = 0; j < ensemble->internalStateSize; ++j) {
       ensemble->internalState[i * ensemble->internalStateSize + j] = 0;
     }
     ensemble->internalState[i * ensemble->internalStateSize + 2] = 1.0;
-    --numCreate;
   }
+  ensemble->numPtcls += numCreate;
 }
 
 void blFieldUpdate(double dt, double kappa, struct FieldState *fieldState) {
