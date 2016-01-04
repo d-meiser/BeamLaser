@@ -23,7 +23,9 @@ BeforeEach(ParticleSource) {
       volume, numPtcls, vbar, deltaV, INTERNAL_STATE_SIZE, initialState, 0);
 }
 
-AfterEach(ParticleSource) {}
+AfterEach(ParticleSource) {
+  blParticleSourceDestroy(particleSource);
+}
 
 Ensure(ParticleSource, nullSourceCreatesZeroParticles) {
   int n = blParticleSourceGetNumParticles(0);

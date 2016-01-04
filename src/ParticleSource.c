@@ -25,6 +25,15 @@ void blParticleSourceCreateParticles(struct ParticleSource *particleSource,
   }
 }
 
+void blParticleSourceDestroy(struct ParticleSource *particleSource) {
+  if (particleSource) {
+    struct ParticleSource *next = particleSource->next;
+    particleSource->destroy(particleSource->ctx);
+    free(particleSource);
+    blParticleSourceDestroy(next);
+  }
+}
+
 struct UniformCtx {
   struct BBox volume;
   int nbar;
