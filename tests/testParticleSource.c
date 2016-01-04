@@ -10,26 +10,33 @@ static double vx[ENSEMBLE_CAPACITY];
 static double vy[ENSEMBLE_CAPACITY];
 static double vz[ENSEMBLE_CAPACITY];
 static double internalState[ENSEMBLE_CAPACITY * INTERNAL_STATE_SIZE];
+static struct BBox volume = {0.0, 1.0, -1.0, 0.5, -2.5, 3.0};
+static struct ParticleSource *particleSource;
+static const int numPtcls = 5;
 
 Describe(ParticleSource)
-BeforeEach(ParticleSource) {}
-AfterEach(ParticleSource) {}
-
-Ensure(ParticleSource, nullSourceCreatesZeroParticles) {
-  int numPtcls = blParticleSourceGetNumParticles(0);
-  assert_that(numPtcls, is_equal_to(0));
-}
-
-Ensure(ParticleSource, uniformSourceCreatesParticlesInBox) {
-  struct BBox volume = {0.0, 1.0, -1.0, 0.5, -2.5, 3.0};
-  int numPtcls = 5;
+BeforeEach(ParticleSource) {
   double vbar[3] = {0.0, 0.0, -200.0};
   double deltaV[3] = {1.0, 1.0, 10.0};
   double initialState[4] = {0, 0, 1.0, 0};
-  int i;
-
-  struct ParticleSource *particleSource = blParticleSourceUniformCreate(
+  particleSource = blParticleSourceUniformCreate(
       volume, numPtcls, vbar, deltaV, INTERNAL_STATE_SIZE, initialState, 0);
+}
+
+AfterEach(ParticleSource) {}
+
+Ensure(ParticleSource, nullSourceCreatesZeroParticles) {
+  int n = blParticleSourceGetNumParticles(0);
+  assert_that(n, is_equal_to(0));
+}
+
+Ensure(ParticleSource, uniformSourceProducesNBarParticles) {
+  int n = blParticleSourceGetNumParticles(particleSource);
+  assert_that(n, is_equal_to(numPtcls));
+}
+
+Ensure(ParticleSource, uniformSourceCreatesParticlesInBox) {
+  int i;
 
   blParticleSourceCreateParticles(particleSource, x, y, z, vx, vy, vz,
       internalState);
@@ -48,6 +55,7 @@ int main()
 {
   TestSuite *suite = create_test_suite();
   add_test_with_context(suite, ParticleSource, nullSourceCreatesZeroParticles);
+  add_test_with_context(suite, ParticleSource, uniformSourceProducesNBarParticles);
   add_test_with_context(suite, ParticleSource, uniformSourceCreatesParticlesInBox);
   int result = run_test_suite(suite, create_text_reporter());
   destroy_test_suite(suite);
