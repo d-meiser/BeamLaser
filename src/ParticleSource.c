@@ -25,6 +25,14 @@ void blParticleSourceCreateParticles(struct ParticleSource *particleSource,
   }
 }
 
+/* Create a ParticleSource node; concrete implementation has to finish
+ * initialization */
+static void blParticleSourceCreate(struct ParticleSource *next,
+                                   struct ParticleSource **particleSource) {
+  *particleSource = malloc(sizeof(**particleSource));
+  (*particleSource)->next = next;
+}
+
 void blParticleSourceDestroy(struct ParticleSource *particleSource) {
   if (particleSource) {
     struct ParticleSource *next = particleSource->next;
@@ -74,7 +82,8 @@ struct ParticleSource *blParticleSourceUniformCreate(
     struct BBox volume, int nbar, double *vbar, double *deltaV,
     int internalStateSize, double *internalState,
     struct ParticleSource *next) {
-  struct ParticleSource *self = malloc(sizeof(*self));
+  struct ParticleSource *self;
+  blParticleSourceCreate(next, &self);
   self->getNumParticles = uniformGetNumParticles;
   self->createParticles = uniformCreateParticles;
   self->destroy = uniformDestroy;
@@ -92,7 +101,6 @@ struct ParticleSource *blParticleSourceUniformCreate(
   memcpy(ctx->internalState, internalState,
       internalStateSize * sizeof(*ctx->internalState));
   self->ctx = ctx;
-  self->next = next;
   return self;
 }
 
