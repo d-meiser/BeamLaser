@@ -96,15 +96,16 @@ has to be dealt with using a numerical integrator, e.g. RK4.
 
 \subsection{TODO list}
 
-\paragraph{Get rid of Ring Buffer for particles} The idea of the
-ring buffer data structure was to make it cheap to add and remove
-particles from the simulation.  However, this unduly penalizes
-other parts of the simulation that are relatively more expensive.
-In particular, it prevents vectorization of many important loops.
-In addition it makes much of the code more complicated and leads
-to ambiguities where it is not immediately apparent whether an
-array is a ring buffer or an array.  Also, this is not needed for
-many simulations that don't insert / remove particles frequently.
+\paragraph{Get rid of Ring Buffer for particles {\bf [done]}} The
+idea of the ring buffer data structure was to make it cheap to
+add and remove particles from the simulation.  However, this
+unduly penalizes other parts of the simulation that are
+relatively more expensive.  In particular, it prevents
+vectorization of many important loops.  In addition it makes much
+of the code more complicated and leads to ambiguities where it is
+not immediately apparent whether an array is a ring buffer or an
+array.  Also, this is not needed for many simulations that don't
+insert / remove particles frequently.
 
 Removal and insertion of particles are affected by this change.
 Particles should be inserted at the front of arrays (this
