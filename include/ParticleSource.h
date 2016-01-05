@@ -35,7 +35,7 @@ void blParticleSourceDestroy(struct ParticleSource *particleSource);
 /** Constructor for a spatially uniform particle source
  *
  * @param volume The cubic volume in which the particles are created
- * @param nbar   The number of particles produced by each call to
+ * @param numPtcls   The number of particles produced by each call to
  *               blParticleSourceCreateParticles
  * @param vbar   Three vector with average velocity of particles
  * @param deltaV Three vector with standard deviations of particle
@@ -44,7 +44,7 @@ void blParticleSourceDestroy(struct ParticleSource *particleSource);
  *               particle sources.
  */
 struct ParticleSource *blParticleSourceUniformCreate(
-    struct BBox volume, int nbar,
+    struct BBox volume, int numPtcls,
     double *vbar, double *deltaV,
     int internalStateSize, double *internalState,
     struct ParticleSource *next);

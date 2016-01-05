@@ -47,7 +47,7 @@ void blParticleSourceDestroy(struct ParticleSource *particleSource) {
  */
 struct UniformCtx {
   struct BBox volume;
-  int nbar;
+  int numPtcls;
   double vbar[3];
   double deltaV[3];
   int internalStateSize;
@@ -56,7 +56,7 @@ struct UniformCtx {
 
 static int uniformGetNumParticles(void *ctx) {
   struct UniformCtx *uctx = ctx;
-  return uctx->nbar;
+  return uctx->numPtcls;
 }
 
 static void uniformCreateParticles(double *x, double *y, double *z,
@@ -65,7 +65,7 @@ static void uniformCreateParticles(double *x, double *y, double *z,
   const struct BBox *box = &uCtx->volume;
   int i;
 
-  for (i = 0; i < uCtx->nbar; ++i) {
+  for (i = 0; i < uCtx->numPtcls; ++i) {
     x[i] = box->xmin + (box->xmax - box->xmin) * sprng();
     y[i] = box->ymin + (box->ymax - box->ymin) * sprng();
     z[i] = box->zmin + (box->zmax - box->zmin) * sprng();
@@ -84,7 +84,7 @@ void uniformDestroy(void *ctx) {
 }
 
 struct ParticleSource *blParticleSourceUniformCreate(
-    struct BBox volume, int nbar, double *vbar, double *deltaV,
+    struct BBox volume, int numPtcls, double *vbar, double *deltaV,
     int internalStateSize, double *internalState,
     struct ParticleSource *next) {
   struct ParticleSource *self;
@@ -94,7 +94,7 @@ struct ParticleSource *blParticleSourceUniformCreate(
   self->destroy = uniformDestroy;
   struct UniformCtx *ctx = malloc(sizeof(struct UniformCtx));
   ctx->volume = volume;
-  ctx->nbar = nbar;
+  ctx->numPtcls = numPtcls;
   ctx->vbar[0] = vbar[0];
   ctx->vbar[1] = vbar[1];
   ctx->vbar[2] = vbar[2];
