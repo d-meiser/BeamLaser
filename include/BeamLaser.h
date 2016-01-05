@@ -4,6 +4,7 @@
 #include <Ensemble.h>
 #include <Errors.h>
 #include <Integrator.h>
+#include <ParticleSource.h>
 #include <Partition.h>
 
 #endif

@@ -6,7 +6,9 @@ include_directories(
 set(BeamLaserLibSources
     Ensemble.c
     Integrator.c
+    ParticleSource.c
     Partition.c
+    Utilities.c
    )
 
 add_library(beamlaserlib ${BeamLaserLibSources})
