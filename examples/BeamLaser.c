@@ -47,7 +47,6 @@ struct Configuration {
   double alpha;
   double kappa;
   struct BBox simulationDomain;
-  struct BBox sourceVolume;
 };
 
 struct IntegratorCtx {
@@ -59,9 +58,11 @@ struct IntegratorCtx {
 };
 
 void setDefaults(struct Configuration *conf);
-void computeSourceVolume(struct Configuration *conf);
 void particleSink(const struct Configuration *conf, struct BLEnsemble *ensemble);
-void particleSource(const struct Configuration *conf, struct BLEnsemble *ensemble);
+void processParticleSources(struct ParticleSource *particleSource,
+                            struct BLEnsemble *ensemble);
+struct ParticleSource *constructParticleSources(
+    const struct Configuration *conf);
 void blFieldUpdate(double dt, double kappa, struct FieldState *fieldState);
 void blFieldAtomInteraction(double dt, struct FieldState *fieldState,
         struct IntegratorCtx *integratorCtx, BLIntegrator integrator);
@@ -84,6 +85,7 @@ int main(int argn, char **argv) {
   struct SimulationState simulationState;
   struct Configuration conf;
   struct IntegratorCtx integratorCtx;
+  struct ParticleSource *particleSource;
   BLIntegrator integrator;
   BL_STATUS stat;
   int i, rank;
@@ -95,10 +97,9 @@ int main(int argn, char **argv) {
 #endif
 
   setDefaults(&conf);
-  computeSourceVolume(&conf);
   blIntegratorCreate("RK4", conf.maxNumParticles * INTERNAL_STATE_DIM,
                      &integrator);
-  
+
   stat = blEnsembleInitialize(conf.maxNumParticles, INTERNAL_STATE_DIM,
       &simulationState.ensemble);
   integratorCtx.ensemble = &simulationState.ensemble;
@@ -113,9 +114,11 @@ int main(int argn, char **argv) {
   simulationState.fieldState.p = 0.0;
   if (stat != BL_SUCCESS) return stat;
 
+  particleSource = constructParticleSources(&conf);
+
   for (i = 0; i < conf.numSteps; ++i) {
     particleSink(&conf, &simulationState.ensemble);
-    particleSource(&conf, &simulationState.ensemble);
+    processParticleSources(particleSource, &simulationState.ensemble);
     blEnsemblePush(0.5 * conf.dt, &simulationState.ensemble);
     blFieldUpdate(0.5 * conf.dt, conf.kappa, &simulationState.fieldState);
     blFieldAtomInteraction(conf.dt, &simulationState.fieldState,
@@ -128,6 +131,8 @@ int main(int argn, char **argv) {
     }
   }
 
+
+  blParticleSourceDestroy(particleSource);
   free(integratorCtx.x);
   free(integratorCtx.ex);
   free(integratorCtx.ey);
@@ -160,27 +165,14 @@ void setDefaults(struct Configuration *conf) {
   conf->simulationDomain.zmax = 1.0e-4;
 }
 
-void computeSourceVolume(struct Configuration *conf) {
-  conf->sourceVolume.xmin = conf->simulationDomain.xmin;
-  conf->sourceVolume.xmax = conf->simulationDomain.xmax;
-  conf->sourceVolume.ymin = conf->simulationDomain.ymin;
-  conf->sourceVolume.ymax = conf->simulationDomain.ymax;
-  conf->sourceVolume.zmin = conf->simulationDomain.zmax;
-  conf->sourceVolume.zmax = conf->simulationDomain.zmax + conf->vbar * conf->dt;
-}
-
 void particleSink(const struct Configuration *conf,
                   struct BLEnsemble *ensemble) {
   blEnsembleRemoveBelow(conf->simulationDomain.zmin, ensemble->z, ensemble);
 }
 
-void particleSource(const struct Configuration *conf,
-                    struct BLEnsemble *ensemble) {
-  int numCreate = round(
-      conf->nbar * 
-      (conf->dt * conf->vbar) /
-      (conf->simulationDomain.zmax - conf->simulationDomain.zmin)
-      );
+void processParticleSources(struct ParticleSource *particleSource,
+                           struct BLEnsemble *ensemble) {
+  int numCreate = blParticleSourceGetNumParticles(particleSource);
   memmove(ensemble->x + numCreate, ensemble->x,
       ensemble->numPtcls * sizeof(*ensemble->x));
   memmove(ensemble->y + numCreate, ensemble->y,
@@ -197,6 +189,12 @@ void particleSource(const struct Configuration *conf,
       ensemble->internalState,
       ensemble->numPtcls * sizeof(double) * ensemble->internalStateSize);
   ensemble->numPtcls += numCreate;
+  blParticleSourceCreateParticles(particleSource, ensemble->x, ensemble->y,
+                                  ensemble->z,
+                                  ensemble->vx,
+                                  ensemble->vy,
+                                  ensemble->vz,
+                                  ensemble->internalState);
 }
 
 void blFieldUpdate(double dt, double kappa, struct FieldState *fieldState) {
@@ -318,4 +316,29 @@ static void modeFunction(double x, double y, double z,
   *fx = 0;
   *fy = exp(-(y * y + z * z) / (sigmaE * sigmaE)) * sin(waveNumber * x);
   *fz = 0;
+}
+
+struct ParticleSource *constructParticleSources(
+    const struct Configuration *conf) {
+  struct ParticleSource *particleSource;
+  struct BBox volume = {
+    conf->simulationDomain.xmin,
+    conf->simulationDomain.xmax,
+    conf->simulationDomain.ymin,
+    conf->simulationDomain.ymax,
+    conf->simulationDomain.zmax,
+    conf->simulationDomain.zmax + conf->dt * conf->vbar};
+  int numPtcls = round(
+      conf->nbar *
+      (conf->dt * conf->vbar) /
+      (conf->simulationDomain.zmax - conf->simulationDomain.zmin)
+      );
+  double vbar[] = {0, 0, -conf->vbar};
+  double deltaV[] = {
+    conf->alpha * conf->deltaV, conf->alpha * conf->deltaV, conf->deltaV};
+  double internalState[] = {0, 0, 1, 0};
+
+  particleSource = blParticleSourceUniformCreate(
+      volume, numPtcls, vbar, deltaV, 4, internalState, 0);
+  return particleSource;
 }
