@@ -7,3 +7,4 @@ mpich*
 *.aux
 *.log
 *.pdf
+*.toc
