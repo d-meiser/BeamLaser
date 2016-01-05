@@ -23,6 +23,7 @@ BL_STATUS blEnsembleInitialize(int capacity, int internalStateSize,
 void blEnsembleFree(struct BLEnsemble *ensemble);
 void blEnsembleRemoveBelow(double cutoff, double *positions,
                            struct BLEnsemble *ensemble);
+void blEnsembleCreateSpace(int numParticles, struct BLEnsemble *ensemble);
 void blEnsemblePush(double dt, struct BLEnsemble *ensemble);
 
 #endif

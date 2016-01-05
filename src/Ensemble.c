@@ -1,6 +1,7 @@
 #include <Ensemble.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 #include <Partition.h>
 
 
@@ -84,3 +85,21 @@ void blEnsemblePush(double dt, struct BLEnsemble *ensemble) {
   }
 }
 
+void blEnsembleCreateSpace(int numParticles, struct BLEnsemble *ensemble) {
+  memmove(ensemble->x + numParticles, ensemble->x,
+      ensemble->numPtcls * sizeof(*ensemble->x));
+  memmove(ensemble->y + numParticles, ensemble->y,
+      ensemble->numPtcls * sizeof(*ensemble->y));
+  memmove(ensemble->z + numParticles, ensemble->z,
+      ensemble->numPtcls * sizeof(*ensemble->z));
+  memmove(ensemble->vx + numParticles, ensemble->vx,
+      ensemble->numPtcls * sizeof(*ensemble->vx));
+  memmove(ensemble->vy + numParticles, ensemble->vy,
+      ensemble->numPtcls * sizeof(*ensemble->vy));
+  memmove(ensemble->vz + numParticles, ensemble->vz,
+      ensemble->numPtcls * sizeof(*ensemble->vz));
+  memmove(ensemble->internalState + numParticles * ensemble->internalStateSize,
+      ensemble->internalState,
+      ensemble->numPtcls * sizeof(double) * ensemble->internalStateSize);
+  ensemble->numPtcls += numParticles;
+}

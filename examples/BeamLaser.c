@@ -173,27 +173,10 @@ void particleSink(const struct Configuration *conf,
 void processParticleSources(struct ParticleSource *particleSource,
                            struct BLEnsemble *ensemble) {
   int numCreate = blParticleSourceGetNumParticles(particleSource);
-  memmove(ensemble->x + numCreate, ensemble->x,
-      ensemble->numPtcls * sizeof(*ensemble->x));
-  memmove(ensemble->y + numCreate, ensemble->y,
-      ensemble->numPtcls * sizeof(*ensemble->y));
-  memmove(ensemble->z + numCreate, ensemble->z,
-      ensemble->numPtcls * sizeof(*ensemble->z));
-  memmove(ensemble->vx + numCreate, ensemble->vx,
-      ensemble->numPtcls * sizeof(*ensemble->vx));
-  memmove(ensemble->vy + numCreate, ensemble->vy,
-      ensemble->numPtcls * sizeof(*ensemble->vy));
-  memmove(ensemble->vz + numCreate, ensemble->vz,
-      ensemble->numPtcls * sizeof(*ensemble->vz));
-  memmove(ensemble->internalState + numCreate * ensemble->internalStateSize,
-      ensemble->internalState,
-      ensemble->numPtcls * sizeof(double) * ensemble->internalStateSize);
-  ensemble->numPtcls += numCreate;
-  blParticleSourceCreateParticles(particleSource, ensemble->x, ensemble->y,
-                                  ensemble->z,
-                                  ensemble->vx,
-                                  ensemble->vy,
-                                  ensemble->vz,
+  blEnsembleCreateSpace(numCreate, ensemble);
+  blParticleSourceCreateParticles(particleSource,
+                                  ensemble->x, ensemble->y, ensemble->z,
+                                  ensemble->vx, ensemble->vy, ensemble->vz,
                                   ensemble->internalState);
 }
 
