@@ -1,5 +1,6 @@
 include_directories(
     ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_BINARY_DIR}
     ${SPRNG_INCLUDE_DIR}
     )
 
