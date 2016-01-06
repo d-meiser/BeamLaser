@@ -1,3 +1,7 @@
 /* Whether building with MPI support */
 #cmakedefine BL_WITH_MPI
+// Use the parallel version of sprng
+#ifdef BL_WITH_MPI
+#define USE_MPI
+#endif
 

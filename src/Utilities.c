@@ -1,4 +1,5 @@
 #include <Utilities.h>
+#include <config.h>
 #include <math.h>
 #include <float.h>
 #define SIMPLE_SPRNG
