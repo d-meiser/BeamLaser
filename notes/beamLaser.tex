@@ -94,6 +94,70 @@ has to be dealt with using a numerical integrator, e.g. RK4.
 
 \section{Implementation notes}
 
+
+\subsection{Algorithm for computation of atom field interaction}
+
+A key part of the update sequence is the evolution of the coupled
+atom-cavity system.  During this step, the atoms are at rest
+because their motion is dealt with during the push.  The
+mode-function is thus constant at each atoms' location.  The
+polarization changes due the atomic internal state changing and
+the field amplitude changes as well.
+
+\subsubsection{Inputs}
+
+\begin{itemize}
+\item Field amplitude
+\item Atomic internal states
+\item Mode function at each atoms location
+\end{itemize}
+
+
+\subsubsection{Outputs}
+
+\begin{itemize}
+\item Field amplitude at time $t+\Delta t$
+\item Atomic internal state at time $t+\Delta t$
+\end{itemize}
+
+
+\subsubsection{Update algorithm}
+
+RK4 with the following RHS:
+
+\begin{itemize}
+\item Scatter field amplitude from Rank 0
+\item {\it polarization} = 0
+\item For each atom:
+\begin{itemize}
+  \item Load internal state $|\psi\rangle$
+  \item Compute $|\psi^\prime\rangle =
+                 \varphi\vec{\epsilon}\cdot\vec{d}|\psi\rangle$
+  \item {\it polarization} += $\langle\psi|\psi^\prime\rangle$
+  \item Store $|\psi^\prime\rangle$
+\end{itemize}
+\item {\it polarization} is the rhs for the field amplitude and
+the $|\psi^\prime\rangle$ are the rhs for the atomic internal
+state.
+\end{itemize}
+
+\paragraph{Comment on units} We need to figure out how to
+parametrize $\vec{d}$.  The dipole matrix element should be
+pulled out and combined with the electric field.  We are thus
+left with evaluating the matrix vector application for the
+operator $\vec{L}$.
+
+\paragraph{Comment on matrix structure of $\vec{L}$} In the
+canonical $|F,m_F\rangle$ basis the operator $\vec{L}$ is
+tridiagonal.  For computational efficiency we should exploit this
+structure.  It may be beneficial to use $J_z$, $J_+$, and $J_-$
+instead of $J_z$, $J_x$, and $J_y$ because that way we can
+operate on one diagonal at a time.  Perhaps this transformation
+should be carried all the way through to the representation of
+the mode function.  That way we don't have to convert between
+$E_x,E_y$ and $E_+, E_-$ all the time.
+
+
 \subsection{TODO list}
 
 \paragraph{Get rid of Ring Buffer for particles {\bf [done]}} The
@@ -125,7 +189,8 @@ work) to simplify the control flow.  I.e. no need to add
 \verb~if (!rank) { ... }~ around the field updates.  The
 amplitudes on ranks other than zero simply get overwritten.
 
-\paragraph{Parallel initialization of random number generation}
+\paragraph{Parallel initialization of random number generation
+{\bf [needs testing]}}
 The \verb~sprng~ library needs to be compiled and included
 differently depending on whether it is used with MPI.
 
