@@ -5,6 +5,7 @@ struct DipoleOperator {
   void (*apply)(int stride, int numPtcls,
     const double *ex, const double *ey, const double *ez,
     const double psi, double *result, double *polarization);
+  void (*destroy)(void *ctx);
   void *ctx;
 };
 
@@ -14,6 +15,9 @@ void blDipoleOperatorApply(struct DipoleOperator *op,
     const double psi, double *result, double *polarization);
 
 void blDipoleOperatorDestroy(struct DipoleOperator *op);
+
+
+struct DipoleOperator *blDipoleOperatorTLACreate();
 
 #endif
 

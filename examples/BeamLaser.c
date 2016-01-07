@@ -20,7 +20,6 @@
 #define MPI_Request int
 #endif
 
-#define BL_UNUSED(a) (void)(a)
 
 static const int INTERNAL_STATE_DIM = 4;
 
