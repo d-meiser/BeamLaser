@@ -4,7 +4,12 @@
 struct DipoleOperator {
   void (*apply)(int stride, int numPtcls,
     const double *ex, const double *ey, const double *ez,
-    const double psi, double *result, double *polarization);
+    const double *psi, double *result, double *polarization,
+    void *ctx);
+  void (*applyNoPolarization)(int stride, int numPtcls,
+    const double *ex, const double *ey, const double *ez,
+    const double *psi, double *result,
+    void *ctx);
   void (*destroy)(void *ctx);
   void *ctx;
 };
@@ -12,7 +17,12 @@ struct DipoleOperator {
 void blDipoleOperatorApply(struct DipoleOperator *op,
     int stride, int numPtcls,
     const double *ex, const double *ey, const double *ez,
-    const double psi, double *result, double *polarization);
+    const double *psi, double *result, double *polarization);
+
+void blDipoleOperatorApplyNoPolarization(struct DipoleOperator *op,
+    int stride, int numPtcls,
+    const double *ex, const double *ey, const double *ez,
+    const double *psi, double *result);
 
 void blDipoleOperatorDestroy(struct DipoleOperator *op);
 
