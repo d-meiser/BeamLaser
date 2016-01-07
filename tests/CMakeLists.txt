@@ -5,6 +5,7 @@ include_directories(
 
 set(TESTS
     testBSP
+    testDipoleOperator
     testEnsemble
     testIntegrator
     testParticleSource
