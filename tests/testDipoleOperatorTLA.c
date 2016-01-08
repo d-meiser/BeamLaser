@@ -56,7 +56,8 @@ Ensure(DipoleOperatorTLA, hasRightMatrixElementAlongX) {
   dipoleOperator = blDipoleOperatorTLACreate();
   ex[0] = 1.0;
   ey[0] = 3.0;
-  ez[0] = 0.0;
+  ez[0] = -1.7;
+
   psi[0] = 1.0;
   psi[1] = 0.0;
   psi[2] = 0.0;
@@ -68,6 +69,39 @@ Ensure(DipoleOperatorTLA, hasRightMatrixElementAlongX) {
   assert_that_double(result[1], is_equal_to_double(0.0));
   assert_that_double(result[2], is_equal_to_double(1.0 * M_SQRT1_2));
   assert_that_double(result[3], is_equal_to_double(-3.0 * M_SQRT1_2));
+
+  psi[0] = 0.0;
+  psi[1] = 0.0;
+  psi[2] = 1.0;
+  psi[3] = 0.0;
+  blDipoleOperatorApply(dipoleOperator,
+                        4, 1, ex, ey, ez, 
+                        psi, result, polarization);
+  assert_that_double(result[0], is_equal_to_double(1.0 * M_SQRT1_2));
+  assert_that_double(result[1], is_equal_to_double(3.0 * M_SQRT1_2));
+  assert_that_double(result[2], is_equal_to_double(0.0));
+  assert_that_double(result[3], is_equal_to_double(0.0));
+  blDipoleOperatorDestroy(dipoleOperator);
+}
+
+Ensure(DipoleOperatorTLA, worksWithoutPolarization) {
+  dipoleOperator = blDipoleOperatorTLACreate();
+  ex[0] = 1.0;
+  ey[0] = 3.0;
+  ez[0] = 4.3;
+
+  psi[0] = 1.0;
+  psi[1] = 0.0;
+  psi[2] = 0.0;
+  psi[3] = 0.0;
+  blDipoleOperatorApplyNoPolarization(dipoleOperator,
+                        4, 1, ex, ey, ez, 
+                        psi, result);
+  assert_that_double(result[0], is_equal_to_double(0.0));
+  assert_that_double(result[1], is_equal_to_double(0.0));
+  assert_that_double(result[2], is_equal_to_double(1.0 * M_SQRT1_2));
+  assert_that_double(result[3], is_equal_to_double(-3.0 * M_SQRT1_2));
+
   psi[0] = 0.0;
   psi[1] = 0.0;
   psi[2] = 1.0;
@@ -89,6 +123,7 @@ int main()
   add_test_with_context(suite, DipoleOperatorTLA,
                         doesNotHaveMatrixElementAlongZ);
   add_test_with_context(suite, DipoleOperatorTLA, hasRightMatrixElementAlongX);
+  add_test_with_context(suite, DipoleOperatorTLA, worksWithoutPolarization);
   int result = run_test_suite(suite, create_text_reporter());
   destroy_test_suite(suite);
   return result;
