@@ -13,7 +13,15 @@ static double polarization[2];
 
 
 Describe(DipoleOperatorTLA)
-BeforeEach(DipoleOperatorTLA) {}
+BeforeEach(DipoleOperatorTLA) {
+  int i;
+  for (i = 0; i < DOF_PER_PTCL * MAX_NUM_PTCLS; ++i) {
+    psi[i] = i;
+  }
+  for (i = 0; i < DOF_PER_PTCL * MAX_NUM_PTCLS; ++i) {
+    result[i] = 2.3 * i;
+  }
+}
 AfterEach(DipoleOperatorTLA) {}
 
 Ensure(DipoleOperatorTLA, canBeCreated) {
@@ -24,9 +32,18 @@ Ensure(DipoleOperatorTLA, canBeCreated) {
 
 Ensure(DipoleOperatorTLA, doesNotHaveMatrixElementAlongZ) {
   dipoleOperator = blDipoleOperatorTLACreate();
+  ex[0] = 0.0;
+  ey[0] = 0.0;
+  ez[0] = 1.0;
   blDipoleOperatorApply(dipoleOperator,
                         4, 1, ex, ey, ez, 
                         psi, result, polarization);
+  assert_that_double(polarization[0], is_equal_to_double(0.0));
+  assert_that_double(polarization[1], is_equal_to_double(0.0));
+  int i;
+  for (i = 0; i < DOF_PER_PTCL; ++i) {
+    assert_that_double(result[i], is_equal_to_double(0.0));
+  }
   blDipoleOperatorDestroy(dipoleOperator);
 }
 
