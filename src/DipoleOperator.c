@@ -38,7 +38,10 @@ static void dipoleOperatorTLAApply(int stride, int numPtcls,
     const double *ex, const double *ey, const double *ez,
     const double *psi, double *result, double *polarization,
     void *ctx) {
+  BL_UNUSED(ctx);
+  BL_UNUSED(ez);
   double complex y[2];
+  double complex pol = 0;
   double complex *x, *r;
   int i, j;
   for (i = 0; i < numPtcls; ++i) {
@@ -48,19 +51,16 @@ static void dipoleOperatorTLAApply(int stride, int numPtcls,
     for (j = 0; j < 2; ++j) {
       y[j] = 0;
     }
+    y[0] = ep * x[1];
+    y[1] = conj(ep) * x[0];
+    for (j = 0; j < 2; ++j) {
+      pol += conj(x[j]) * y[j];
+    }
     for (j = 0; j < 2; ++j) {
       r[j] = y[j];
     }
   }
-  BL_UNUSED(stride);
-  BL_UNUSED(numPtcls);
-  BL_UNUSED(ex);
-  BL_UNUSED(ey);
-  BL_UNUSED(ez);
-  BL_UNUSED(psi);
-  BL_UNUSED(result);
-  BL_UNUSED(polarization);
-  BL_UNUSED(ctx);
+  *((double complex*)polarization) = pol;
 }
 
 static void dipoleOperatorTLADestroy(void *ctx) {
