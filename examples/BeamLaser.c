@@ -242,8 +242,8 @@ void interactionRHS(double t, int n, const double *x, double *y,
                         integratorCtx->ex, integratorCtx->ey, integratorCtx->ez,
                         x, y, (double*)&polarization);
 
-  MPI_Request polRedReq;
 #ifdef BL_WITH_MPI
+  MPI_Request polRedReq;
   MPI_Iallreduce(&polarization,
                  y + fieldOffset, 2, MPI_DOUBLE, MPI_SUM,
                  MPI_COMM_WORLD, &polRedReq);
