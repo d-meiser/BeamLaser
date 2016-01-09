@@ -241,24 +241,33 @@ void interactionRHS(double t, int n, const double *x, double *y,
                         numPtcls,
                         integratorCtx->ex, integratorCtx->ey, integratorCtx->ez,
                         x, y, (double*)&polarization);
+
+#ifdef BL_WITH_MPI
+  MPI_Request polRedReq;
+  MPI_Iallreduce(&polarization,
+                 y + fieldOffset, 2, MPI_DOUBLE, MPI_SUM,
+                 MPI_COMM_WORLD, &polRedReq);
+#else
+  *((double complex*)(y + fieldOffset)) = polarization;
+#endif
+
   for (i = 0; i < numPtcls; ++i) {
     y[i] *= fieldAmplitude;
   }
+
 #ifdef BL_WITH_MPI
-  MPI_Allreduce(&polarization,
-                y + fieldOffset, 2, MPI_DOUBLE, MPI_SUM,
-                MPI_COMM_WORLD);
+  MPI_Wait(&polRedReq, MPI_STATUS_IGNORE);
 #else
-  *((double complex*)(y + fieldOffset)) = polarization;
 #endif
 }
 
 MPI_Request scatterFieldBegin(const struct FieldState *fieldState,
     double *fieldDest) {
 #ifdef BL_WITH_MPI
-  fieldDest[0] = fieldState->q;
-  fieldDest[1] = fieldState->p;
-  return 0;
+  MPI_Request scatterReq;
+  MPI_Iscatter(fieldState, 2, MPI_DOUBLE, fieldDest, 2, MPI_DOUBLE, 0,
+      MPI_COMM_WORLD, &scatterReq);
+  return scatterReq;
 #else
   fieldDest[0] = fieldState->q;
   fieldDest[1] = fieldState->p;
@@ -269,9 +278,9 @@ MPI_Request scatterFieldBegin(const struct FieldState *fieldState,
 void scatterFieldEnd(MPI_Request req, const struct FieldState *fieldState,
     double *fieldDest) {
 #ifdef BL_WITH_MPI
-  BL_UNUSED(req);
   BL_UNUSED(fieldState);
   BL_UNUSED(fieldDest);
+  MPI_Wait(&req, MPI_STATUS_IGNORE);
 #else
   BL_UNUSED(req);
   BL_UNUSED(fieldState);

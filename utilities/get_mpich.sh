@@ -1,5 +1,8 @@
 #!/bin/sh
 
+if [ -f mpich/include/mpi.h ]; then
+  echo "mpich/include/mpi.h found."
+fi
 if [ -f mpich/lib/libmpich.so ]; then
   echo "libmpich.so found -- nothing to build."
 else

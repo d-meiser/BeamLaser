@@ -1,5 +1,9 @@
 #include <cgreen/cgreen.h>
 #include <ParticleSource.h>
+#include <config.h>
+#ifdef BL_WITH_MPI
+#include <mpi.h>
+#endif
 
 #define INTERNAL_STATE_SIZE 4
 #define ENSEMBLE_CAPACITY 10
@@ -76,8 +80,14 @@ Ensure(ParticleSource, twoSourcesCanBeComposed) {
   }
 }
 
-int main()
+int main(int argn, char **argv)
 {
+#ifdef BL_WITH_MPI
+  MPI_Init(&argn, &argv);
+#else
+  BL_UNUSED(argn);
+  BL_UNUSED(argv);
+#endif
   TestSuite *suite = create_test_suite();
   add_test_with_context(suite, ParticleSource, nullSourceCreatesZeroParticles);
   add_test_with_context(suite, ParticleSource, twoSourcesCanBeDestroyed);
@@ -86,6 +96,9 @@ int main()
   add_test_with_context(suite, ParticleSource, twoSourcesCanBeComposed);
   int result = run_test_suite(suite, create_text_reporter());
   destroy_test_suite(suite);
+#ifdef BL_WITH_MPI
+  MPI_Finalize();
+#endif
   return result;
 }
 

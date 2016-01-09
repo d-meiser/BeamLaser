@@ -2,6 +2,9 @@ sudo: false
 virtualenv:
   system_site_packages: true
 language: c
+env:
+  - WITH_MPI=OFF
+  - WITH_MPI=ON
 addons:
   apt:
     packages:
@@ -9,8 +12,8 @@ addons:
     - lcov
 cache:
   directories:
-  - sprng2.0
   - mpich
+  - mpich-3.2
 before_install:
   - gem install coveralls-lcov
   - sh ./utilities/get_cgreen.sh
@@ -20,8 +23,8 @@ script:
   - export CGREEN_CHILD_EXIT_WITH_FLUSH=TRUE
   - mkdir -p build
   - cd build
-  - cmake -DWITH_CXX=OFF -DWITH_UNIT_TESTS=OFF -DBL_BUILD_TESTS=ON -DBL_ENABLE_COVERAGE=ON -DBL_WITH_PEDANTIC_FLAGS=OFF -DBL_WITH_WALL_FLAGS=ON ..
-  - make -j2
+  - cmake -DWITH_CXX=OFF -DWITH_UNIT_TESTS=OFF -DBL_BUILD_TESTS=ON -DBL_ENABLE_COVERAGE=ON -DBL_WITH_PEDANTIC_FLAGS=OFF -DBL_WITH_WALL_FLAGS=ON -DBL_WITH_MPI=$WITH_MPI -DMPI_C_COMPILER=`pwd`/../mpich/bin/mpicc -DMPI_C_INCLUDE_PATH=`pwd`/../mpich/include -DMPIEXEC=`pwd`/../mpich/bin/mpirun ..
+  - make -j4
   - ctest -j2 --output-on-failure
 after_success:
   - lcov -d tests -d src -base-directory .. -c -o coverage.info
