@@ -53,7 +53,12 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 endif ()
 
 if (BL_WITH_MPI)
-  find_package(MPI)
+  find_package(MPI REQUIRED)
+  message(STATUS " >>> MPI_C_FOUND == ${MPI_C_FOUND}")
+  message(STATUS " >>> MPI_C_LIBRARIES == ${MPI_C_LIBRARIES}")
+  message(STATUS " >>> MPI_C_INCLUDE_PATH == ${MPI_C_INCLUDE_PATH}")
+  message(STATUS " >>> MPIEXEC == ${MPIEXEC}")
+  message(STATUS " >>> MPIEXEC_NUMPROC_FLAG == ${MPIEXEC_NUMPROC_FLAG}")
 endif ()
 
 add_subdirectory(src)
