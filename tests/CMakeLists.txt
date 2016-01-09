@@ -1,6 +1,8 @@
 include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}/../include
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_BINARY_DIR}
     ${CGREEN_PUBLIC_INCLUDE_DIRS}
+    ${MPI_C_INCLUDE_PATH}
     )
 
 set(TESTS
