@@ -1,7 +1,19 @@
 #ifndef UTILITIES_H
 #define UTILITIES_H
 
+#include <config.h>
+#ifdef BL_WITH_MPI
+#include <mpi.h>
+#endif
+
 #define BL_UNUSED(a) (void)(a)
+
+#ifdef BL_WITH_MPI
+typedef MPI_Request BL_MPI_Request;
+#else
+typedef int BL_MPI_Request;
+#endif
+
 
 struct BlBox {
   double xmin;
@@ -13,5 +25,9 @@ struct BlBox {
 };
 
 double blGenerateGaussianNoise(double mu, double sigma);
+BL_MPI_Request blScatterBegin(const double *src,
+    double *dest, int n);
+void blScatterEnd(BL_MPI_Request req, const double *src,
+    double *dest, int n);
 
 #endif

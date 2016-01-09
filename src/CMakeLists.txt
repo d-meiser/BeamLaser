@@ -3,6 +3,9 @@ include_directories(
     ${PROJECT_BINARY_DIR}
     ${SPRNG_INCLUDE_DIR}
     )
+if(BL_WITH_MPI)
+  include_directories(${MPI_C_INCLUDE_PATH} SYSTEM)
+endif()
 
 set(BeamLaserLibSources
     DipoleOperator.c
