@@ -13,6 +13,7 @@ addons:
 cache:
   directories:
   - mpich
+  - mpich-3.2
 before_install:
   - gem install coveralls-lcov
   - sh ./utilities/get_cgreen.sh
