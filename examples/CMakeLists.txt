@@ -1,6 +1,7 @@
 include_directories(
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_BINARY_DIR}
+    ${MPI_C_INCLUDE_PATH}
     )
 if (BL_WITH_MPI)
   include_directories(${MPI_C_INCLUDE_PATH} SYSTEM)
