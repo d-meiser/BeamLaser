@@ -191,16 +191,18 @@ void blFieldAtomInteraction(double dt, struct FieldState *fieldState,
         struct IntegratorCtx *integratorCtx, BLIntegrator integrator) {
   int i;
   struct BLEnsemble *ensemble = integratorCtx->ensemble;
-  int n = ensemble->numPtcls * ensemble->internalStateSize + 2;
+  const int numPtcls = ensemble->numPtcls;
+  const int fieldOffset = numPtcls * ensemble->internalStateSize;
+  int n = numPtcls * ensemble->internalStateSize + 2;
   double *x = integratorCtx->x;
 
   /* 
    * Pack field and internal state data in contiguous buffer;
    * Field is replicated and integrated redundantly
    */
-  MPI_Request fieldRequest = scatterFieldBegin(fieldState, x);
+  MPI_Request fieldRequest = scatterFieldBegin(fieldState, x + fieldOffset);
   for (i = 0; i < ensemble->numPtcls; ++i) {
-    memcpy(&x[2 + i * INTERNAL_STATE_DIM],
+    memcpy(&x[i * INTERNAL_STATE_DIM],
         &ensemble->internalState[i * INTERNAL_STATE_DIM],
         INTERNAL_STATE_DIM * sizeof(double));
   }
@@ -209,16 +211,16 @@ void blFieldAtomInteraction(double dt, struct FieldState *fieldState,
         &integratorCtx->ex[i], &integratorCtx->ey[i], &integratorCtx->ez[i]);
   }
 
-  scatterFieldEnd(fieldRequest, fieldState, x);
+  scatterFieldEnd(fieldRequest, fieldState, x + fieldOffset);
 
   blIntegratorTakeStep(integrator, 0.0, dt, n, interactionRHS, x, x,
       integratorCtx);
 
-  fieldState->q = x[0];
-  fieldState->p = x[1];
+  fieldState->q = x[fieldOffset + 0];
+  fieldState->p = x[fieldOffset + 1];
   for (i = 0; i < ensemble->numPtcls; ++i) {
     memcpy(&ensemble->internalState[i * ensemble->internalStateSize],
-           &x[2 + i * ensemble->internalStateSize],
+           &x[i * ensemble->internalStateSize],
            ensemble->internalStateSize * sizeof(double));
   }
 }
@@ -229,8 +231,11 @@ void interactionRHS(double t, int n, const double *x, double *y,
   BL_UNUSED(n);
   struct IntegratorCtx *integratorCtx = ctx;
   struct BLEnsemble *ensemble = integratorCtx->ensemble;
-  int numPtcls, i;
-  const double complex field = *((const double complex*)x);
+  int i;
+  const int numPtcls = ensemble->numPtcls;
+  const int fieldOffset = numPtcls * ensemble->internalStateSize;
+  const double complex fieldAmplitude =
+    *((const double complex*)(x + fieldOffset));
 
   /* For all particles:
    *   compute polarization
@@ -243,28 +248,21 @@ void interactionRHS(double t, int n, const double *x, double *y,
    * this entails traversing the state arrays twice and evaluating the
    * mode function twice.
    * */
-  numPtcls = ensemble->numPtcls;
   double complex polarization = 0;
+  blDipoleOperatorApply(integratorCtx->dipoleOperator,
+                        ensemble->internalStateSize,
+                        numPtcls,
+                        integratorCtx->ex, integratorCtx->ey, integratorCtx->ez,
+                        x, y, (double*)&polarization);
   for (i = 0; i < numPtcls; ++i) {
-    double mode[3];
-    mode[0] = integratorCtx->ex[i];
-    mode[1] = integratorCtx->ey[i];
-    mode[2] = integratorCtx->ez[i];
-    const double complex *psiX =
-      (const double complex *)&x[2 + i * ensemble->internalStateSize];
-    double complex *psiY =
-      (double complex *)&y[2 + i * ensemble->internalStateSize];
-    polarization -= I * mode[1] * 1.0e7 * conj(psiX[0]) * psiX[1];
-    /* dpsi/dt = -i H psi 
-     * H \propto a */
-    psiY[0] = -I * mode[1] * 1.0e2 * conj(field) * psiX[1];
-    psiY[1] = -I * mode[1] * 1.0e2 * field * psiX[0];
+    y[i] *= fieldAmplitude;
   }
 #ifdef BL_WITH_MPI
-  MPI_Allreduce(&polarization, y, 2, MPI_DOUBLE, MPI_SUM,
+  MPI_Allreduce(&polarization,
+                y + fieldOffset, 2, MPI_DOUBLE, MPI_SUM,
                 MPI_COMM_WORLD);
 #else
-  *((double complex*)y) = polarization;
+  *((double complex*)(y + fieldOffset)) = polarization;
 #endif
 }
 
