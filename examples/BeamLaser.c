@@ -241,15 +241,23 @@ void interactionRHS(double t, int n, const double *x, double *y,
                         numPtcls,
                         integratorCtx->ex, integratorCtx->ey, integratorCtx->ez,
                         x, y, (double*)&polarization);
+
+  MPI_Request polRedReq;
+#ifdef BL_WITH_MPI
+  MPI_Iallreduce(&polarization,
+                 y + fieldOffset, 2, MPI_DOUBLE, MPI_SUM,
+                 MPI_COMM_WORLD, &polRedReq);
+#else
+  *((double complex*)(y + fieldOffset)) = polarization;
+#endif
+
   for (i = 0; i < numPtcls; ++i) {
     y[i] *= fieldAmplitude;
   }
+
 #ifdef BL_WITH_MPI
-  MPI_Allreduce(&polarization,
-                y + fieldOffset, 2, MPI_DOUBLE, MPI_SUM,
-                MPI_COMM_WORLD);
+  MPI_Wait(&polRedReq, MPI_STATUS_IGNORE);
 #else
-  *((double complex*)(y + fieldOffset)) = polarization;
 #endif
 }
 
