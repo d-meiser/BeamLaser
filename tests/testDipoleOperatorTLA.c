@@ -6,7 +6,7 @@
 #define M_SQRT1_2	0.70710678118654752440	/* 1/sqrt(2) */
 #endif
 
-static struct DipoleOperator *dipoleOperator;
+static struct BLDipoleOperator *dipoleOperator;
 #define MAX_NUM_PTCLS 10
 #define DOF_PER_PTCL 4
 static double ex[MAX_NUM_PTCLS];

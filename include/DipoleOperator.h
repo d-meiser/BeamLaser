@@ -1,7 +1,7 @@
 #ifndef DIPOLE_OPERATOR_H
 #define DIPOLE_OPERATOR_H
 
-struct DipoleOperator {
+struct BLDipoleOperator {
   void (*apply)(int stride, int numPtcls,
     const double *ex, const double *ey, const double *ez,
     const double *psi, double *result, double *polarization,
@@ -14,20 +14,20 @@ struct DipoleOperator {
   void *ctx;
 };
 
-void blDipoleOperatorApply(struct DipoleOperator *op,
+void blDipoleOperatorApply(struct BLDipoleOperator *op,
     int stride, int numPtcls,
     const double *ex, const double *ey, const double *ez,
     const double *psi, double *result, double *polarization);
 
-void blDipoleOperatorApplyNoPolarization(struct DipoleOperator *op,
+void blDipoleOperatorApplyNoPolarization(struct BLDipoleOperator *op,
     int stride, int numPtcls,
     const double *ex, const double *ey, const double *ez,
     const double *psi, double *result);
 
-void blDipoleOperatorDestroy(struct DipoleOperator *op);
+void blDipoleOperatorDestroy(struct BLDipoleOperator *op);
 
 
-struct DipoleOperator *blDipoleOperatorTLACreate();
+struct BLDipoleOperator *blDipoleOperatorTLACreate();
 
 #endif
 

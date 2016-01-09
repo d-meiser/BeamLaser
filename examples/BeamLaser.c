@@ -50,6 +50,7 @@ struct Configuration {
 
 struct IntegratorCtx {
   struct BLEnsemble *ensemble;
+  struct BLDipoleOperator *dipoleOperator;
   double *x;
   double *ex;
   double *ey;
@@ -102,6 +103,7 @@ int main(int argn, char **argv) {
   stat = blEnsembleInitialize(conf.maxNumParticles, INTERNAL_STATE_DIM,
       &simulationState.ensemble);
   integratorCtx.ensemble = &simulationState.ensemble;
+  integratorCtx.dipoleOperator = blDipoleOperatorTLACreate();
   integratorCtx.x = malloc(
       INTERNAL_STATE_DIM * conf.maxNumParticles * sizeof(double));
   integratorCtx.ex = malloc(conf.maxNumParticles * sizeof(double));
@@ -132,6 +134,7 @@ int main(int argn, char **argv) {
 
 
   blParticleSourceDestroy(particleSource);
+  blDipoleOperatorDestroy(integratorCtx.dipoleOperator);
   free(integratorCtx.x);
   free(integratorCtx.ex);
   free(integratorCtx.ey);

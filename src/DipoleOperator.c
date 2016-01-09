@@ -10,14 +10,14 @@
 #define M_SQRT1_2	0.70710678118654752440	/* 1/sqrt(2) */
 #endif
 
-void blDipoleOperatorApply(struct DipoleOperator *op,
+void blDipoleOperatorApply(struct BLDipoleOperator *op,
     int stride, int numPtcls,
     const double *ex, const double *ey, const double *ez,
     const double *psi, double *result, double *polarization) {
   op->apply(stride, numPtcls, ex, ey, ez, psi, result, polarization, op->ctx);
 }
 
-void blDipoleOperatorApplyNoPolarization(struct DipoleOperator *op,
+void blDipoleOperatorApplyNoPolarization(struct BLDipoleOperator *op,
     int stride, int numPtcls,
     const double *ex, const double *ey, const double *ez,
     const double *psi, double *result) {
@@ -29,7 +29,7 @@ void blDipoleOperatorApplyNoPolarization(struct DipoleOperator *op,
   }
 }
 
-void blDipoleOperatorDestroy(struct DipoleOperator *op) {
+void blDipoleOperatorDestroy(struct BLDipoleOperator *op) {
   op->destroy(op->ctx);
   free(op);
 }
@@ -91,8 +91,8 @@ static void dipoleOperatorTLADestroy(void *ctx) {
   BL_UNUSED(ctx);
 }
 
-struct DipoleOperator *blDipoleOperatorTLACreate() {
-  struct DipoleOperator *op = malloc(sizeof(*op));
+struct BLDipoleOperator *blDipoleOperatorTLACreate() {
+  struct BLDipoleOperator *op = malloc(sizeof(*op));
   op->apply = dipoleOperatorTLAApply;
   op->applyNoPolarization = dipoleOperatorTLAApplyNoPolarization;
   op->destroy = dipoleOperatorTLADestroy;
