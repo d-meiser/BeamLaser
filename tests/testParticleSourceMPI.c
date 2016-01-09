@@ -17,7 +17,7 @@ int main(int argn, char **argv) {
   BL_UNUSED(argv);
 #endif
 
-  struct BBox box = {0, 1, 0, 1, 0, 1};
+  struct BlBox box = {0, 1, 0, 1, 0, 1};
   double vbar[] = {0, 0, 0};
   double deltaV[] = {2.3, 3.5, 7.5};
   double internalState[] = {1, 0, 0, 0};

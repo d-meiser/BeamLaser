@@ -45,7 +45,7 @@ struct Configuration {
   double deltaV;
   double alpha;
   double kappa;
-  struct BBox simulationDomain;
+  struct BlBox simulationDomain;
 };
 
 struct IntegratorCtx {
@@ -300,7 +300,7 @@ static void modeFunction(double x, double y, double z,
 struct ParticleSource *constructParticleSources(
     const struct Configuration *conf) {
   struct ParticleSource *particleSource;
-  struct BBox volume = {
+  struct BlBox volume = {
     conf->simulationDomain.xmin,
     conf->simulationDomain.xmax,
     conf->simulationDomain.ymin,

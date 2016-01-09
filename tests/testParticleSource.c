@@ -14,7 +14,7 @@ static double vx[ENSEMBLE_CAPACITY];
 static double vy[ENSEMBLE_CAPACITY];
 static double vz[ENSEMBLE_CAPACITY];
 static double internalState[ENSEMBLE_CAPACITY * INTERNAL_STATE_SIZE];
-static struct BBox volume = {0.0, 1.0, -1.0, 0.5, -2.5, 3.0};
+static struct BlBox volume = {0.0, 1.0, -1.0, 0.5, -2.5, 3.0};
 static double vbar[3] = {0.0, 0.0, -200.0};
 static double deltaV[3] = {1.0, 1.0, 10.0};
 static double initialState[4] = {0, 0, 1.0, 0};

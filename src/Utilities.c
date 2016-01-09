@@ -6,7 +6,7 @@
 #include <sprng.h>
 
 
-double generateGaussianNoise(double mu, double sigma) {
+double blGenerateGaussianNoise(double mu, double sigma) {
   const double epsilon = DBL_EPSILON;
   const double two_pi = 2.0*3.14159265358979323846;
 

@@ -3,7 +3,7 @@
 
 #define BL_UNUSED(a) (void)(a)
 
-struct BBox {
+struct BlBox {
   double xmin;
   double xmax;
   double ymin;
@@ -12,6 +12,6 @@ struct BBox {
   double zmax;
 };
 
-double generateGaussianNoise(double mu, double sigma);
+double blGenerateGaussianNoise(double mu, double sigma);
 
 #endif
