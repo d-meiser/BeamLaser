@@ -5,6 +5,7 @@ include_directories(
     )
 
 set(BeamLaserLibSources
+    DipoleOperator.c
     Ensemble.c
     Integrator.c
     ParticleSource.c
