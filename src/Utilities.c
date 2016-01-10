@@ -56,3 +56,27 @@ void blScatterEnd(BL_MPI_Request req, const double *src, double *dest, int n) {
 #endif
 }
 
+BL_MPI_Request blAddAllBegin(const double *src, double *dest, int n) {
+#ifdef BL_WITH_MPI
+  MPI_Request req;
+  MPI_Iallreduce(src, dest, n, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD, &req);
+  return req;
+#else
+  memcpy(dest, src, n * sizeof(*src));
+  return 0;
+#endif
+}
+
+void blAddAllEnd(BL_MPI_Request req, const double *src, double *dest, int n) {
+#ifdef BL_WITH_MPI
+  BL_UNUSED(src);
+  BL_UNUSED(dest);
+  BL_UNUSED(n);
+  MPI_Wait(&req, MPI_STATUS_IGNORE);
+#else
+  BL_UNUSED(req);
+  BL_UNUSED(src);
+  BL_UNUSED(dest);
+  BL_UNUSED(n);
+#endif
+}

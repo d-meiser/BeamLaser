@@ -29,5 +29,7 @@ BL_MPI_Request blScatterBegin(const double *src,
     double *dest, int n);
 void blScatterEnd(BL_MPI_Request req, const double *src,
     double *dest, int n);
+BL_MPI_Request blAddAllBegin(const double *src, double *dest, int n);
+void blAddAllEnd(BL_MPI_Request req, const double *src, double *dest, int n);
 
 #endif
