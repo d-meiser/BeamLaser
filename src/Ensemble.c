@@ -5,7 +5,6 @@
 #include <Partition.h>
 
 
-
 BL_STATUS blEnsembleInitialize(int capacity, int internalStateSize,
                                struct BLEnsemble *ensemble) {
   ensemble->numPtcls = 0;

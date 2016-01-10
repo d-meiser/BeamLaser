@@ -15,6 +15,7 @@
 #include <string.h>
 #include <math.h>
 #include <complex.h>
+#include <getopt.h>
 
 
 static const int INTERNAL_STATE_DIM = 4;
@@ -32,11 +33,11 @@ struct SimulationState {
 
 struct Configuration {
   int numSteps;
-  double particleWeight;
-  double dipoleMatrixElement;
+  double dt;
   double nbar;
   int maxNumParticles;
-  double dt;
+  double particleWeight;
+  double dipoleMatrixElement;
   double vbar;
   double deltaV;
   double alpha;
@@ -53,6 +54,8 @@ struct IntegratorCtx {
 };
 
 void setDefaults(struct Configuration *conf);
+void processCommandLineArgs(struct Configuration *conf, int argn, char **argv);
+void printUsage();
 void particleSink(const struct Configuration *conf, struct BLEnsemble *ensemble);
 void processParticleSources(struct ParticleSource *particleSource,
                             struct BLEnsemble *ensemble);
@@ -88,6 +91,8 @@ int main(int argn, char **argv) {
 #endif
 
   setDefaults(&conf);
+  processCommandLineArgs(&conf, argn, argv);
+
   blIntegratorCreate("RK4", conf.maxNumParticles * INTERNAL_STATE_DIM,
                      &integrator);
 
@@ -155,6 +160,120 @@ void setDefaults(struct Configuration *conf) {
   conf->simulationDomain.zmax = 1.0e-4;
 }
 
+void processCommandLineArgs(struct Configuration *conf, int argn, char **argv) {
+  int c;
+
+  while (1)
+    {
+      static struct option long_options[] =
+        {
+          {"numSteps",             required_argument, 0, 'n'},
+          {"dt",                   required_argument, 0, 'd'},
+          {"nbar",                 required_argument, 0, 'N'},
+          {"maxNumPtcls",          required_argument, 0, 'm'},
+          {"ptclWeight",           required_argument, 0, 'w'},
+          {"dipoleMatrixElement",  required_argument, 0, 'D'},
+          {"vbar",                 required_argument, 0, 'v'},
+          {"deltaV",               required_argument, 0, 'V'},
+          {"alpha",                required_argument, 0, 'a'},
+          {"kappa",                required_argument, 0, 'K'},
+          {0, 0, 0, 0}
+        };
+      int option_index = 0;
+
+      c = getopt_long(argn, argv, "n:d:N:m:w:D:v:V:a:K:",
+                      long_options, &option_index);
+
+      if (c == -1)
+        break;
+
+      switch (c) {
+      case 'n':
+        if (sscanf(optarg, "%d", &conf->numSteps) != 1) {
+          printf("Unable to parse argument to option -n, --numSteps\n");
+          printUsage();
+          exit(-1);
+        }
+        break;
+      case 'd':
+        if (sscanf(optarg, "%lf", &conf->dt) != 1) {
+          printf("Unable to parse argument to option -d, --dt\n");
+          printUsage();
+          exit(-1);
+        }
+        break;
+      case 'N':
+        if (sscanf(optarg, "%lf", &conf->nbar) != 1) {
+          printf("Unable to parse argument to option -N, --nbar\n");
+          printUsage();
+          exit(-1);
+        }
+        break;
+      case 'm':
+        if (sscanf(optarg, "%d", &conf->maxNumParticles) != 1) {
+          printf("Unable to parse argument to option -m, --maxNumPtcls\n");
+          printUsage();
+          exit(-1);
+        }
+        break;
+      case 'w':
+        if (sscanf(optarg, "%lf", &conf->particleWeight) != 1) {
+          printf("Unable to parse argument to option -w, --ptclWeight\n");
+          printUsage();
+          exit(-1);
+        }
+        break;
+      case 'D':
+        if (sscanf(optarg, "%lf", &conf->dipoleMatrixElement) != 1) {
+          printf("Unable to parse argument to option -D, --dipoleMatrixElement\n");
+          printUsage();
+          exit(-1);
+        }
+        break;
+      case 'v':
+        if (sscanf(optarg, "%lf", &conf->vbar) != 1) {
+          printf("Unable to parse argument to option -v, --vbar\n");
+          printUsage();
+          exit(-1);
+        }
+        break;
+      case 'V':
+        if (sscanf(optarg, "%lf", &conf->deltaV) != 1) {
+          printf("Unable to parse argument to option -V, --deltaV\n");
+          printUsage();
+          exit(-1);
+        }
+        break;
+      case 'a':
+        if (sscanf(optarg, "%lf", &conf->alpha) != 1) {
+          printf("Unable to parse argument to option -a, --alpha\n");
+          printUsage();
+          exit(-1);
+        }
+        break;
+      case 'K':
+        if (sscanf(optarg, "%lf", &conf->kappa) != 1) {
+          printf("Unable to parse argument to option -K, --kappa\n");
+          printUsage();
+          exit(-1);
+        }
+        break;
+      case '?':
+        /* getopt_long already printed an error message. */
+        break;
+      default:
+        abort();
+      }
+    }
+
+  /* Print any remaining command line arguments (not options). */
+  if (optind < argn) {
+    printf ("non-option ARGV-elements: ");
+    while (optind < argn)
+      printf ("%s ", argv[optind++]);
+    putchar ('\n');
+  }
+}
 void particleSink(const struct Configuration *conf,
                   struct BLEnsemble *ensemble) {
   blEnsembleRemoveBelow(conf->simulationDomain.zmin, ensemble->z, ensemble);
@@ -276,4 +395,23 @@ struct ParticleSource *constructParticleSources(
   particleSource = blParticleSourceUniformCreate(
       volume, numPtcls, vbar, deltaV, 4, internalState, 0);
   return particleSource;
+}
+
+void printUsage() {
+  printf("Simulation of beam laser with two level atoms\n"
+         "\n"
+         "Options:\n"
+         "-n, --numSteps:           Number of steps to take.\n"
+         "-d, --dt:                 Time step size.\n"
+         "-N, --nbar:               Mean number of particles in simulation domain.\n"
+         "-m, --maxNumPtcl          Maximum number of particles.\n"
+         "-w, --ptclWeight          Number of physical particles represented by each\n"
+         "                          simulation particle.\n"
+         "-D, --dipoleMatrixElement Dipole matrix element of transition with\n"
+         "                          Clebsch-Gordan coefficient of one.\n"
+         "-v, --vbar                Mean velocity of atoms.\n"
+         "-V, --deltaV              Longitudinal velocity spread.\n"
+         "-a, --alpha               Beam divergence.\n"
+         "-K, --kappa               Cavity damping rate.\n"
+         );
 }
