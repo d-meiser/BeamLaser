@@ -27,14 +27,13 @@ int main(int argn, char **argv) {
   myRank = 0;
 #endif
 
-  double x[2] = {myRank == 0 ? 1.0 : 2.0};
-  double y[2] = {0};
+  double x = myRank == 0 ? 1.0 : 2.0;
+  double y = 0;
 
-  BL_MPI_Request req = blBcastBegin(x, y, 1);
-  blBcastEnd(req, x, y, 1);
-  printf("%d %lf\n", myRank, y[0]);
+  BL_MPI_Request req = blBcastBegin(&x, &y, 1);
+  blBcastEnd(req, &x, &y, 1);
 
-  assert(fabs(y[0] - 1.0) < 1.0e-13);
+  assert(fabs(y - 1.0) < 1.0e-13);
 
 #ifdef BL_WITH_MPI
   status = MPI_Finalize();
