@@ -177,11 +177,12 @@ void processCommandLineArgs(struct Configuration *conf, int argn, char **argv) {
           {"deltaV",               required_argument, 0, 'V'},
           {"alpha",                required_argument, 0, 'a'},
           {"kappa",                required_argument, 0, 'K'},
+          {"help",                 required_argument, 0, 'h'},
           {0, 0, 0, 0}
         };
       int option_index = 0;
 
-      c = getopt_long(argn, argv, "n:d:N:m:w:D:v:V:a:K:",
+      c = getopt_long(argn, argv, "n:d:N:m:w:D:v:V:a:K:h",
                       long_options, &option_index);
 
       if (c == -1)
@@ -258,6 +259,9 @@ void processCommandLineArgs(struct Configuration *conf, int argn, char **argv) {
           exit(-1);
         }
         break;
+      case 'h':
+        printUsage();
+        exit(0);
       case '?':
         /* getopt_long already printed an error message. */
         break;
@@ -398,7 +402,11 @@ struct ParticleSource *constructParticleSources(
 }
 
 void printUsage() {
-  printf("Simulation of beam laser with two level atoms\n"
+  printf("\n"
+         "BeamLaserTLA --- Simulation of beam laser with two level atoms\n"
+         "\n"
+         "\n"
+         "Usage: BeamLaserTLA [options]\n"
          "\n"
          "Options:\n"
          "-n, --numSteps:           Number of steps to take.\n"
@@ -413,5 +421,7 @@ void printUsage() {
          "-V, --deltaV              Longitudinal velocity spread.\n"
          "-a, --alpha               Beam divergence.\n"
          "-K, --kappa               Cavity damping rate.\n"
+         "-h, --help                Print this message.\n"
+         "\n"
          );
 }
