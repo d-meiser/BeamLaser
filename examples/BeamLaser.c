@@ -235,14 +235,12 @@ void interactionRHS(double t, int n, const double *x, double *y,
                         x, y, (double*)&polarization);
 
 
+  BL_MPI_Request polReq =
+    blAddAllBegin((const double*)&polarization, y + fieldOffset, 2);
   for (i = 0; i < numPtcls; ++i) {
     y[i] *= fieldAmplitude;
   }
-
-#ifdef BL_WITH_MPI
-  MPI_Wait(&polRedReq, MPI_STATUS_IGNORE);
-#else
-#endif
+  blAddAllEnd(polReq, (const double*)&polarization, y + fieldOffset, 2);
 }
 
 
