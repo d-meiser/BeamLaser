@@ -188,12 +188,12 @@ void blFieldAtomInteraction(double dt, struct FieldState *fieldState,
   been scattered to each rank we integrate its equations of motion redundantly.
   */
   BL_MPI_Request fieldRequest =
-    blScatterBegin((const double*)fieldState, ensemble->internalState + fieldOffset, 2);
+    blBcastBegin((const double*)fieldState, ensemble->internalState + fieldOffset, 2);
   for (i = 0; i < ensemble->numPtcls; ++i) {
     modeFunction(ensemble->x[i], ensemble->y[i], ensemble->z[i],
         &integratorCtx->ex[i], &integratorCtx->ey[i], &integratorCtx->ez[i]);
   }
-  blScatterEnd(fieldRequest, (const double*)fieldState,
+  blBcastEnd(fieldRequest, (const double*)fieldState,
                   ensemble->internalState + fieldOffset, 2);
 
   blIntegratorTakeStep(integrator, 0.0, dt, n, interactionRHS,

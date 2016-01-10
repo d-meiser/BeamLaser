@@ -30,19 +30,18 @@ double blGenerateGaussianNoise(double mu, double sigma) {
   return z0 * sigma + mu;
 }
 
-BL_MPI_Request blScatterBegin(const double *src, double *dest, int n) {
-#ifdef BL_WITH_MPI
-  BL_MPI_Request scatterReq;
-  MPI_Iscatter(src, n, MPI_DOUBLE, dest, n, MPI_DOUBLE, 0,
-      MPI_COMM_WORLD, &scatterReq);
-  return scatterReq;
-#else
+BL_MPI_Request blBcastBegin(const double *src, double *dest, int n) {
   memcpy(dest, src, n * sizeof(*src));
+#ifdef BL_WITH_MPI
+  BL_MPI_Request bcastReq;
+  MPI_Ibcast(dest, n, MPI_DOUBLE, 0, MPI_COMM_WORLD, &bcastReq);
+  return bcastReq;
+#else
   return 0;
 #endif
 }
 
-void blScatterEnd(BL_MPI_Request req, const double *src, double *dest, int n) {
+void blBcastEnd(BL_MPI_Request req, const double *src, double *dest, int n) {
 #ifdef BL_WITH_MPI
   BL_UNUSED(src);
   BL_UNUSED(dest);
