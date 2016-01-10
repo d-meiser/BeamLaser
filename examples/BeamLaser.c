@@ -16,10 +16,6 @@
 #include <math.h>
 #include <complex.h>
 
-#ifndef BL_WITH_MPI
-#define MPI_Request int
-#endif
-
 
 static const int INTERNAL_STATE_DIM = 4;
 
@@ -45,7 +41,7 @@ struct Configuration {
   double deltaV;
   double alpha;
   double kappa;
-  struct BBox simulationDomain;
+  struct BlBox simulationDomain;
 };
 
 struct IntegratorCtx {
@@ -65,10 +61,6 @@ struct ParticleSource *constructParticleSources(
 void blFieldUpdate(double dt, double kappa, struct FieldState *fieldState);
 void blFieldAtomInteraction(double dt, struct FieldState *fieldState,
         struct IntegratorCtx *integratorCtx, BLIntegrator integrator);
-void scatterFieldEnd(MPI_Request req, const struct FieldState *fieldState,
-    double *fieldDest);
-MPI_Request scatterFieldBegin(const struct FieldState *fieldState,
-    double *fieldDest);
 void interactionRHS(double t, int n, const double *x, double *y,
                     void *ctx);
 static void modeFunction(double x, double y, double z,
@@ -195,14 +187,14 @@ void blFieldAtomInteraction(double dt, struct FieldState *fieldState,
   needs to have room for at least two additional doubles. After the field has
   been scattered to each rank we integrate its equations of motion redundantly.
   */
-  MPI_Request fieldRequest =
-    scatterFieldBegin(fieldState, ensemble->internalState + fieldOffset);
+  BL_MPI_Request fieldRequest =
+    blBcastBegin((const double*)fieldState, ensemble->internalState + fieldOffset, 2);
   for (i = 0; i < ensemble->numPtcls; ++i) {
     modeFunction(ensemble->x[i], ensemble->y[i], ensemble->z[i],
         &integratorCtx->ex[i], &integratorCtx->ey[i], &integratorCtx->ez[i]);
   }
-  scatterFieldEnd(fieldRequest, fieldState,
-                  ensemble->internalState + fieldOffset);
+  blBcastEnd(fieldRequest, (const double*)fieldState,
+                  ensemble->internalState + fieldOffset, 2);
 
   blIntegratorTakeStep(integrator, 0.0, dt, n, interactionRHS,
                        ensemble->internalState, ensemble->internalState,
@@ -242,51 +234,15 @@ void interactionRHS(double t, int n, const double *x, double *y,
                         integratorCtx->ex, integratorCtx->ey, integratorCtx->ez,
                         x, y, (double*)&polarization);
 
-#ifdef BL_WITH_MPI
-  MPI_Request polRedReq;
-  MPI_Iallreduce(&polarization,
-                 y + fieldOffset, 2, MPI_DOUBLE, MPI_SUM,
-                 MPI_COMM_WORLD, &polRedReq);
-#else
-  *((double complex*)(y + fieldOffset)) = polarization;
-#endif
 
+  BL_MPI_Request polReq =
+    blAddAllBegin((const double*)&polarization, y + fieldOffset, 2);
   for (i = 0; i < numPtcls; ++i) {
     y[i] *= fieldAmplitude;
   }
-
-#ifdef BL_WITH_MPI
-  MPI_Wait(&polRedReq, MPI_STATUS_IGNORE);
-#else
-#endif
+  blAddAllEnd(polReq, (const double*)&polarization, y + fieldOffset, 2);
 }
 
-MPI_Request scatterFieldBegin(const struct FieldState *fieldState,
-    double *fieldDest) {
-#ifdef BL_WITH_MPI
-  MPI_Request scatterReq;
-  MPI_Iscatter(fieldState, 2, MPI_DOUBLE, fieldDest, 2, MPI_DOUBLE, 0,
-      MPI_COMM_WORLD, &scatterReq);
-  return scatterReq;
-#else
-  fieldDest[0] = fieldState->q;
-  fieldDest[1] = fieldState->p;
-  return 0;
-#endif
-}
-
-void scatterFieldEnd(MPI_Request req, const struct FieldState *fieldState,
-    double *fieldDest) {
-#ifdef BL_WITH_MPI
-  BL_UNUSED(fieldState);
-  BL_UNUSED(fieldDest);
-  MPI_Wait(&req, MPI_STATUS_IGNORE);
-#else
-  BL_UNUSED(req);
-  BL_UNUSED(fieldState);
-  BL_UNUSED(fieldDest);
-#endif
-}
 
 static void modeFunction(double x, double y, double z,
                          double *fx, double *fy, double *fz) {
@@ -300,7 +256,7 @@ static void modeFunction(double x, double y, double z,
 struct ParticleSource *constructParticleSources(
     const struct Configuration *conf) {
   struct ParticleSource *particleSource;
-  struct BBox volume = {
+  struct BlBox volume = {
     conf->simulationDomain.xmin,
     conf->simulationDomain.xmax,
     conf->simulationDomain.ymin,

@@ -29,6 +29,8 @@ endforeach()
 if(BL_WITH_MPI)
   set(MPI_TESTS
       testParticleSourceMPI
+      testBcast
+      testAddAll
       )
 
   foreach(t ${MPI_TESTS})

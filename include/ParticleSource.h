@@ -47,7 +47,7 @@ void blParticleSourceDestroy(struct ParticleSource *particleSource);
  *               particle sources.
  */
 struct ParticleSource *blParticleSourceUniformCreate(
-    struct BBox volume, int numPtcls,
+    struct BlBox volume, int numPtcls,
     double *vbar, double *deltaV,
     int internalStateSize, double *internalState,
     struct ParticleSource *next);
