@@ -13,5 +13,8 @@ if (BL_WITH_MPI)
 endif ()
 
 add_test(BeamLaserTLA BeamLaserTLA)
-add_test(BeamLaserTLA_MPI ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 2 ./BeamLaserTLA)
+if(BL_WITH_MPI)
+  add_test(BeamLaserTLA_MPI
+      ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 2 ./BeamLaserTLA)
+endif()
 
