@@ -33,6 +33,7 @@ struct SimulationState {
 
 struct Configuration {
   int numSteps;
+  int dumpPeriod;
   double dt;
   double nbar;
   int maxNumParticles;
@@ -122,7 +123,7 @@ int main(int argn, char **argv) {
         &integratorCtx, integrator);
     blFieldUpdate(0.5 * conf.dt, conf.kappa, &simulationState.fieldState);
     blEnsemblePush(0.5 * conf.dt, &simulationState.ensemble);
-    if (!rank) {
+    if (rank == 0 && ((i % conf.dumpPeriod) == 0)) {
       printf("%d %le %le\n", i,
              simulationState.fieldState.q, simulationState.fieldState.p);
     }
@@ -145,6 +146,7 @@ int main(int argn, char **argv) {
 
 void setDefaults(struct Configuration *conf) {
   conf->numSteps = 10;
+  conf->dumpPeriod = 1;
   conf->particleWeight = 1.0e6;
   conf->dipoleMatrixElement = 1.0e-5 * 1.0e-29;
   conf->nbar = 1.0e3;
@@ -170,6 +172,7 @@ void processCommandLineArgs(struct Configuration *conf, int argn, char **argv) {
       static struct option long_options[] =
         {
           {"numSteps",             required_argument, 0, 'n'},
+          {"dumpPeriod",           required_argument, 0, 'p'},
           {"dt",                   required_argument, 0, 'd'},
           {"nbar",                 required_argument, 0, 'N'},
           {"maxNumPtcls",          required_argument, 0, 'm'},
@@ -184,7 +187,7 @@ void processCommandLineArgs(struct Configuration *conf, int argn, char **argv) {
         };
       int option_index = 0;
 
-      c = getopt_long(argn, argv, "n:d:N:m:w:D:v:V:a:K:h",
+      c = getopt_long(argn, argv, "n:p:d:N:m:w:D:v:V:a:K:h",
                       long_options, &option_index);
 
       if (c == -1)
@@ -194,6 +197,13 @@ void processCommandLineArgs(struct Configuration *conf, int argn, char **argv) {
       case 'n':
         if (sscanf(optarg, "%d", &conf->numSteps) != 1) {
           printf("Unable to parse argument to option -n, --numSteps\n");
+          printUsage();
+          exit(-1);
+        }
+        break;
+      case 'p':
+        if (sscanf(optarg, "%d", &conf->dumpPeriod) != 1) {
+          printf("Unable to parse argument to option -p, --dumpPeriod\n");
           printUsage();
           exit(-1);
         }
@@ -290,6 +300,7 @@ void printUsage() {
          "\n"
          "Options:\n"
          "-n, --numSteps:           Number of steps to take.\n"
+         "-p, --dumpPeriod:         Number of steps between dumps.\n"
          "-d, --dt:                 Time step size.\n"
          "-N, --nbar:               Mean number of particles in simulation domain.\n"
          "-m, --maxNumPtcl          Maximum number of particles.\n"
