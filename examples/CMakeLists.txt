@@ -6,11 +6,15 @@ include_directories(
 if (BL_WITH_MPI)
   include_directories(${MPI_C_INCLUDE_PATH} SYSTEM)
 endif ()
-add_executable(BeamLaser BeamLaser.c)
-target_link_libraries(BeamLaser beamlaserlib ${SPRNG_LIB} m)
+add_executable(BeamLaserTLA BeamLaserTLA.c)
+target_link_libraries(BeamLaserTLA beamlaserlib ${SPRNG_LIB} m)
 if (BL_WITH_MPI)
-  target_link_libraries(BeamLaser ${MPI_C_LIBRARIES})
+  target_link_libraries(BeamLaserTLA ${MPI_C_LIBRARIES})
 endif ()
 
-add_test(BeamLaser BeamLaser)
+add_test(BeamLaserTLA BeamLaserTLA)
+if(BL_WITH_MPI)
+  add_test(BeamLaserTLA_MPI
+      ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 2 ./BeamLaserTLA)
+endif()
 
