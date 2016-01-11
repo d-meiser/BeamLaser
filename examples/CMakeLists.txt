@@ -12,5 +12,5 @@ if (BL_WITH_MPI)
   target_link_libraries(BeamLaserTLA ${MPI_C_LIBRARIES})
 endif ()
 
-add_test(BeamLaser BeamLaser)
+add_test(BeamLaserTLA BeamLaserTLA)
 
