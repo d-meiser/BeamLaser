@@ -56,6 +56,7 @@ struct IntegratorCtx {
 void setDefaults(struct Configuration *conf);
 void processCommandLineArgs(struct Configuration *conf, int argn, char **argv);
 void printUsage();
+void adjustNumPtclsForNumRanks(struct Configuration *conf);
 void particleSink(const struct Configuration *conf, struct BLEnsemble *ensemble);
 void processParticleSources(struct ParticleSource *particleSource,
                             struct BLEnsemble *ensemble);
@@ -92,6 +93,7 @@ int main(int argn, char **argv) {
 
   setDefaults(&conf);
   processCommandLineArgs(&conf, argn, argv);
+  adjustNumPtclsForNumRanks(&conf);
 
   blIntegratorCreate("RK4", conf.maxNumParticles * INTERNAL_STATE_DIM,
                      &integrator);
@@ -278,6 +280,41 @@ void processCommandLineArgs(struct Configuration *conf, int argn, char **argv) {
     putchar ('\n');
   }
 }
+
+void printUsage() {
+  printf("\n"
+         "BeamLaserTLA --- Simulation of beam laser with two level atoms\n"
+         "\n"
+         "\n"
+         "Usage: BeamLaserTLA [options]\n"
+         "\n"
+         "Options:\n"
+         "-n, --numSteps:           Number of steps to take.\n"
+         "-d, --dt:                 Time step size.\n"
+         "-N, --nbar:               Mean number of particles in simulation domain.\n"
+         "-m, --maxNumPtcl          Maximum number of particles.\n"
+         "-w, --ptclWeight          Number of physical particles represented by each\n"
+         "                          simulation particle.\n"
+         "-D, --dipoleMatrixElement Dipole matrix element of transition with\n"
+         "                          Clebsch-Gordan coefficient of one.\n"
+         "-v, --vbar                Mean velocity of atoms.\n"
+         "-V, --deltaV              Longitudinal velocity spread.\n"
+         "-a, --alpha               Beam divergence.\n"
+         "-K, --kappa               Cavity damping rate.\n"
+         "-h, --help                Print this message.\n"
+         "\n"
+         );
+}
+
+void adjustNumPtclsForNumRanks(struct Configuration *conf) {
+  int numRanks = 1;
+#ifdef BL_WITH_MPI
+  MPI_Comm_size(MPI_COMM_WORLD, &numRanks);
+#endif
+  conf->nbar /= numRanks;
+  conf->maxNumParticles /= numRanks;
+}
+
 void particleSink(const struct Configuration *conf,
                   struct BLEnsemble *ensemble) {
   blEnsembleRemoveBelow(conf->simulationDomain.zmin, ensemble->z, ensemble);
@@ -401,27 +438,3 @@ struct ParticleSource *constructParticleSources(
   return particleSource;
 }
 
-void printUsage() {
-  printf("\n"
-         "BeamLaserTLA --- Simulation of beam laser with two level atoms\n"
-         "\n"
-         "\n"
-         "Usage: BeamLaserTLA [options]\n"
-         "\n"
-         "Options:\n"
-         "-n, --numSteps:           Number of steps to take.\n"
-         "-d, --dt:                 Time step size.\n"
-         "-N, --nbar:               Mean number of particles in simulation domain.\n"
-         "-m, --maxNumPtcl          Maximum number of particles.\n"
-         "-w, --ptclWeight          Number of physical particles represented by each\n"
-         "                          simulation particle.\n"
-         "-D, --dipoleMatrixElement Dipole matrix element of transition with\n"
-         "                          Clebsch-Gordan coefficient of one.\n"
-         "-v, --vbar                Mean velocity of atoms.\n"
-         "-V, --deltaV              Longitudinal velocity spread.\n"
-         "-a, --alpha               Beam divergence.\n"
-         "-K, --kappa               Cavity damping rate.\n"
-         "-h, --help                Print this message.\n"
-         "\n"
-         );
-}
