@@ -56,7 +56,7 @@ struct IntegratorCtx {
 
 void setDefaults(struct Configuration *conf);
 void processCommandLineArgs(struct Configuration *conf, int argn, char **argv);
-void printUsage();
+void printUsage(const char* errorMessage);
 void adjustNumPtclsForNumRanks(struct Configuration *conf);
 void particleSink(const struct Configuration *conf, struct BLEnsemble *ensemble);
 void processParticleSources(struct ParticleSource *particleSource,
@@ -196,83 +196,72 @@ void processCommandLineArgs(struct Configuration *conf, int argn, char **argv) {
       switch (c) {
       case 'n':
         if (sscanf(optarg, "%d", &conf->numSteps) != 1) {
-          printf("Unable to parse argument to option -n, --numSteps\n");
-          printUsage();
+          printUsage("Unable to parse argument to option -n, --numSteps\n");
           exit(-1);
         }
         break;
       case 'p':
         if (sscanf(optarg, "%d", &conf->dumpPeriod) != 1) {
-          printf("Unable to parse argument to option -p, --dumpPeriod\n");
-          printUsage();
+          printUsage("Unable to parse argument to option -p, --dumpPeriod\n");
           exit(-1);
         }
         break;
       case 'd':
         if (sscanf(optarg, "%lf", &conf->dt) != 1) {
-          printf("Unable to parse argument to option -d, --dt\n");
-          printUsage();
+          printUsage("Unable to parse argument to option -d, --dt\n");
           exit(-1);
         }
         break;
       case 'N':
         if (sscanf(optarg, "%lf", &conf->nbar) != 1) {
-          printf("Unable to parse argument to option -N, --nbar\n");
-          printUsage();
+          printUsage("Unable to parse argument to option -N, --nbar\n");
           exit(-1);
         }
         break;
       case 'm':
         if (sscanf(optarg, "%d", &conf->maxNumParticles) != 1) {
-          printf("Unable to parse argument to option -m, --maxNumPtcls\n");
-          printUsage();
+          printUsage("Unable to parse argument to option -m, --maxNumPtcls\n");
           exit(-1);
         }
         break;
       case 'w':
         if (sscanf(optarg, "%lf", &conf->particleWeight) != 1) {
-          printf("Unable to parse argument to option -w, --ptclWeight\n");
-          printUsage();
+          printUsage("Unable to parse argument to option -w, --ptclWeight\n");
           exit(-1);
         }
         break;
       case 'D':
         if (sscanf(optarg, "%lf", &conf->dipoleMatrixElement) != 1) {
-          printf("Unable to parse argument to option -D, --dipoleMatrixElement\n");
-          printUsage();
+          printUsage("Unable to parse argument to option -D, --dipoleMatrixElement\n");
           exit(-1);
         }
         break;
       case 'v':
         if (sscanf(optarg, "%lf", &conf->vbar) != 1) {
-          printf("Unable to parse argument to option -v, --vbar\n");
-          printUsage();
+          printUsage("Unable to parse argument to option -v, --vbar\n");
           exit(-1);
         }
         break;
       case 'V':
         if (sscanf(optarg, "%lf", &conf->deltaV) != 1) {
-          printf("Unable to parse argument to option -V, --deltaV\n");
-          printUsage();
+          printUsage("Unable to parse argument to option -V, --deltaV\n");
           exit(-1);
         }
         break;
       case 'a':
         if (sscanf(optarg, "%lf", &conf->alpha) != 1) {
-          printf("Unable to parse argument to option -a, --alpha\n");
-          printUsage();
+          printUsage("Unable to parse argument to option -a, --alpha\n");
           exit(-1);
         }
         break;
       case 'K':
         if (sscanf(optarg, "%lf", &conf->kappa) != 1) {
-          printf("Unable to parse argument to option -K, --kappa\n");
-          printUsage();
+          printUsage("Unable to parse argument to option -K, --kappa\n");
           exit(-1);
         }
         break;
       case 'h':
-        printUsage();
+        printUsage(0);
         exit(0);
       case '?':
         /* getopt_long already printed an error message. */
@@ -291,30 +280,38 @@ void processCommandLineArgs(struct Configuration *conf, int argn, char **argv) {
   }
 }
 
-void printUsage() {
+void printUsage(const char* errorMessage) {
+  int myRank = 0;
+#ifdef BL_WITH_MPI
+  MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
+#endif
+  if (myRank) return;
+  if (errorMessage) {
+    printf("%s\n", errorMessage);
+  }
   printf("\n"
-         "BeamLaserTLA --- Simulation of beam laser with two level atoms\n"
-         "\n"
-         "\n"
-         "Usage: BeamLaserTLA [options]\n"
-         "\n"
-         "Options:\n"
-         "-n, --numSteps:           Number of steps to take.\n"
-         "-p, --dumpPeriod:         Number of steps between dumps.\n"
-         "-d, --dt:                 Time step size.\n"
-         "-N, --nbar:               Mean number of particles in simulation domain.\n"
-         "-m, --maxNumPtcl          Maximum number of particles.\n"
-         "-w, --ptclWeight          Number of physical particles represented by each\n"
-         "                          simulation particle.\n"
-         "-D, --dipoleMatrixElement Dipole matrix element of transition with\n"
-         "                          Clebsch-Gordan coefficient of one.\n"
-         "-v, --vbar                Mean velocity of atoms.\n"
-         "-V, --deltaV              Longitudinal velocity spread.\n"
-         "-a, --alpha               Beam divergence.\n"
-         "-K, --kappa               Cavity damping rate.\n"
-         "-h, --help                Print this message.\n"
-         "\n"
-         );
+           "BeamLaserTLA --- Simulation of beam laser with two level atoms\n"
+           "\n"
+           "\n"
+           "Usage: BeamLaserTLA [options]\n"
+           "\n"
+           "Options:\n"
+           "-n, --numSteps:           Number of steps to take.\n"
+           "-p, --dumpPeriod:         Number of steps between dumps.\n"
+           "-d, --dt:                 Time step size.\n"
+           "-N, --nbar:               Mean number of particles in simulation domain.\n"
+           "-m, --maxNumPtcl          Maximum number of particles.\n"
+           "-w, --ptclWeight          Number of physical particles represented by each\n"
+           "                          simulation particle.\n"
+           "-D, --dipoleMatrixElement Dipole matrix element of transition with\n"
+           "                          Clebsch-Gordan coefficient of one.\n"
+           "-v, --vbar                Mean velocity of atoms.\n"
+           "-V, --deltaV              Longitudinal velocity spread.\n"
+           "-a, --alpha               Beam divergence.\n"
+           "-K, --kappa               Cavity damping rate.\n"
+           "-h, --help                Print this message.\n"
+           "\n"
+           );
 }
 
 void adjustNumPtclsForNumRanks(struct Configuration *conf) {
