@@ -45,17 +45,21 @@ static void dipoleOperatorTLAApply(int stride, int numPtcls,
   double complex *x, *r;
   int i, j;
   for (i = 0; i < numPtcls; ++i) {
-    double complex ep = (ex[i] + I * ey[i]) * M_SQRT1_2;
     x = (double complex*)(psi + i * stride);
     r = (double complex*)(result + i * stride);
+
     for (j = 0; j < 2; ++j) {
       y[j] = 0;
     }
+
+    double ep = ex[i];
     y[0] = ep * x[1];
-    y[1] = conj(ep) * x[0];
+    y[1] = ep * x[0];
+
     for (j = 0; j < 2; ++j) {
       pol += conj(x[j]) * y[j];
     }
+
     for (j = 0; j < 2; ++j) {
       r[j] = y[j];
     }
