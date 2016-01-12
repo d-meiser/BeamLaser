@@ -20,6 +20,15 @@
 
 static const int INTERNAL_STATE_DIM = 4;
 
+static double Omega = 0.0;
+static const double epsilon0 = 8.85e-12;
+static const double hbar = 1.0e-34;
+static const double speedOfLight = 3.0e8;
+
+static const double waveNumber = 2.0 * M_PI / 1.0e-6;
+static const double sigmaE = 3.0e-5;
+static double L = 1.0e-2;
+
 struct FieldState {
   double q;
   double p;
@@ -47,6 +56,7 @@ struct Configuration {
 };
 
 struct IntegratorCtx {
+  const struct Configuration *conf;
   struct BLEnsemble *ensemble;
   struct BLDipoleOperator *dipoleOperator;
   double *ex;
@@ -96,11 +106,18 @@ int main(int argn, char **argv) {
   processCommandLineArgs(&conf, argn, argv);
   adjustNumPtclsForNumRanks(&conf);
 
+  double omega = 2.0 * M_PI * speedOfLight / 1.0e-6;
+  Omega = (1.0 / hbar) *
+    sqrt(hbar * omega / (epsilon0 * sigmaE * sigmaE *L)) *
+    conf.dipoleMatrixElement;
+  printf("Omega == %lf\n", Omega / 1.0e6 / (2.0 * M_PI));
+
   blIntegratorCreate("RK4", conf.maxNumParticles * INTERNAL_STATE_DIM,
                      &integrator);
 
   stat = blEnsembleInitialize(conf.maxNumParticles, INTERNAL_STATE_DIM,
       &simulationState.ensemble);
+  integratorCtx.conf = &conf;
   integratorCtx.ensemble = &simulationState.ensemble;
   integratorCtx.dipoleOperator = blDipoleOperatorTLACreate();
   integratorCtx.ex = malloc(conf.maxNumParticles * sizeof(double));
@@ -148,7 +165,7 @@ void setDefaults(struct Configuration *conf) {
   conf->numSteps = 10;
   conf->dumpPeriod = 1;
   conf->particleWeight = 1.0e6;
-  conf->dipoleMatrixElement = 1.0e-5 * 1.0e-29;
+  conf->dipoleMatrixElement = 1.0e-29;
   conf->nbar = 1.0e3;
   conf->maxNumParticles = 2000;
   conf->dt = 1.0e-8;
@@ -401,7 +418,7 @@ void interactionRHS(double t, int n, const double *x, double *y,
                         numPtcls,
                         integratorCtx->ex, integratorCtx->ey, integratorCtx->ez,
                         x, y, (double*)&polarization);
-
+  polarization *= integratorCtx->conf->particleWeight;
 
   BL_MPI_Request polReq =
     blAddAllBegin((const double*)&polarization, y + fieldOffset, 2);
@@ -414,10 +431,8 @@ void interactionRHS(double t, int n, const double *x, double *y,
 
 static void modeFunction(double x, double y, double z,
                          double *fx, double *fy, double *fz) {
-  const double sigmaE = 3.0e-5;
-  const double waveNumber = 2.0 * M_PI / 1.0e-6;
   *fx = 0;
-  *fy = exp(-(y * y + z * z) / (sigmaE * sigmaE)) * sin(waveNumber * x);
+  *fy = Omega * exp(-(y * y + z * z) / (sigmaE * sigmaE)) * sin(waveNumber * x);
   *fz = 0;
 }
 
