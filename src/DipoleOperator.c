@@ -40,6 +40,7 @@ static void dipoleOperatorTLAApply(int stride, int numPtcls,
     void *ctx) {
   BL_UNUSED(ctx);
   BL_UNUSED(ez);
+  BL_UNUSED(ey);
   double complex y[2];
   double complex pol = 0;
   double complex *x, *r;
@@ -73,6 +74,7 @@ static void dipoleOperatorTLAApplyNoPolarization(int stride, int numPtcls,
                                    void *ctx) {
   BL_UNUSED(ctx);
   BL_UNUSED(ez);
+  BL_UNUSED(ey);
   double complex y[2];
   double complex *x, *r;
   int i, j;
