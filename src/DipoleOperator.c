@@ -3,12 +3,6 @@
 #include <stdlib.h>
 #include <complex.h>
 
-#ifndef M_SQRT2
-#define M_SQRT2	1.41421356237309504880	/* sqrt(2) */
-#endif
-#ifndef M_SQRT1_2
-#define M_SQRT1_2	0.70710678118654752440	/* 1/sqrt(2) */
-#endif
 
 void blDipoleOperatorApply(struct BLDipoleOperator *op,
     int stride, int numPtcls,
@@ -79,14 +73,17 @@ static void dipoleOperatorTLAApplyNoPolarization(int stride, int numPtcls,
   double complex *x, *r;
   int i, j;
   for (i = 0; i < numPtcls; ++i) {
-    double complex ep = (ex[i] + I * ey[i]) * M_SQRT1_2;
     x = (double complex*)(psi + i * stride);
     r = (double complex*)(result + i * stride);
+
     for (j = 0; j < 2; ++j) {
       y[j] = 0;
     }
+
+    double ep = ex[i];
     y[0] = ep * x[1];
-    y[1] = conj(ep) * x[0];
+    y[1] = ep * x[0];
+
     for (j = 0; j < 2; ++j) {
       r[j] = y[j];
     }
