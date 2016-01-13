@@ -77,7 +77,13 @@ Ensure(PoissonDist, hasVarianceCloseToNBarForLargeN) {
       is_less_than_double(1.0e-1));
 }
 
-int main() {
+int main(int argn, char **argv) {
+#ifdef BL_WITH_MPI
+  MPI_Init(&argn, &argv);
+#else
+  BL_UNUSED(argn);
+  BL_UNUSED(argv);
+#endif
   TestSuite *suite = create_test_suite();
   add_test_with_context(suite, PoissonDist, isANonNegativeNumber);
   add_test_with_context(suite, PoissonDist, hasMeanCloseToNBar);
@@ -86,6 +92,9 @@ int main() {
   add_test_with_context(suite, PoissonDist, hasVarianceCloseToNBarForLargeN);
   int result = run_test_suite(suite, create_text_reporter());
   destroy_test_suite(suite);
+#ifdef BL_WITH_MPI
+  MPI_Finalize();
+#endif
   return result;
 }
 
