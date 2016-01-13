@@ -17,13 +17,14 @@ int blParticleSourceGetNumParticles(struct ParticleSource *particleSource) {
 
 void blParticleSourceCreateParticles(struct ParticleSource *particleSource,
     double *x, double *y, double *z, double *vx, double *vy, double *vz,
-    double *internalState) {
+    int internalStateSize, double *internalState) {
   if (particleSource) {
     particleSource->createParticles(x, y, z, vx, vy, vz, internalState,
         particleSource->ctx);
     int n = particleSource->getNumParticles(particleSource->ctx);
     blParticleSourceCreateParticles(particleSource->next,
-        x + n, y + n, z + n, vx + n, vy + n, vz + n, internalState + n);
+        x + n, y + n, z + n, vx + n, vy + n, vz + n,
+        internalStateSize, internalState + n * internalStateSize);
   }
 }
 

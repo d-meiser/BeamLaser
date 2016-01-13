@@ -29,7 +29,7 @@ int blParticleSourceGetNumParticles(struct ParticleSource *particleSource);
 /* Create particles for all sources in this list*/
 void blParticleSourceCreateParticles(struct ParticleSource *particleSource,
     double *x, double *y, double *z, double *vx, double *vy, double *vz,
-    double *internalState);
+    int internalStateSize, double *internalState);
 
 /* Destroy the sources in the particleSource list */
 void blParticleSourceDestroy(struct ParticleSource *particleSource);

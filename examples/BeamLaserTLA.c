@@ -355,6 +355,7 @@ void processParticleSources(struct ParticleSource *particleSource,
   blParticleSourceCreateParticles(particleSource,
                                   ensemble->x, ensemble->y, ensemble->z,
                                   ensemble->vx, ensemble->vy, ensemble->vz,
+                                  ensemble->internalStateSize,
                                   ensemble->internalState);
 }
 

@@ -51,7 +51,7 @@ Ensure(ParticleSource, uniformSourceCreatesParticlesInBox) {
   int i;
 
   blParticleSourceCreateParticles(particleSource, x, y, z, vx, vy, vz,
-      internalState);
+      INTERNAL_STATE_SIZE, internalState);
 
   for (i = 0; i < numPtcls; ++i) {
     assert_that_double(x[i], is_greater_than_double(volume.xmin - 1.0e-6));
