@@ -12,6 +12,7 @@ set(TESTS
     testIntegrator
     testParticleSource
     testPartition
+    testPoissonDist
     testPushParticles
     testRemoveParticles
     )
