@@ -110,7 +110,6 @@ int main(int argn, char **argv) {
   Omega = (1.0 / hbar) *
     sqrt(hbar * omega / (epsilon0 * sigmaE * sigmaE *L)) *
     conf.dipoleMatrixElement;
-  printf("Omega == %lf\n", Omega / 1.0e6 / (2.0 * M_PI));
 
   blIntegratorCreate("RK4", conf.maxNumParticles * INTERNAL_STATE_DIM,
                      &integrator);
@@ -141,9 +140,13 @@ int main(int argn, char **argv) {
     blFieldUpdate(0.5 * conf.dt, conf.kappa, &simulationState.fieldState);
     blEnsemblePush(0.5 * conf.dt, &simulationState.ensemble);
     if (rank == 0 && ((i % conf.dumpPeriod) == 0)) {
-      printf("%d %le %le\n", i,
+      printf("%9d  %9d  %le  %le\n", i, simulationState.ensemble.numPtcls,
              simulationState.fieldState.q, simulationState.fieldState.p);
     }
+  }
+  if (rank == 0) {
+    printf("%9d  %9d  %le  %le\n", i, simulationState.ensemble.numPtcls,
+        simulationState.fieldState.q, simulationState.fieldState.p);
   }
 
 
@@ -431,8 +434,8 @@ void interactionRHS(double t, int n, const double *x, double *y,
 
 static void modeFunction(double x, double y, double z,
                          double *fx, double *fy, double *fz) {
-  *fx = 0;
-  *fy = Omega * exp(-(y * y + z * z) / (sigmaE * sigmaE)) * sin(waveNumber * x);
+  *fx = Omega * exp(-(y * y + z * z) / (sigmaE * sigmaE)) * sin(waveNumber * x);
+  *fy = 0;
   *fz = 0;
 }
 
@@ -446,7 +449,7 @@ struct ParticleSource *constructParticleSources(
     conf->simulationDomain.ymax,
     conf->simulationDomain.zmax,
     conf->simulationDomain.zmax + conf->dt * conf->vbar};
-  int numPtcls = round(
+  int numPtcls = ceil(
       conf->nbar *
       (conf->dt * conf->vbar) /
       (conf->simulationDomain.zmax - conf->simulationDomain.zmin)
