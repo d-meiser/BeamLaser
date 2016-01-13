@@ -6,6 +6,10 @@
 #include <assert.h>
 #include <math.h>
 
+
+#define MAX_NUM_PTCLS 10
+
+
 int main(int argn, char **argv) {
   int result = 0;
 #ifdef BL_WITH_MPI
@@ -20,13 +24,15 @@ int main(int argn, char **argv) {
   struct BlBox box = {0, 1, 0, 1, 0, 1};
   double vbar[] = {0, 0, 0};
   double deltaV[] = {2.3, 3.5, 7.5};
-  double internalState[] = {1, 0, 0, 0};
+  double initialState[] = {1, 0, 0, 0};
   static const int internalStateSize = 4;
   struct ParticleSource *particleSource =
     blParticleSourceUniformCreate(box, 1, vbar, deltaV,
-        internalStateSize, internalState, 0);
+        internalStateSize, initialState, 0);
 
-  double x[1], y[1], z[1], vx[1], vy[1], vz[1];
+  double x[MAX_NUM_PTCLS], y[MAX_NUM_PTCLS], z[MAX_NUM_PTCLS],
+         vx[MAX_NUM_PTCLS], vy[MAX_NUM_PTCLS], vz[MAX_NUM_PTCLS];
+  double internalState[4 * MAX_NUM_PTCLS];
 
   blParticleSourceCreateParticles(particleSource,
                                   x, y, z, vx, vy, vz,
