@@ -77,10 +77,20 @@ void blEnsembleRemoveBelow(double cutoff, double *positions,
 
 void blEnsemblePush(double dt, struct BLEnsemble *ensemble) {
   int i;
+  double * restrict x = ensemble->x;
+  double * restrict y = ensemble->y;
+  double * restrict z = ensemble->z;
+  const double * restrict vx = ensemble->vx;
+  const double * restrict vy = ensemble->vy;
+  const double * restrict vz = ensemble->vz;
   for (i = 0; i < ensemble->numPtcls; ++i) {
-    ensemble->x[i] += dt * ensemble->vx[i];
-    ensemble->y[i] += dt * ensemble->vy[i];
-    ensemble->z[i] += dt * ensemble->vz[i];
+    x[i] += dt * vx[i];
+  }
+  for (i = 0; i < ensemble->numPtcls; ++i) {
+    y[i] += dt * vy[i];
+  }
+  for (i = 0; i < ensemble->numPtcls; ++i) {
+    z[i] += dt * vz[i];
   }
 }
 
