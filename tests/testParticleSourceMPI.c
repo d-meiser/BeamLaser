@@ -21,13 +21,16 @@ int main(int argn, char **argv) {
   double vbar[] = {0, 0, 0};
   double deltaV[] = {2.3, 3.5, 7.5};
   double internalState[] = {1, 0, 0, 0};
+  static const int internalStateSize = 4;
   struct ParticleSource *particleSource =
-    blParticleSourceUniformCreate(box, 1, vbar, deltaV, 4, internalState, 0);
+    blParticleSourceUniformCreate(box, 1, vbar, deltaV,
+        internalStateSize, internalState, 0);
 
   double x[1], y[1], z[1], vx[1], vy[1], vz[1];
 
   blParticleSourceCreateParticles(particleSource,
-                                  x, y, z, vx, vy, vz, internalState);
+                                  x, y, z, vx, vy, vz,
+                                  internalStateSize, internalState);
 
 #ifdef BL_WITH_MPI
   int numRanks;
