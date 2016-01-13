@@ -434,6 +434,7 @@ void interactionRHS(double t, int n, const double *x, double *y,
   blAddAllEnd(polReq, (const double*)&polarization, y + fieldOffset, 2);
 }
 
+#define MODE_FUN_CHUNK_SIZE 16
 
 void modeFunction(int n,
     const double * restrict x,
@@ -442,15 +443,44 @@ void modeFunction(int n,
     double * restrict fx,
     double * restrict fy,
     double * restrict fz) {
-  int i;
-  for (i = 0; i < n; ++i) {
-    double arge = -(y[i] * y[i] + z[i] * z[i] / (sigmaE * sigmaE));
-    double args = -(waveNumber * x[i]);
-    fx[i] = Omega * exp(arge) * sin(args);
+  int i, j;
+  for (i = 0; i < n; i += MODE_FUN_CHUNK_SIZE) {
+
+    double gaussianTerm[MODE_FUN_CHUNK_SIZE];
+    for (j = 0; j < MODE_FUN_CHUNK_SIZE; ++j) {
+      gaussianTerm[j] = -(y[i + j] * y[i + j] + z[i + j] * z[i + j] / (sigmaE * sigmaE));
+    }
+    for (j = 0; j < MODE_FUN_CHUNK_SIZE; ++j) {
+      gaussianTerm[j] = exp(gaussianTerm[j]);
+    }
+
+    double sineTerm[MODE_FUN_CHUNK_SIZE];
+    for (j = 0; j < MODE_FUN_CHUNK_SIZE; ++j) {
+      sineTerm[j] = waveNumber * x[i + j];
+    }
+    for (j = 0; j < MODE_FUN_CHUNK_SIZE; ++j) {
+      sineTerm[j] = sin(sineTerm[j]);
+    }
+
+    for (j = 0; j < MODE_FUN_CHUNK_SIZE; ++j) {
+      fx[i + j] = Omega * gaussianTerm[j] * sineTerm[j];
+    }
   }
+
+  /* clean up of peeled loop */
+  if (i != n) {
+    i -= MODE_FUN_CHUNK_SIZE;
+    for (; i < n; ++i) {
+      double arge = -(y[i] * y[i] + z[i] * z[i] / (sigmaE * sigmaE));
+      double args = -(waveNumber * x[i]);
+      fx[i] = Omega * exp(arge) * sin(args);
+    }
+  }
+
   for (i = 0; i < n; ++i) {
     fy[i] = 0;
   }
+
   for (i = 0; i < n; ++i) {
     fz[i] = 0;
   }
