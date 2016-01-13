@@ -78,8 +78,13 @@ void blFieldAtomInteraction(double dt, struct FieldState *fieldState,
         struct IntegratorCtx *integratorCtx, BLIntegrator integrator);
 void interactionRHS(double t, int n, const double *x, double *y,
                     void *ctx);
-static void modeFunction(double x, double y, double z,
-                         double *fx, double *fy, double *fz);
+static void modeFunction(int n,
+    const double * restrict x,
+    const double * restrict y,
+    const double * restrict z,
+    double * restrict fx,
+    double * restrict fy,
+    double * restrict fz);
 
 int main(int argn, char **argv) {
 #ifdef BL_WITH_MPI
@@ -366,7 +371,6 @@ void blFieldUpdate(double dt, double kappa, struct FieldState *fieldState) {
 
 void blFieldAtomInteraction(double dt, struct FieldState *fieldState,
         struct IntegratorCtx *integratorCtx, BLIntegrator integrator) {
-  int i;
   struct BLEnsemble *ensemble = integratorCtx->ensemble;
   const int numPtcls = ensemble->numPtcls;
   const int fieldOffset = numPtcls * ensemble->internalStateSize;
@@ -378,10 +382,8 @@ void blFieldAtomInteraction(double dt, struct FieldState *fieldState,
   */
   BL_MPI_Request fieldRequest =
     blBcastBegin((const double*)fieldState, ensemble->internalState + fieldOffset, 2);
-  for (i = 0; i < ensemble->numPtcls; ++i) {
-    modeFunction(ensemble->x[i], ensemble->y[i], ensemble->z[i],
-        &integratorCtx->ex[i], &integratorCtx->ey[i], &integratorCtx->ez[i]);
-  }
+  modeFunction(ensemble->numPtcls, ensemble->x, ensemble->y, ensemble->z,
+      integratorCtx->ex, integratorCtx->ey, integratorCtx->ez);
   blBcastEnd(fieldRequest, (const double*)fieldState,
                   ensemble->internalState + fieldOffset, 2);
 
@@ -433,11 +435,25 @@ void interactionRHS(double t, int n, const double *x, double *y,
 }
 
 
-static void modeFunction(double x, double y, double z,
-                         double *fx, double *fy, double *fz) {
-  *fx = Omega * exp(-(y * y + z * z) / (sigmaE * sigmaE)) * sin(waveNumber * x);
-  *fy = 0;
-  *fz = 0;
+void modeFunction(int n,
+    const double * restrict x,
+    const double * restrict y,
+    const double * restrict z,
+    double * restrict fx,
+    double * restrict fy,
+    double * restrict fz) {
+  int i;
+  for (i = 0; i < n; ++i) {
+    double arge = -(y[i] * y[i] + z[i] * z[i] / (sigmaE * sigmaE));
+    double args = -(waveNumber * x[i]);
+    fx[i] = Omega * exp(arge) * sin(args);
+  }
+  for (i = 0; i < n; ++i) {
+    fy[i] = 0;
+  }
+  for (i = 0; i < n; ++i) {
+    fz[i] = 0;
+  }
 }
 
 struct ParticleSource *constructParticleSources(
