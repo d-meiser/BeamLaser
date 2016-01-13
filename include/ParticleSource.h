@@ -29,7 +29,7 @@ int blParticleSourceGetNumParticles(struct ParticleSource *particleSource);
 /* Create particles for all sources in this list*/
 void blParticleSourceCreateParticles(struct ParticleSource *particleSource,
     double *x, double *y, double *z, double *vx, double *vy, double *vz,
-    double *internalState);
+    int internalStateSize, double *internalState);
 
 /* Destroy the sources in the particleSource list */
 void blParticleSourceDestroy(struct ParticleSource *particleSource);
@@ -38,8 +38,8 @@ void blParticleSourceDestroy(struct ParticleSource *particleSource);
 /** Constructor for a spatially uniform particle source
  *
  * @param volume The cubic volume in which the particles are created
- * @param numPtcls   The number of particles produced by each call to
- *               blParticleSourceCreateParticles
+ * @param nbar   The average number of particles produced by each call
+ *               to blParticleSourceCreateParticles
  * @param vbar   Three vector with average velocity of particles
  * @param deltaV Three vector with standard deviations of particle
  *               velocities
@@ -47,7 +47,7 @@ void blParticleSourceDestroy(struct ParticleSource *particleSource);
  *               particle sources.
  */
 struct ParticleSource *blParticleSourceUniformCreate(
-    struct BlBox volume, int numPtcls,
+    struct BlBox volume, double nbar,
     double *vbar, double *deltaV,
     int internalStateSize, double *internalState,
     struct ParticleSource *next);

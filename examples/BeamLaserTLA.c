@@ -355,6 +355,7 @@ void processParticleSources(struct ParticleSource *particleSource,
   blParticleSourceCreateParticles(particleSource,
                                   ensemble->x, ensemble->y, ensemble->z,
                                   ensemble->vx, ensemble->vy, ensemble->vz,
+                                  ensemble->internalStateSize,
                                   ensemble->internalState);
 }
 
@@ -449,18 +450,16 @@ struct ParticleSource *constructParticleSources(
     conf->simulationDomain.ymax,
     conf->simulationDomain.zmax,
     conf->simulationDomain.zmax + conf->dt * conf->vbar};
-  int numPtcls = ceil(
-      conf->nbar *
+  double nbar = conf->nbar *
       (conf->dt * conf->vbar) /
-      (conf->simulationDomain.zmax - conf->simulationDomain.zmin)
-      );
+      (conf->simulationDomain.zmax - conf->simulationDomain.zmin);
   double vbar[] = {0, 0, -conf->vbar};
   double deltaV[] = {
     conf->alpha * conf->deltaV, conf->alpha * conf->deltaV, conf->deltaV};
   double internalState[] = {0, 0, 1, 0};
 
   particleSource = blParticleSourceUniformCreate(
-      volume, numPtcls, vbar, deltaV, 4, internalState, 0);
+      volume, nbar, vbar, deltaV, 4, internalState, 0);
   return particleSource;
 }
 

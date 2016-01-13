@@ -7,6 +7,9 @@
 #include <sprng.h>
 
 
+static int blGeneratePoissonKnuth(double lambda);
+
+
 double blGenerateGaussianNoise(double mu, double sigma) {
   const double epsilon = DBL_EPSILON;
   const double two_pi = 2.0*3.14159265358979323846;
@@ -28,6 +31,30 @@ double blGenerateGaussianNoise(double mu, double sigma) {
   z0 = sqrt(-2.0 * log(u1)) * cos(two_pi * u2);
   z1 = sqrt(-2.0 * log(u1)) * sin(two_pi * u2);
   return z0 * sigma + mu;
+}
+
+int blGeneratePoisson(double nbar) {
+  static const double thresholdKnuth = 25.0;
+  if (nbar < thresholdKnuth) {
+    return blGeneratePoissonKnuth(nbar);
+  } else {
+    int sample;
+    do {
+      sample = round(blGenerateGaussianNoise(nbar, sqrt(nbar)));
+    } while (sample < 0);
+    return sample;
+  }
+}
+
+static int blGeneratePoissonKnuth(double lambda) {
+  double L = exp(-lambda);
+  int k = 0;
+  double p = 1.0;
+  do {
+    ++k;
+    p *= sprng();
+  } while (p > L);
+  return k - 1;
 }
 
 BL_MPI_Request blBcastBegin(const double *src, double *dest, int n) {

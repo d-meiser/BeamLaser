@@ -25,6 +25,7 @@ struct BlBox {
 };
 
 double blGenerateGaussianNoise(double mu, double sigma);
+int blGeneratePoisson(double nbar);
 
 BL_MPI_Request blBcastBegin(const double *src, double *dest, int n);
 void blBcastEnd(BL_MPI_Request req, const double *src, double *dest, int n);
