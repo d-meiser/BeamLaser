@@ -64,6 +64,13 @@ struct IntegratorCtx {
   double *ez;
 };
 
+struct BLDiagnostics {
+  void (*process)(int i, struct SimulationState *simulationState, void *ctx);
+  void (*destroy)(void *ctx);
+  void *ctx;
+  struct BLDiagnostics *next;
+};
+
 void setDefaults(struct Configuration *conf);
 void processCommandLineArgs(struct Configuration *conf, int argn, char **argv);
 void printUsage(const char* errorMessage);
@@ -86,6 +93,13 @@ static void modeFunction(int n,
     double * restrict fy,
     double * restrict fz);
 
+void blDiagnosticsProcess(struct BLDiagnostics *diagnostics, int i,
+    struct SimulationState *simulationState);
+void blDiagnosticsProcessDestroy(struct BLDiagnostics *diagnostics);
+
+struct BLDiagnostics* blDiagnosticFieldStateCreate(int dumpPeriodicity,
+    struct BLDiagnostics* next);
+
 int main(int argn, char **argv) {
 #ifdef BL_WITH_MPI
   MPI_Init(&argn, &argv);
@@ -98,6 +112,7 @@ int main(int argn, char **argv) {
   struct IntegratorCtx integratorCtx;
   struct ParticleSource *particleSource;
   BLIntegrator integrator;
+  struct BLDiagnostics *diagnostics = 0;
   BL_STATUS stat;
   int i, rank;
 
@@ -134,6 +149,7 @@ int main(int argn, char **argv) {
   if (stat != BL_SUCCESS) return stat;
 
   particleSource = constructParticleSources(&conf);
+  diagnostics = blDiagnosticFieldStateCreate(conf.dumpPeriod, 0);
 
   for (i = 0; i < conf.numSteps; ++i) {
     particleSink(&conf, &simulationState.ensemble);
@@ -144,10 +160,7 @@ int main(int argn, char **argv) {
         &integratorCtx, integrator);
     blFieldUpdate(0.5 * conf.dt, conf.kappa, &simulationState.fieldState);
     blEnsemblePush(0.5 * conf.dt, &simulationState.ensemble);
-    if (rank == 0 && ((i % conf.dumpPeriod) == 0)) {
-      printf("%9d  %9d  %le  %le\n", i, simulationState.ensemble.numPtcls,
-             simulationState.fieldState.q, simulationState.fieldState.p);
-    }
+    blDiagnosticsProcess(diagnostics, i, &simulationState);
   }
   if (rank == 0) {
     printf("%9d  %9d  %le  %le\n", i, simulationState.ensemble.numPtcls,
@@ -155,6 +168,7 @@ int main(int argn, char **argv) {
   }
 
 
+  blDiagnosticsProcessDestroy(diagnostics);
   blParticleSourceDestroy(particleSource);
   blDipoleOperatorDestroy(integratorCtx.dipoleOperator);
   free(integratorCtx.ex);
@@ -509,3 +523,58 @@ struct ParticleSource *constructParticleSources(
   return particleSource;
 }
 
+void blDiagnosticsProcess(struct BLDiagnostics *diagnostics, int i,
+    struct SimulationState *simulationState) {
+  while (diagnostics) {
+    diagnostics->process(i, simulationState, diagnostics->ctx);
+    diagnostics = diagnostics->next;
+  }
+}
+
+void blDiagnosticsProcessDestroy(struct BLDiagnostics *diagnostics) {
+  if (diagnostics) {
+    struct BLDiagnostics *next = diagnostics->next;
+    diagnostics->destroy(diagnostics->ctx);
+    free(diagnostics);
+    blDiagnosticsProcessDestroy(next);
+  }
+}
+
+struct BLDiagnosticsFieldStateCtx {
+  int dumpPeriodicity;
+};
+
+static void blDiagnosticsFieldStateProcess(int i,
+    struct SimulationState* simulationState, void *c) {
+  struct BLDiagnosticsFieldStateCtx *ctx = c;
+  int rank = 0;
+#ifdef BL_WITH_MPI
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+#endif
+  if (rank == 0 && ((i % ctx->dumpPeriodicity) == 0)) {
+    printf("%9d  %9d  %le  %le\n", i,
+        simulationState->ensemble.numPtcls,
+        simulationState->fieldState.q,
+        simulationState->fieldState.p);
+  }
+}
+
+static void blDiagnosticsFieldStateDestroy(void *ctx) {
+  free(ctx);
+}
+
+struct BLDiagnostics* blDiagnosticFieldStateCreate(int dumpPeriodicity,
+    struct BLDiagnostics* next) {
+  struct BLDiagnostics *this = malloc(sizeof(*this));
+  this->process = blDiagnosticsFieldStateProcess;
+  this->destroy = blDiagnosticsFieldStateDestroy;
+  struct BLDiagnosticsFieldStateCtx *ctx = malloc(sizeof(*ctx));
+  ctx->dumpPeriodicity = dumpPeriodicity;
+  this->ctx = ctx;
+  this->next = next;
+  return this;
+}
+
+static void blDiagnosticsFieldStateProcess(int i,
+    struct SimulationState* simulationState, void *ctx);
+static void blDiagnosticsFieldStateDestroy(void *ctx);
