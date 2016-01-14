@@ -99,6 +99,8 @@ void blDiagnosticsProcessDestroy(struct BLDiagnostics *diagnostics);
 
 struct BLDiagnostics* blDiagnosticFieldStateCreate(int dumpPeriodicity,
     struct BLDiagnostics* next);
+struct BLDiagnostics* blDiagnosticPtclsCreate(int dumpPeriodicity,
+    const char *filename, struct BLDiagnostics* next);
 
 int main(int argn, char **argv) {
 #ifdef BL_WITH_MPI
@@ -150,6 +152,7 @@ int main(int argn, char **argv) {
 
   particleSource = constructParticleSources(&conf);
   diagnostics = blDiagnosticFieldStateCreate(conf.dumpPeriod, 0);
+  diagnostics = blDiagnosticPtclsCreate(conf.dumpPeriod, argv[0], diagnostics);
 
   for (i = 0; i < conf.numSteps; ++i) {
     particleSink(&conf, &simulationState.ensemble);
@@ -540,6 +543,10 @@ void blDiagnosticsProcessDestroy(struct BLDiagnostics *diagnostics) {
   }
 }
 
+
+/*
+ * Field diagnostics
+ */
 struct BLDiagnosticsFieldStateCtx {
   int dumpPeriodicity;
 };
@@ -575,6 +582,67 @@ struct BLDiagnostics* blDiagnosticFieldStateCreate(int dumpPeriodicity,
   return this;
 }
 
-static void blDiagnosticsFieldStateProcess(int i,
-    struct SimulationState* simulationState, void *ctx);
-static void blDiagnosticsFieldStateDestroy(void *ctx);
+/*
+ * Atom diagnostics
+ */
+struct BLDiagnosticsPtclsCtx {
+  int dumpPeriodicity;
+  const char *fileName;
+};
+
+static void blDiagnosticsPtclsProcess(int i,
+    struct SimulationState* simulationState, void *c) {
+  struct BLDiagnosticsPtclsCtx *ctx = c;
+  int rank = 0;
+#ifdef BL_WITH_MPI
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+#endif
+  char fileName[1000];
+  sprintf(fileName, "%s_%d_%d.txt", ctx->fileName, rank, i);
+  FILE *f = fopen(fileName, "w");
+  if (!f) return;
+  struct BLEnsemble *ensemble = &simulationState->ensemble;
+  int j;
+  for (j = 0; j < ensemble->numPtcls; ++j) {
+    fprintf(f, "%e ", ensemble->x[j]);
+  }
+  fprintf(f, "\n");
+  for (j = 0; j < ensemble->numPtcls; ++j) {
+    fprintf(f, "%e ", ensemble->y[j]);
+  }
+  fprintf(f, "\n");
+  for (j = 0; j < ensemble->numPtcls; ++j) {
+    fprintf(f, "%e ", ensemble->z[j]);
+  }
+  fprintf(f, "\n");
+  for (j = 0; j < ensemble->numPtcls; ++j) {
+    fprintf(f, "%e ", ensemble->vx[j]);
+  }
+  fprintf(f, "\n");
+  for (j = 0; j < ensemble->numPtcls; ++j) {
+    fprintf(f, "%e ", ensemble->vy[j]);
+  }
+  fprintf(f, "\n");
+  for (j = 0; j < ensemble->numPtcls; ++j) {
+    fprintf(f, "%e ", ensemble->vz[j]);
+  }
+  fprintf(f, "\n");
+  fclose(f);
+}
+
+static void blDiagnosticsPtclsDestroy(void *ctx) {
+  free(ctx);
+}
+
+struct BLDiagnostics* blDiagnosticPtclsCreate(int dumpPeriodicity,
+    const char *fileName, struct BLDiagnostics* next) {
+  struct BLDiagnostics *this = malloc(sizeof(*this));
+  this->process = blDiagnosticsPtclsProcess;
+  this->destroy = blDiagnosticsPtclsDestroy;
+  struct BLDiagnosticsPtclsCtx *ctx = malloc(sizeof(*ctx));
+  ctx->dumpPeriodicity = dumpPeriodicity;
+  ctx->fileName = fileName;
+  this->ctx = ctx;
+  this->next = next;
+  return this;
+}
