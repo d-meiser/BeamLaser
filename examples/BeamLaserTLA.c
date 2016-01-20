@@ -32,6 +32,9 @@ static double L = 1.0e-2;
 struct Configuration {
   int numSteps;
   int dumpPeriod;
+  int dumpField;
+  int dumpPhaseSpace;
+  int dumpInternalState;
   double dt;
   double nbar;
   int maxNumParticles;
@@ -62,6 +65,7 @@ void processParticleSources(struct ParticleSource *particleSource,
                             struct BLEnsemble *ensemble);
 struct ParticleSource *constructParticleSources(
     const struct Configuration *conf);
+struct BLDiagnostics *constructDiagnostics(const struct Configuration *conf);
 void blFieldUpdate(double dt, double kappa, struct BLFieldState *fieldState);
 void blFieldAtomInteraction(double dt, struct BLFieldState *fieldState,
         struct IntegratorCtx *integratorCtx, BLIntegrator integrator);
@@ -125,8 +129,7 @@ int main(int argn, char **argv) {
   if (stat != BL_SUCCESS) return stat;
 
   particleSource = constructParticleSources(&conf);
-  diagnostics = blDiagnosticsFieldStateCreate(conf.dumpPeriod, 0);
-  diagnostics = blDiagnosticsPtclsCreate(conf.dumpPeriod, argv[0], diagnostics);
+  diagnostics = constructDiagnostics(&conf);
 
   for (i = 0; i < conf.numSteps; ++i) {
     particleSink(&conf, &simulationState.ensemble);
@@ -163,6 +166,9 @@ int main(int argn, char **argv) {
 void setDefaults(struct Configuration *conf) {
   conf->numSteps = 10;
   conf->dumpPeriod = 1;
+  conf->dumpField = 0;
+  conf->dumpPhaseSpace = 0;
+  conf->dumpInternalState = 0;
   conf->particleWeight = 1.0e6;
   conf->dipoleMatrixElement = 1.0e-29;
   conf->nbar = 1.0e3;
@@ -189,6 +195,9 @@ void processCommandLineArgs(struct Configuration *conf, int argn, char **argv) {
         {
           {"numSteps",             required_argument, 0, 'n'},
           {"dumpPeriod",           required_argument, 0, 'p'},
+          {"dumpField",            required_argument, 0, 'f'},
+          {"dumpPhaseSpace",       required_argument, 0, 's'},
+          {"dumpInternalState",    required_argument, 0, 'i'},
           {"dt",                   required_argument, 0, 'd'},
           {"nbar",                 required_argument, 0, 'N'},
           {"maxNumPtcls",          required_argument, 0, 'm'},
@@ -203,7 +212,7 @@ void processCommandLineArgs(struct Configuration *conf, int argn, char **argv) {
         };
       int option_index = 0;
 
-      c = getopt_long(argn, argv, "n:p:d:N:m:w:D:v:V:a:K:h",
+      c = getopt_long(argn, argv, "n:p:fsid:N:m:w:D:v:V:a:K:h",
                       long_options, &option_index);
 
       if (c == -1)
@@ -221,6 +230,15 @@ void processCommandLineArgs(struct Configuration *conf, int argn, char **argv) {
           printUsage("Unable to parse argument to option -p, --dumpPeriod\n");
           exit(-1);
         }
+        break;
+      case 'f':
+        conf->dumpField = 1;
+        break;
+      case 's':
+        conf->dumpPhaseSpace = 1;
+        break;
+      case 'i':
+        conf->dumpInternalState = 1;
         break;
       case 'd':
         if (sscanf(optarg, "%lf", &conf->dt) != 1) {
@@ -314,6 +332,9 @@ void printUsage(const char* errorMessage) {
            "Options:\n"
            "-n, --numSteps:           Number of steps to take.\n"
            "-p, --dumpPeriod:         Number of steps between dumps.\n"
+           "-f, --dumpField:          Whether to dump the field.\n"
+           "-s, --dumpPhaseSpace:     Whether to dump phase space coordinates of the particles.\n"
+           "-i, --dumpInternalState:  Whether to dump the particles' internal state.\n"
            "-d, --dt:                 Time step size.\n"
            "-N, --nbar:               Mean number of particles in simulation domain.\n"
            "-m, --maxNumPtcl          Maximum number of particles.\n"
@@ -500,3 +521,19 @@ struct ParticleSource *constructParticleSources(
   return particleSource;
 }
 
+struct BLDiagnostics *constructDiagnostics(
+    const struct Configuration *conf) {
+  struct BLDiagnostics *diagnostics = 0;
+  if (conf->dumpField) {
+    diagnostics = blDiagnosticsFieldStateCreate(conf->dumpPeriod, diagnostics);
+  }
+  if (conf->dumpPhaseSpace) {
+    diagnostics = blDiagnosticsPtclsCreate(conf->dumpPeriod, "ptcls",
+        diagnostics);
+  }
+  if (conf->dumpInternalState) {
+    diagnostics = blDiagnosticsInternalStateCreate(conf->dumpPeriod,
+        "internal_state", diagnostics);
+  }
+  return diagnostics;
+}
