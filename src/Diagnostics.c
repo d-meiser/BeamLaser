@@ -124,3 +124,50 @@ struct BLDiagnostics* blDiagnosticsPtclsCreate(int dumpPeriodicity,
   return this;
 }
 
+/*
+ * Internal state diagnostics
+ */
+struct BLDiagnosticsInternalStateCtx {
+  int dumpPeriodicity;
+  const char *fileName;
+};
+
+static void blDiagnosticsInternalStateProcess(int i,
+    struct BLSimulationState* simulationState, void *c) {
+  struct BLDiagnosticsInternalStateCtx *ctx = c;
+  int rank = 0;
+#ifdef BL_WITH_MPI
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+#endif
+  char fileName[1000];
+  sprintf(fileName, "%s_%d_%d.txt", ctx->fileName, rank, i);
+  FILE *f = fopen(fileName, "w");
+  if (!f) return;
+  struct BLEnsemble *ensemble = &simulationState->ensemble;
+  int j, k;
+  for (j = 0; j < ensemble->numPtcls; ++j) {
+    for (k = 0; k < ensemble->internalStateSize; ++k) {
+      fprintf(f, "%e ",
+          ensemble->internalState[j * ensemble->internalStateSize + k]);
+    }
+    fprintf(f, "\n");
+  }
+}
+
+static void blDiagnosticsInternalStateDestroy(void *ctx) {
+  free(ctx);
+}
+
+struct BLDiagnostics* blDiagnosticsInternalStateCreate(int dumpPeriodicity,
+    const char *fileName, struct BLDiagnostics* next) {
+  struct BLDiagnostics *this = malloc(sizeof(*this));
+  this->process = blDiagnosticsInternalStateProcess;
+  this->destroy = blDiagnosticsInternalStateDestroy;
+  struct BLDiagnosticsInternalStateCtx *ctx = malloc(sizeof(*ctx));
+  ctx->dumpPeriodicity = dumpPeriodicity;
+  ctx->fileName = fileName;
+  this->ctx = ctx;
+  this->next = next;
+  return this;
+}
+

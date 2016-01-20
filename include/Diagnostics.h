@@ -20,5 +20,7 @@ struct BLDiagnostics* blDiagnosticsFieldStateCreate(int dumpPeriodicity,
     struct BLDiagnostics* next);
 struct BLDiagnostics* blDiagnosticsPtclsCreate(int dumpPeriodicity,
     const char *filename, struct BLDiagnostics* next);
+struct BLDiagnostics* blDiagnosticsInternalStateCreate(int dumpPeriodicity,
+    const char *filename, struct BLDiagnostics* next);
 
 #endif
