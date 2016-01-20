@@ -14,7 +14,7 @@ struct BLDiagnostics {
 
 void blDiagnosticsProcess(struct BLDiagnostics *diagnostics, int i,
     struct BLSimulationState *simulationState);
-void blDiagnosticsProcessDestroy(struct BLDiagnostics *diagnostics);
+void blDiagnosticsDestroy(struct BLDiagnostics *diagnostics);
 
 struct BLDiagnostics* blDiagnosticFieldStateCreate(int dumpPeriodicity,
     struct BLDiagnostics* next);

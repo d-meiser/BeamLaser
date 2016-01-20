@@ -145,7 +145,7 @@ int main(int argn, char **argv) {
   }
 
 
-  blDiagnosticsProcessDestroy(diagnostics);
+  blDiagnosticsDestroy(diagnostics);
   blParticleSourceDestroy(particleSource);
   blDipoleOperatorDestroy(integratorCtx.dipoleOperator);
   free(integratorCtx.ex);

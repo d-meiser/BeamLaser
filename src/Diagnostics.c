@@ -11,12 +11,12 @@ void blDiagnosticsProcess(struct BLDiagnostics *diagnostics, int i,
   }
 }
 
-void blDiagnosticsProcessDestroy(struct BLDiagnostics *diagnostics) {
+void blDiagnosticsDestroy(struct BLDiagnostics *diagnostics) {
   if (diagnostics) {
     struct BLDiagnostics *next = diagnostics->next;
     diagnostics->destroy(diagnostics->ctx);
     free(diagnostics);
-    blDiagnosticsProcessDestroy(next);
+    blDiagnosticsDestroy(next);
   }
 }
 
