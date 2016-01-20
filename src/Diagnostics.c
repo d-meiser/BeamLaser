@@ -2,8 +2,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+
 void blDiagnosticsProcess(struct BLDiagnostics *diagnostics, int i,
-    struct SimulationState *simulationState) {
+    struct BLSimulationState *simulationState) {
   while (diagnostics) {
     diagnostics->process(i, simulationState, diagnostics->ctx);
     diagnostics = diagnostics->next;
@@ -28,7 +29,7 @@ struct BLDiagnosticsFieldStateCtx {
 };
 
 static void blDiagnosticsFieldStateProcess(int i,
-    struct SimulationState* simulationState, void *c) {
+    struct BLSimulationState* simulationState, void *c) {
   struct BLDiagnosticsFieldStateCtx *ctx = c;
   int rank = 0;
 #ifdef BL_WITH_MPI
@@ -67,7 +68,7 @@ struct BLDiagnosticsPtclsCtx {
 };
 
 static void blDiagnosticsPtclsProcess(int i,
-    struct SimulationState* simulationState, void *c) {
+    struct BLSimulationState* simulationState, void *c) {
   struct BLDiagnosticsPtclsCtx *ctx = c;
   int rank = 0;
 #ifdef BL_WITH_MPI

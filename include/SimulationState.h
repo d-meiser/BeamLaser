@@ -3,14 +3,14 @@
 
 #include <Ensemble.h>
 
-struct FieldState {
+struct BLFieldState {
   double q;
   double p;
 };
 
-struct SimulationState {
+struct BLSimulationState {
   double t;
-  struct FieldState fieldState;
+  struct BLFieldState fieldState;
   struct BLEnsemble ensemble;
 };
 

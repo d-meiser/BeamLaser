@@ -62,8 +62,8 @@ void processParticleSources(struct ParticleSource *particleSource,
                             struct BLEnsemble *ensemble);
 struct ParticleSource *constructParticleSources(
     const struct Configuration *conf);
-void blFieldUpdate(double dt, double kappa, struct FieldState *fieldState);
-void blFieldAtomInteraction(double dt, struct FieldState *fieldState,
+void blFieldUpdate(double dt, double kappa, struct BLFieldState *fieldState);
+void blFieldAtomInteraction(double dt, struct BLFieldState *fieldState,
         struct IntegratorCtx *integratorCtx, BLIntegrator integrator);
 void interactionRHS(double t, int n, const double *x, double *y,
                     void *ctx);
@@ -83,7 +83,7 @@ int main(int argn, char **argv) {
   BL_UNUSED(argn);
   BL_UNUSED(argv);
 #endif
-  struct SimulationState simulationState;
+  struct BLSimulationState simulationState;
   struct Configuration conf;
   struct IntegratorCtx integratorCtx;
   struct ParticleSource *particleSource;
@@ -355,12 +355,12 @@ void processParticleSources(struct ParticleSource *particleSource,
                                   ensemble->internalState);
 }
 
-void blFieldUpdate(double dt, double kappa, struct FieldState *fieldState) {
+void blFieldUpdate(double dt, double kappa, struct BLFieldState *fieldState) {
   fieldState->q = fieldState->q * exp(-0.5 * kappa * dt);
   fieldState->p = fieldState->p * exp(-0.5 * kappa * dt);
 }
 
-void blFieldAtomInteraction(double dt, struct FieldState *fieldState,
+void blFieldAtomInteraction(double dt, struct BLFieldState *fieldState,
         struct IntegratorCtx *integratorCtx, BLIntegrator integrator) {
   struct BLEnsemble *ensemble = integratorCtx->ensemble;
   const int numPtcls = ensemble->numPtcls;

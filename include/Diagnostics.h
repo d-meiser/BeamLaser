@@ -6,14 +6,14 @@
 
 
 struct BLDiagnostics {
-  void (*process)(int i, struct SimulationState *simulationState, void *ctx);
+  void (*process)(int i, struct BLSimulationState *simulationState, void *ctx);
   void (*destroy)(void *ctx);
   void *ctx;
   struct BLDiagnostics *next;
 };
 
 void blDiagnosticsProcess(struct BLDiagnostics *diagnostics, int i,
-    struct SimulationState *simulationState);
+    struct BLSimulationState *simulationState);
 void blDiagnosticsProcessDestroy(struct BLDiagnostics *diagnostics);
 
 struct BLDiagnostics* blDiagnosticFieldStateCreate(int dumpPeriodicity,
