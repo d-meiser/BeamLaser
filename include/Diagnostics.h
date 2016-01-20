@@ -16,9 +16,9 @@ void blDiagnosticsProcess(struct BLDiagnostics *diagnostics, int i,
     struct BLSimulationState *simulationState);
 void blDiagnosticsDestroy(struct BLDiagnostics *diagnostics);
 
-struct BLDiagnostics* blDiagnosticFieldStateCreate(int dumpPeriodicity,
+struct BLDiagnostics* blDiagnosticsFieldStateCreate(int dumpPeriodicity,
     struct BLDiagnostics* next);
-struct BLDiagnostics* blDiagnosticPtclsCreate(int dumpPeriodicity,
+struct BLDiagnostics* blDiagnosticsPtclsCreate(int dumpPeriodicity,
     const char *filename, struct BLDiagnostics* next);
 
 #endif

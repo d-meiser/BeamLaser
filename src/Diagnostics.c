@@ -47,7 +47,7 @@ static void blDiagnosticsFieldStateDestroy(void *ctx) {
   free(ctx);
 }
 
-struct BLDiagnostics* blDiagnosticFieldStateCreate(int dumpPeriodicity,
+struct BLDiagnostics* blDiagnosticsFieldStateCreate(int dumpPeriodicity,
     struct BLDiagnostics* next) {
   struct BLDiagnostics *this = malloc(sizeof(*this));
   this->process = blDiagnosticsFieldStateProcess;
@@ -111,7 +111,7 @@ static void blDiagnosticsPtclsDestroy(void *ctx) {
   free(ctx);
 }
 
-struct BLDiagnostics* blDiagnosticPtclsCreate(int dumpPeriodicity,
+struct BLDiagnostics* blDiagnosticsPtclsCreate(int dumpPeriodicity,
     const char *fileName, struct BLDiagnostics* next) {
   struct BLDiagnostics *this = malloc(sizeof(*this));
   this->process = blDiagnosticsPtclsProcess;

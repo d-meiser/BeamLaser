@@ -125,8 +125,8 @@ int main(int argn, char **argv) {
   if (stat != BL_SUCCESS) return stat;
 
   particleSource = constructParticleSources(&conf);
-  diagnostics = blDiagnosticFieldStateCreate(conf.dumpPeriod, 0);
-  diagnostics = blDiagnosticPtclsCreate(conf.dumpPeriod, argv[0], diagnostics);
+  diagnostics = blDiagnosticsFieldStateCreate(conf.dumpPeriod, 0);
+  diagnostics = blDiagnosticsPtclsCreate(conf.dumpPeriod, argv[0], diagnostics);
 
   for (i = 0; i < conf.numSteps; ++i) {
     particleSink(&conf, &simulationState.ensemble);
