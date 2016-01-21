@@ -24,6 +24,7 @@ BeforeEach(Diagnostics) {
       simulationState.ensemble.internalState[i * INTERNAL_STATE_DIM + j] = i + j;
     }
   }
+  simulationState.ensemble.numPtcls = MAX_NUM_PTCLS;
   simulationState.fieldState.q = 1.3;
   simulationState.fieldState.p = 1.7;
 }
