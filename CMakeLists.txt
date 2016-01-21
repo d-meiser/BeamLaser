@@ -12,11 +12,11 @@ include(CheckCCompilerFlag)
 
 find_package(SPRNG REQUIRED)
 
-option(BL_BUILD_TESTS "Whether to build tests" ON)
+option(BL_BUILD_TESTS "Whether to build tests" OFF)
 option(BL_ENABLE_COVERAGE "Instrument tests for coverage" OFF)
 option(BL_WITH_ADDRESS_SANITIZER "Whether to build with address sanitizer enabled" OFF)
 option(BL_WITH_WALL_FLAGS "Whether to compile with all warning flags." ON)
-option(BL_WITH_PEDANTIC_FLAGS "Whether to compile with pedantic flags." ON)
+option(BL_WITH_PEDANTIC_FLAGS "Whether to compile with pedantic flags." OFF)
 option(BL_WITH_WARNING_AS_ERRORS "Whether to treat compiler warnings as errors." ON)
 option(BL_WITH_MPI "Whether we're building with MPI support" OFF)
 
