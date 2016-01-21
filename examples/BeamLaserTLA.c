@@ -29,20 +29,12 @@ static const double waveNumber = 2.0 * M_PI / 1.0e-6;
 static const double sigmaE = 3.0e-5;
 static double L = 1.0e-2;
 
-struct FieldState {
-  double q;
-  double p;
-};
-
-struct SimulationState {
-  double t;
-  struct FieldState fieldState;
-  struct BLEnsemble ensemble;
-};
-
 struct Configuration {
   int numSteps;
   int dumpPeriod;
+  int dumpField;
+  int dumpPhaseSpace;
+  int dumpInternalState;
   double dt;
   double nbar;
   int maxNumParticles;
@@ -73,8 +65,9 @@ void processParticleSources(struct ParticleSource *particleSource,
                             struct BLEnsemble *ensemble);
 struct ParticleSource *constructParticleSources(
     const struct Configuration *conf);
-void blFieldUpdate(double dt, double kappa, struct FieldState *fieldState);
-void blFieldAtomInteraction(double dt, struct FieldState *fieldState,
+struct BLDiagnostics *constructDiagnostics(const struct Configuration *conf);
+void blFieldUpdate(double dt, double kappa, struct BLFieldState *fieldState);
+void blFieldAtomInteraction(double dt, struct BLFieldState *fieldState,
         struct IntegratorCtx *integratorCtx, BLIntegrator integrator);
 void interactionRHS(double t, int n, const double *x, double *y,
                     void *ctx);
@@ -86,6 +79,7 @@ static void modeFunction(int n,
     double * restrict fy,
     double * restrict fz);
 
+
 int main(int argn, char **argv) {
 #ifdef BL_WITH_MPI
   MPI_Init(&argn, &argv);
@@ -93,11 +87,12 @@ int main(int argn, char **argv) {
   BL_UNUSED(argn);
   BL_UNUSED(argv);
 #endif
-  struct SimulationState simulationState;
+  struct BLSimulationState simulationState;
   struct Configuration conf;
   struct IntegratorCtx integratorCtx;
   struct ParticleSource *particleSource;
   BLIntegrator integrator;
+  struct BLDiagnostics *diagnostics = 0;
   BL_STATUS stat;
   int i, rank;
 
@@ -134,6 +129,7 @@ int main(int argn, char **argv) {
   if (stat != BL_SUCCESS) return stat;
 
   particleSource = constructParticleSources(&conf);
+  diagnostics = constructDiagnostics(&conf);
 
   for (i = 0; i < conf.numSteps; ++i) {
     particleSink(&conf, &simulationState.ensemble);
@@ -144,10 +140,7 @@ int main(int argn, char **argv) {
         &integratorCtx, integrator);
     blFieldUpdate(0.5 * conf.dt, conf.kappa, &simulationState.fieldState);
     blEnsemblePush(0.5 * conf.dt, &simulationState.ensemble);
-    if (rank == 0 && ((i % conf.dumpPeriod) == 0)) {
-      printf("%9d  %9d  %le  %le\n", i, simulationState.ensemble.numPtcls,
-             simulationState.fieldState.q, simulationState.fieldState.p);
-    }
+    blDiagnosticsProcess(diagnostics, i, &simulationState);
   }
   if (rank == 0) {
     printf("%9d  %9d  %le  %le\n", i, simulationState.ensemble.numPtcls,
@@ -155,6 +148,7 @@ int main(int argn, char **argv) {
   }
 
 
+  blDiagnosticsDestroy(diagnostics);
   blParticleSourceDestroy(particleSource);
   blDipoleOperatorDestroy(integratorCtx.dipoleOperator);
   free(integratorCtx.ex);
@@ -172,6 +166,9 @@ int main(int argn, char **argv) {
 void setDefaults(struct Configuration *conf) {
   conf->numSteps = 10;
   conf->dumpPeriod = 1;
+  conf->dumpField = 0;
+  conf->dumpPhaseSpace = 0;
+  conf->dumpInternalState = 0;
   conf->particleWeight = 1.0e6;
   conf->dipoleMatrixElement = 1.0e-29;
   conf->nbar = 1.0e3;
@@ -198,6 +195,9 @@ void processCommandLineArgs(struct Configuration *conf, int argn, char **argv) {
         {
           {"numSteps",             required_argument, 0, 'n'},
           {"dumpPeriod",           required_argument, 0, 'p'},
+          {"dumpField",            required_argument, 0, 'f'},
+          {"dumpPhaseSpace",       required_argument, 0, 's'},
+          {"dumpInternalState",    required_argument, 0, 'i'},
           {"dt",                   required_argument, 0, 'd'},
           {"nbar",                 required_argument, 0, 'N'},
           {"maxNumPtcls",          required_argument, 0, 'm'},
@@ -212,7 +212,7 @@ void processCommandLineArgs(struct Configuration *conf, int argn, char **argv) {
         };
       int option_index = 0;
 
-      c = getopt_long(argn, argv, "n:p:d:N:m:w:D:v:V:a:K:h",
+      c = getopt_long(argn, argv, "n:p:fsid:N:m:w:D:v:V:a:K:h",
                       long_options, &option_index);
 
       if (c == -1)
@@ -230,6 +230,15 @@ void processCommandLineArgs(struct Configuration *conf, int argn, char **argv) {
           printUsage("Unable to parse argument to option -p, --dumpPeriod\n");
           exit(-1);
         }
+        break;
+      case 'f':
+        conf->dumpField = 1;
+        break;
+      case 's':
+        conf->dumpPhaseSpace = 1;
+        break;
+      case 'i':
+        conf->dumpInternalState = 1;
         break;
       case 'd':
         if (sscanf(optarg, "%lf", &conf->dt) != 1) {
@@ -323,6 +332,9 @@ void printUsage(const char* errorMessage) {
            "Options:\n"
            "-n, --numSteps:           Number of steps to take.\n"
            "-p, --dumpPeriod:         Number of steps between dumps.\n"
+           "-f, --dumpField:          Whether to dump the field.\n"
+           "-s, --dumpPhaseSpace:     Whether to dump phase space coordinates of the particles.\n"
+           "-i, --dumpInternalState:  Whether to dump the particles' internal state.\n"
            "-d, --dt:                 Time step size.\n"
            "-N, --nbar:               Mean number of particles in simulation domain.\n"
            "-m, --maxNumPtcl          Maximum number of particles.\n"
@@ -364,12 +376,12 @@ void processParticleSources(struct ParticleSource *particleSource,
                                   ensemble->internalState);
 }
 
-void blFieldUpdate(double dt, double kappa, struct FieldState *fieldState) {
+void blFieldUpdate(double dt, double kappa, struct BLFieldState *fieldState) {
   fieldState->q = fieldState->q * exp(-0.5 * kappa * dt);
   fieldState->p = fieldState->p * exp(-0.5 * kappa * dt);
 }
 
-void blFieldAtomInteraction(double dt, struct FieldState *fieldState,
+void blFieldAtomInteraction(double dt, struct BLFieldState *fieldState,
         struct IntegratorCtx *integratorCtx, BLIntegrator integrator) {
   struct BLEnsemble *ensemble = integratorCtx->ensemble;
   const int numPtcls = ensemble->numPtcls;
@@ -509,3 +521,19 @@ struct ParticleSource *constructParticleSources(
   return particleSource;
 }
 
+struct BLDiagnostics *constructDiagnostics(
+    const struct Configuration *conf) {
+  struct BLDiagnostics *diagnostics = 0;
+  if (conf->dumpField) {
+    diagnostics = blDiagnosticsFieldStateCreate(conf->dumpPeriod, diagnostics);
+  }
+  if (conf->dumpPhaseSpace) {
+    diagnostics = blDiagnosticsPtclsCreate(conf->dumpPeriod, "ptcls",
+        diagnostics);
+  }
+  if (conf->dumpInternalState) {
+    diagnostics = blDiagnosticsInternalStateCreate(conf->dumpPeriod,
+        "internal_state", diagnostics);
+  }
+  return diagnostics;
+}

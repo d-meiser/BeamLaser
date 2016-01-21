@@ -7,6 +7,7 @@ include_directories(
 
 set(TESTS
     testBSP
+    testDiagnostics
     testDipoleOperatorTLA
     testEnsemble
     testIntegrator
