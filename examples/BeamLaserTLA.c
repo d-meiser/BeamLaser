@@ -349,6 +349,7 @@ void printUsage(const char* errorMessage) {
            "-h, --help                Print this message.\n"
            "\n"
            );
+  exit(0);
 }
 
 void adjustNumPtclsForNumRanks(struct Configuration *conf) {

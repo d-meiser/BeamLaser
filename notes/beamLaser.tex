@@ -158,11 +158,40 @@ the mode function.  That way we don't have to convert between
 $E_x,E_y$ and $E_+, E_-$ all the time.
 
 
-\subsection{TODO list}
+\section{Verification}
 
-\paragraph{Get rid of Ring Buffer for particles {\bf [done]}} The
-idea of the ring buffer data structure was to make it cheap to
-add and remove particles from the simulation.  However, this
+In this section we discuss a number of sanity checks we have
+performed to ensure correct functioning of the simulation
+program.
+
+
+\subsection{Particle sources and particle motion}
+
+First we verify that particles with the correct positions and
+velocities are being produced.
+
+
+\subsection{Decay of the cavity field}
+
+Decay and noise dynamics.  Also steady state fluctuations.
+
+
+\subsection{Coherent evolution of coupled atom-field system}
+
+Demonstrate Rabi oscillations with the correct Rabi frequency.
+
+
+\subsection{Convergence study}
+
+
+\section{TODO list}
+
+\subsection{Near term}
+
+\subsubsection{Get rid of Ring Buffer for particles {\bf [done]}}
+
+The idea of the ring buffer data structure was to make it cheap
+to add and remove particles from the simulation.  However, this
 unduly penalizes other parts of the simulation that are
 relatively more expensive.  In particular, it prevents
 vectorization of many important loops.  In addition it makes much
@@ -178,7 +207,10 @@ arrays rather than a ring buffer) and particles should be deleted
 from the end using a BSP similar to what's done in the ring
 buffer implementation at the front.
 
-\paragraph{Need to scatter field amplitudes from rank 0}
+
+\subsubsection{Need to scatter field amplitudes from rank 0 {\bf
+[done]}}
+
 Strictly speaking this is not needed as long as the field evolves
 identically on each node (e.g. in the absence of noise in the
 field equations).  But as soon as we add noise the field
@@ -189,10 +221,55 @@ work) to simplify the control flow.  I.e. no need to add
 \verb~if (!rank) { ... }~ around the field updates.  The
 amplitudes on ranks other than zero simply get overwritten.
 
-\paragraph{Parallel initialization of random number generation
-{\bf [needs testing]}}
+
+\subsubsection{Parallel initialization of random number
+generation {\bf [done]}}
+
 The \verb~sprng~ library needs to be compiled and included
 differently depending on whether it is used with MPI.
+
+
+\subsubsection{Noise of the cavity field}
+
+The Langevin noise terms give rise to the finite linewidth.
+
+
+\subsubsection{Need better configurability from the command line}
+
+Currently, configuration is done entirely via command line
+options.  This is becoming pretty unwieldy.  As we're adding more
+flexibility to  the code base problems are only going to
+increase.  Options include a declarative configuration language
+(xml, json, yaml) or bindings to a scripting language (python or
+guile).
+
+
+\subsubsection{Uniform mode function}
+
+ Primarily for unit tests.
+
+
+\subsubsection{Particle sources for initialization}
+
+
+\subsubsection{More types of particle sources}
+
+
+\subsection{Down the road}
+
+The following are things we wish to tackle in the future.
+
+
+\subsubsection{Photon scattering physics} This is going to be a big
+one.  Adding this capability will allow us to do repumping among
+other things.
+
+
+\subsubsection{Trapping potential for atoms}
+
+
+\subsubsection{Multimode fields} We will still focus on the case
+of a small number of modes.
 
 
 \end{document}
