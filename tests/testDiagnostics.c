@@ -57,6 +57,14 @@ Ensure(Diagnostics, canCreateMultipleDiagnostics) {
   blDiagnosticsDestroy(diagnostics);
 }
 
+Ensure(Diagnostics, canProcessSeveral) {
+  struct BLDiagnostics *diagnostics = blDiagnosticsFieldStateCreate(7, 0);
+  diagnostics = blDiagnosticsPtclsCreate(7, "ptcls", diagnostics);
+  diagnostics = blDiagnosticsInternalStateCreate(7, "internal_state", diagnostics);
+  blDiagnosticsProcess(diagnostics, 7, &simulationState);
+  blDiagnosticsDestroy(diagnostics);
+}
+
 int main(int argn, char **argv)
 {
 #ifdef BL_WITH_MPI
@@ -70,6 +78,7 @@ int main(int argn, char **argv)
   add_test_with_context(suite, Diagnostics, worksForMultipleOfDumpPeriodicity);
   add_test_with_context(suite, Diagnostics, doesntDumpWhenNotMultipleOfDumpPeriodicity);
   add_test_with_context(suite, Diagnostics, canCreateMultipleDiagnostics);
+  add_test_with_context(suite, Diagnostics, canProcessSeveral);
   int result = run_test_suite(suite, create_text_reporter());
   destroy_test_suite(suite);
 #ifdef BL_WITH_MPI
