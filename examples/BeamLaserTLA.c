@@ -169,7 +169,7 @@ void setDefaults(struct Configuration *conf) {
   conf->dumpField = 0;
   conf->dumpPhaseSpace = 0;
   conf->dumpInternalState = 0;
-  conf->particleWeight = 1.0e6;
+  conf->particleWeight = 1.0e0;
   conf->dipoleMatrixElement = 1.0e-29;
   conf->nbar = 1.0e3;
   conf->maxNumParticles = 2000;
