@@ -195,9 +195,9 @@ void processCommandLineArgs(struct Configuration *conf, int argn, char **argv) {
         {
           {"numSteps",             required_argument, 0, 'n'},
           {"dumpPeriod",           required_argument, 0, 'p'},
-          {"dumpField",            required_argument, 0, 'f'},
-          {"dumpPhaseSpace",       required_argument, 0, 's'},
-          {"dumpInternalState",    required_argument, 0, 'i'},
+          {"dumpField",            no_argument,       0, 'f'},
+          {"dumpPhaseSpace",       no_argument,       0, 's'},
+          {"dumpInternalState",    no_argument,       0, 'i'},
           {"dt",                   required_argument, 0, 'd'},
           {"nbar",                 required_argument, 0, 'N'},
           {"maxNumPtcls",          required_argument, 0, 'm'},
@@ -207,7 +207,7 @@ void processCommandLineArgs(struct Configuration *conf, int argn, char **argv) {
           {"deltaV",               required_argument, 0, 'V'},
           {"alpha",                required_argument, 0, 'a'},
           {"kappa",                required_argument, 0, 'K'},
-          {"help",                 required_argument, 0, 'h'},
+          {"help",                 no_argument,       0, 'h'},
           {0, 0, 0, 0}
         };
       int option_index = 0;
