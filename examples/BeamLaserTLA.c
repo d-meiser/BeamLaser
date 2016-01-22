@@ -414,7 +414,7 @@ void interactionRHS(double t, int n, const double *x, double *y,
   BL_UNUSED(n);
   struct IntegratorCtx *integratorCtx = ctx;
   struct BLEnsemble *ensemble = integratorCtx->ensemble;
-  int i;
+  int i, j;
   const int numPtcls = ensemble->numPtcls;
   const int fieldOffset = numPtcls * ensemble->internalStateSize;
   const double complex fieldAmplitude =
@@ -442,7 +442,10 @@ void interactionRHS(double t, int n, const double *x, double *y,
   BL_MPI_Request polReq =
     blAddAllBegin((const double*)&polarization, y + fieldOffset, 2);
   for (i = 0; i < numPtcls; ++i) {
-    y[i] *= fieldAmplitude;
+    double complex *yp = (double complex *)(y + i * ensemble->internalStateSize);
+    for (j = 0; j < ensemble->internalStateSize / 2; ++j) {
+      yp[j] *= fieldAmplitude;
+    }
   }
   blAddAllEnd(polReq, (const double*)&polarization, y + fieldOffset, 2);
 }
