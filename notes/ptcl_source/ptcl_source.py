@@ -35,7 +35,8 @@ output = subprocess.Popen([beam_laser_tla_exec,
                            "--dt", "1.0e-9",
                            "--numSteps", str(num_steps),
                            "--dumpPeriod", "10",
-                           "--dumpField"
+                           "--dumpField",
+                           "--dumpPhaseSpace"
 ], stdout=subprocess.PIPE).communicate()[0]
 
 data = output.splitlines()
@@ -50,3 +51,21 @@ plt.xlim([0, dt * data[-1, 0] / 1.0e-6])
 plt.ylim([0, 1.2 * nbar])
 plt.gcf().subplots_adjust(left = 0.18, bottom = 0.21, top=0.95, right=0.95)
 plt.savefig('numPtclsVsT.pdf')
+
+phase_space = np.loadtxt('ptcls_0_900.txt')
+
+plt.clf()
+plt.plot(phase_space[0, :] / 1.0e-6, phase_space[1,:] / 1.0e-6, '.')
+plt.xlabel(r'$x/\mu {\rm m}$')
+plt.ylabel(r'$y/\mu {\rm m}$')
+plt.xlim([-1.2e2, 1.2e2])
+plt.ylim([-1.2e2, 1.2e2])
+plt.gcf().subplots_adjust(left = 0.2, bottom = 0.21, top=0.95, right=0.95)
+plt.savefig('density.pdf')
+
+plt.clf()
+plt.plot(phase_space[3, :], phase_space[5,:], '.')
+plt.xlabel(r'$v_x / ({\rm m} / {\rm s})$')
+plt.ylabel(r'$v_z / ({\rm m} / {\rm s})$')
+plt.gcf().subplots_adjust(left = 0.22, bottom = 0.21, top=0.95, right=0.95)
+plt.savefig('velocity_distribution.pdf')
