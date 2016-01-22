@@ -70,41 +70,43 @@ struct BLDiagnosticsPtclsCtx {
 static void blDiagnosticsPtclsProcess(int i,
     struct BLSimulationState* simulationState, void *c) {
   struct BLDiagnosticsPtclsCtx *ctx = c;
-  int rank = 0;
+  if ((i % ctx->dumpPeriodicity) == 0) {
+    int rank = 0;
 #ifdef BL_WITH_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 #endif
-  char fileName[1000];
-  sprintf(fileName, "%s_%d_%d.txt", ctx->fileName, rank, i);
-  FILE *f = fopen(fileName, "w");
-  if (!f) return;
-  struct BLEnsemble *ensemble = &simulationState->ensemble;
-  int j;
-  for (j = 0; j < ensemble->numPtcls; ++j) {
-    fprintf(f, "%e ", ensemble->x[j]);
+    char fileName[1000];
+    sprintf(fileName, "%s_%d_%d.txt", ctx->fileName, rank, i);
+    FILE *f = fopen(fileName, "w");
+    if (!f) return;
+    struct BLEnsemble *ensemble = &simulationState->ensemble;
+    int j;
+    for (j = 0; j < ensemble->numPtcls; ++j) {
+      fprintf(f, "%e ", ensemble->x[j]);
+    }
+    fprintf(f, "\n");
+    for (j = 0; j < ensemble->numPtcls; ++j) {
+      fprintf(f, "%e ", ensemble->y[j]);
+    }
+    fprintf(f, "\n");
+    for (j = 0; j < ensemble->numPtcls; ++j) {
+      fprintf(f, "%e ", ensemble->z[j]);
+    }
+    fprintf(f, "\n");
+    for (j = 0; j < ensemble->numPtcls; ++j) {
+      fprintf(f, "%e ", ensemble->vx[j]);
+    }
+    fprintf(f, "\n");
+    for (j = 0; j < ensemble->numPtcls; ++j) {
+      fprintf(f, "%e ", ensemble->vy[j]);
+    }
+    fprintf(f, "\n");
+    for (j = 0; j < ensemble->numPtcls; ++j) {
+      fprintf(f, "%e ", ensemble->vz[j]);
+    }
+    fprintf(f, "\n");
+    fclose(f);
   }
-  fprintf(f, "\n");
-  for (j = 0; j < ensemble->numPtcls; ++j) {
-    fprintf(f, "%e ", ensemble->y[j]);
-  }
-  fprintf(f, "\n");
-  for (j = 0; j < ensemble->numPtcls; ++j) {
-    fprintf(f, "%e ", ensemble->z[j]);
-  }
-  fprintf(f, "\n");
-  for (j = 0; j < ensemble->numPtcls; ++j) {
-    fprintf(f, "%e ", ensemble->vx[j]);
-  }
-  fprintf(f, "\n");
-  for (j = 0; j < ensemble->numPtcls; ++j) {
-    fprintf(f, "%e ", ensemble->vy[j]);
-  }
-  fprintf(f, "\n");
-  for (j = 0; j < ensemble->numPtcls; ++j) {
-    fprintf(f, "%e ", ensemble->vz[j]);
-  }
-  fprintf(f, "\n");
-  fclose(f);
 }
 
 static void blDiagnosticsPtclsDestroy(void *ctx) {
@@ -135,22 +137,24 @@ struct BLDiagnosticsInternalStateCtx {
 static void blDiagnosticsInternalStateProcess(int i,
     struct BLSimulationState* simulationState, void *c) {
   struct BLDiagnosticsInternalStateCtx *ctx = c;
-  int rank = 0;
+  if ((i % ctx->dumpPeriodicity) == 0) {
+    int rank = 0;
 #ifdef BL_WITH_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 #endif
-  char fileName[1000];
-  sprintf(fileName, "%s_%d_%d.txt", ctx->fileName, rank, i);
-  FILE *f = fopen(fileName, "w");
-  if (!f) return;
-  struct BLEnsemble *ensemble = &simulationState->ensemble;
-  int j, k;
-  for (j = 0; j < ensemble->numPtcls; ++j) {
-    for (k = 0; k < ensemble->internalStateSize; ++k) {
-      fprintf(f, "%e ",
-          ensemble->internalState[j * ensemble->internalStateSize + k]);
+    char fileName[1000];
+    sprintf(fileName, "%s_%d_%d.txt", ctx->fileName, rank, i);
+    FILE *f = fopen(fileName, "w");
+    if (!f) return;
+    struct BLEnsemble *ensemble = &simulationState->ensemble;
+    int j, k;
+    for (j = 0; j < ensemble->numPtcls; ++j) {
+      for (k = 0; k < ensemble->internalStateSize; ++k) {
+        fprintf(f, "%e ",
+            ensemble->internalState[j * ensemble->internalStateSize + k]);
+      }
+      fprintf(f, "\n");
     }
-    fprintf(f, "\n");
   }
 }
 
