@@ -5,11 +5,17 @@
 \usepackage{float}
 \usepackage{graphicx}
 
+\renewcommand\vec{\mathbf}
+
+
 \begin{document}
 
 \tableofcontents
 
 \section{Model}
+
+
+\subsection{Atoms}
 
 Atoms move ballistically.  Emitted from an oven at a temperature
 $T$ with mean velocity $\bar{v}$.  Collimated to an angle
@@ -22,57 +28,146 @@ There is an assumption here about how the dipoles due to the
 different atoms add up: Coherent addition.  Good above threshold
 but needs to be verified by scaling $w$ down.
 
-Field: single mode with resonance frequency $\omega_c$ and decay
-rate $\gamma$.  Mode function,
-$\vec{\epsilon}(\vec{x})\varphi(\vec{x})$, with $\vec{\epsilon}$
-the polarization unit vector and $\varphi$ normalized to unity in
-$L_2$,
+
+\subsection{Atom-Field interaction}
+
+The internal state of the atoms and the electromagnetic field are
+described  by the Hamiltonian
 \begin{equation}
-\int d^3\mathbf{x} \left|\varphi(\mathbf{x})\right|^2 = 1\;.
+  \hat H =
+  \sum_{j=1}^N \frac{\hbar \omega_a}{2}\hat \sigma_j^z +
+  \sum_{m=1}^M \hbar\omega_m\hat a_m^\dagger\hat a_m +
+  \sum_{j=1}^N \vec{\hat E}(\vec{x}_j)\cdot \vec{\hat d}_j\;.
+  \label{eqn:Hamiltonian}
+\end{equation}
+In this equation, $\omega_a$ is the atomic transition frequency,
+$\hat\sigma_j^z$ is the $z$ Pauli spin matrix for atom $j$, $N$
+is the total number of atoms in the system, $\omega_m$ is the
+resonance frequency of the $m$-th mode, $\hat a_m$ and $\hat
+a_m^\dagger$ are the annihilation and creation operators for the
+$m$-th mode, $M$ is the total number of modes included in the
+model, and $\vec{\hat{d}}_j$ is the dipole operator for the $j$-th
+atom.
+
+Using the mode expansion, the field $\vec{\hat E}$ can be written
+\begin{equation}
+  \vec{\hat E}(\vec{x}_j) =
+  \sum_{m=1}^M\vec{\phi}_m(\vec{x}_j) \hat a_m + H.C.
+\end{equation}
+In this equation, $\vec{\phi}_m$ is the (complex vector valued)
+mode function of the $m$-th mode and $H.C.$ is the Hermitian
+conjugate.  The mode functions are normalized as
+\begin{equation}
+  \int d^3x \vec{\phi}^*(\vec{x})\cdot\vec{\phi}(\vec{x}) =
+  \hbar\omega_m\;.
+\end{equation}
+This implies that the peak values of the field scale as
+\begin{equation}
+  \epsilon_m = \sqrt{\frac{\hbar\omega_m}{2\epsilon_0V_{\rm eff}}}\;,
+\end{equation}
+where $V_{\rm eff}$ is the effective mode volume.
+
+The atomic dipole operator can be written as
+\begin{equation}
+  \vec{\hat d} = \sum_{\sigma, \xi;\sigma^\prime \xi^\prime}
+\langle \sigma, \xi|\vec{\hat{d}}|\sigma^\prime,\xi^\prime \rangle\;.
+\end{equation}
+We have divided the atomic Hilbert space into sub-spaces indexed
+by $\sigma=g,e$.  These sub-spaces are separated by $\omega_a$.
+The states in each sub-space are labeled by additional quantum
+numbers $\xi$ (think fine structure and hyperfine structure), we
+suppress the dependence of $\xi$ on the sub-space to not clutter
+the notation.  Note that, in general, the atomic energy levels
+depend on the full set of quantum numbers $\sigma$ and $\xi$.
+The model Eq.~(\ref{eqn:Hamiltonian}) neglects the dependence on
+the hyperfine levels.  The current treatment is easily
+generalized to include hyperfine level shifts.  Furthermore,
+Zeeman and Stark shifts can incorporated into our simulation by
+including them in the free evolution.  Thus, even though they are
+not included in the atom-field interaction part of the dynamics,
+they are included to second order accuracy in the evolution of
+the system.
+
+We next go over to a frame rotating at the atomic transition
+frequency by means of the transformation
+\begin{equation}
+\hat U = e^{-it\sum_j\hbar\omega_a\hat\sigma_j^z/2}\;.
+\end{equation}
+The Hamiltonian in this frame is
+\begin{multline}
+  \hat H = 
+  \sum_{m=1}^M \hbar\delta_m\hat a_m^\dagger\hat a_m +
+  \sum_{m,j,\sigma,\xi,\sigma^\prime,\xi^\prime}
+  \left[
+    \left(
+      \vec{\phi}_m(x_j)e^{-i\omega_a t} \hat a_m + 
+      \vec{\phi}_m^*(x_j)e^{i\omega_a t} \hat a_m^\dagger +
+    \right)
+  \right.\\
+  \left.
+    \langle \sigma,\xi| \vec{\hat d}_j | \sigma^\prime,\xi^\prime\rangle
+    e^{i\omega_a t({(-1)}^\sigma-{(-1)}^{\sigma^\prime})/2}
+    | \sigma,\xi\rangle \langle \sigma^\prime,\xi^\prime|
+  \right]
+\end{multline}
+
+In the rotating wave approximation we drop terms oscillating with
+a frequency of order $\omega_a$, leading to
+\begin{multline}
+  \hat H = 
+  \sum_{m=1}^M \hbar\delta_m\hat a_m^\dagger\hat a_m +\\
+  \sum_{m,j,\xi,\xi^\prime}
+  \left[
+    \vec{\phi}_m(x_j) 
+    \langle e,\xi| \vec{\hat d}_j | g,\xi^\prime\rangle\;
+    \hat a_m 
+    | e,\xi \rangle \langle g,\xi^\prime| +
+    \vec{\phi}_m^*(x_j) 
+    \langle g,\xi| \vec{\hat d}_j | e,\xi^\prime\rangle\;
+    \hat a_m^\dagger 
+    | g,\xi \rangle \langle e,\xi^\prime|
+  \right]
+\end{multline}
+The first term in the interaction piece describes absorption of a
+photon and the second term describes emission.  Introducing the
+positive frequency part of the field,
+\begin{equation}
+  \vec{\hat E}^{(+)}=\sum_m\vec{\phi}\hat a_m\;,
+\end{equation}
+and the atomic operators,
+\begin{equation}
+  \vec{\hat d}_-=\vec{\hat d}_+^\dagger =
+  \sum_{\xi,\xi^\prime}
+  \langle g,\xi|\vec{\hat d}| e,\xi^\prime \rangle
+  | g,\xi\rangle \langle e,\xi^\prime |\;,
+\end{equation}
+we can write the Hamiltonian as
+\begin{equation}
+  \hat H = 
+  \sum_{m=1}^M \hbar\delta_m\hat a_m^\dagger\hat a_m +\\
+  \sum_j\left( 
+    \vec{\hat E}^{(+)}\cdot \vec{\hat d}_+^{(j)} +
+    \vec{\hat E}^{(-)}\cdot \vec{\hat d}_-^{(j)}
+  \right)
 \end{equation}
 
-Dipole interaction between atoms and cavity:
 
-\begin{equation}
-\hat H_I=\mathbf{d}\cdot\mathbf{E}(\mathbf{x})
-\end{equation}
-Inserting $\mathbf{E}=\epsilon\varphi\hat a +
-\epsilon^*\varphi^* \hat a^\dagger$ we find
-\begin{equation}
-\hat H_I =
-\frac{\hbar g_{ F^\prime, m_F^\prime;F, m_F}(\vec{x})}{2}
-\left|F^\prime,m_F^\prime\right>\left<F, m_F\right|\hat a
-+
-\frac{\hbar g_{F, m_F;F^\prime, m_F^\prime}(\vec{x})}{2}
-\left|F, m_F\right>\left<F^\prime,m_F^\prime\right|\hat a^\dagger
-\end{equation}
-where
-\begin{equation}
-g_{ F^\prime, m_F^\prime;F, m_F}=
-\left<F^\prime,m_F^\prime\right|
-\vec{\epsilon}\cdot\vec{d}(\vec{x})\varphi(\vec{x})
-\left|F,m_F\right>
-\end{equation}
+\subsubsection{Equation of motion for the field}
 
-\paragraph{Equation of motion for the field} We find the
-interaction piece of the equation of motion for the field using
-the Heisenberg equation of motion
+The Heisenberg equations of motion for the field modes are
 \begin{equation}
-i\frac{d\hat a}{dt}=
-\frac{1}{2}\sum_{m_F,m_F^\prime}
-g_{F, m_F;F^\prime, m_F^\prime}
-\left<\psi|F^\prime, m_F^\prime\right>
-\left<F, m_F|\psi\right>
+  i\frac{d}{dt}\hat a_m =
+  \delta_m\hat a_m +
+  \sum_j \vec{\phi}_m^{(*)}(\vec{x}_j)\cdot
+  \left< \vec{\hat d}_-^{(j)}\right>\;.
 \end{equation}
-We work in the frame rotating at the frequency of the cavity
-field.  In addition to the interaction piece there are damping
+The sum over $j$ is the polarization of the gain medium projected
+onto the $m$-th mode.
+
+In addition to the interaction piece there are damping
 and fluctuations.
 \begin{equation}
 i\frac{d\hat a}{dt}=
-\frac{1}{2}\sum_{m_F,m_F^\prime}
-g_{F, m_F;F^\prime, m_F^\prime}
-\left<\psi|F^\prime, m_F^\prime\right>
-\left<F, m_F|\psi\right>
 -\frac{\kappa}{2}\hat a + \hat F_a\;.
 \end{equation}
 The noise term has zero mean and has correlations
@@ -88,6 +183,21 @@ And then we need to do an operator splitting.  The free damped
 equations can be integrated analytically.  The interaction piece
 has to be dealt with using a numerical integrator, e.g. RK4.
 
+
+\subsubsection{Equation of motion for the atoms}
+
+The Schr\"odinger equation for atom $j$ is
+\begin{equation}
+  i\frac{d}{dt}|\psi_j\rangle =
+  \left(
+    \vec{\hat E}^{(+)}(\vec{x}_j)\cdot \vec{\hat d}_+^{(j)} +
+    \vec{\hat E}^{(-)}(\vec{x}_j)\cdot \vec{\hat d}_-^{(j)} +
+  \right)
+  |\psi_j\rangle\;.
+\end{equation}
+
+
+\subsubsection{Special case: Single mode field and  two level atoms}
 
 
 \section{Simulation algorithm}
@@ -123,20 +233,19 @@ the field amplitude changes as well.
 
 \subsubsection{Update algorithm}
 
-RK4 with the following RHS:
-
+RK4 with the following RHS\@:
 \begin{itemize}
 \item Scatter field amplitude from Rank 0
-\item {\it polarization} = 0
+\item \textit{polarization} = 0
 \item For each atom:
 \begin{itemize}
   \item Load internal state $|\psi\rangle$
   \item Compute $|\psi^\prime\rangle =
                  \varphi\vec{\epsilon}\cdot\vec{d}|\psi\rangle$
-  \item {\it polarization} += $\langle\psi|\psi^\prime\rangle$
+  \item \textit{polarization} += $\langle\psi|\psi^\prime\rangle$
   \item Store $|\psi^\prime\rangle$
 \end{itemize}
-\item {\it polarization} is the rhs for the field amplitude and
+\item \textit{polarization} is the rhs for the field amplitude and
 the $|\psi^\prime\rangle$ are the rhs for the atomic internal
 state.
 \end{itemize}
@@ -234,12 +343,12 @@ buffer implementation at the front.
 [done]}}
 
 Strictly speaking this is not needed as long as the field evolves
-identically on each node (e.g. in the absence of noise in the
+identically on each node (e.g.\ in the absence of noise in the
 field equations).  But as soon as we add noise the field
 amplitudes evolve differently on each node and only one of them
 is the true amplitude.  We can still evolve the fields using the
 same equations on each processor (as long as that's not too much
-work) to simplify the control flow.  I.e. no need to add 
+work) to simplify the control flow.  I.e.\ no need to add 
 \verb~if (!rank) { ... }~ around the field updates.  The
 amplitudes on ranks other than zero simply get overwritten.
 
@@ -248,7 +357,7 @@ amplitudes on ranks other than zero simply get overwritten.
 generation {\bf [done]}}
 
 The \verb~sprng~ library needs to be compiled and included
-differently depending on whether it is used with MPI.
+differently depending on whether it is used with MPI\@.
 
 
 \subsubsection{Noise of the cavity field}
