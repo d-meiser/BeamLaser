@@ -199,8 +199,63 @@ The Schr\"odinger equation for atom $j$ is
 
 \subsubsection{Special case: Single mode field and two level atoms}
 
+In the case of a two level atom we can ignore the extra quantum
+numbers $\xi$.  There is just the excited state $|e\rangle$ and
+the ground state $|g\rangle$.  Without loss of generality, we
+assume that the dipole operator has a matrix element along $x$
+only,
+\begin{equation}
+  \langle g|\vec{\hat{d}}_-|e\rangle = \wp \vec{e}_x\;.
+\end{equation}
+
+The equations of motion of the field become
+\begin{equation}
+  i\frac{da}{dt} =
+  \delta a +
+  \sum_j\vec{\phi}^*(\vec{x})\cdot
+  \vec{e}_x\wp\langle g|\hat\sigma_-^{(j)}|e\rangle\;.
+\end{equation}
+
+The Schr\"odinger equation for atom $j$ becomes:
+\begin{equation}
+  i\hbar\frac{d}{dt}|\psi_j\rangle =
+  \left(
+  \vec{\phi}(\vec{x}_j)a\wp^*\sigma^+ +
+  \vec{\phi}^*(\vec{x}_j)a^*\wp\sigma^-
+  \right)|\psi_j\rangle\;.
+\end{equation}
+
 
 \section{Simulation algorithm}
+
+The right hand side in the equations of motion can be computed
+using the following algorithm.
+\begin{itemize}
+
+\item Preparation: compute
+  $\left\{\vec{\hat \phi}_m(\vec{x}_j)|
+  m = 1,\ldots,M; j = 1,\ldots,N\right\}$
+
+\item \verb!MPI_Ibcast! the field amplitudes
+
+\item Compute 
+  $\left\{\vec{P}_j=\wp_j\langle\hat\sigma_-^{(j)}\rangle |
+  j = 1,\ldots,N\right\}$
+
+\item local reduce and then \verb!MPI_Iallreduce! to find
+  $\left\{P_m|m=1,\ldots,M\right\}$
+
+\item Wait on field amplitudes \verb!MPI_Ibcast!
+
+\item Compute the field vectors
+  $\left\{\vec{E}(x_j)|j=1,\ldots,N\right\}$
+
+\item Use field vectors to compute RHSs in atomic Schr\"odinger
+  equations.
+
+\item Wait on polarizations.
+
+\end{itemize}
 
 \section{Implementation notes}
 
