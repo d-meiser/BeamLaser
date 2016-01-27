@@ -51,9 +51,9 @@ struct IntegratorCtx {
   const struct Configuration *conf;
   struct BLEnsemble *ensemble;
   struct BLDipoleOperator *dipoleOperator;
-  double *ex;
-  double *ey;
-  double *ez;
+  double complex *ex;
+  double complex *ey;
+  double complex *ez;
 };
 
 void setDefaults(struct Configuration *conf);
@@ -75,9 +75,9 @@ static void modeFunction(int n,
     const double * restrict x,
     const double * restrict y,
     const double * restrict z,
-    double * restrict fx,
-    double * restrict fy,
-    double * restrict fz);
+    double complex * restrict fx,
+    double complex * restrict fy,
+    double complex * restrict fz);
 
 
 int main(int argn, char **argv) {
@@ -118,10 +118,11 @@ int main(int argn, char **argv) {
       &simulationState.ensemble);
   integratorCtx.conf = &conf;
   integratorCtx.ensemble = &simulationState.ensemble;
-  integratorCtx.dipoleOperator = blDipoleOperatorTLACreate();
-  integratorCtx.ex = malloc(conf.maxNumParticles * sizeof(double));
-  integratorCtx.ey = malloc(conf.maxNumParticles * sizeof(double));
-  integratorCtx.ez = malloc(conf.maxNumParticles * sizeof(double));
+  integratorCtx.dipoleOperator = blDipoleOperatorTLACreate(
+      conf.dipoleMatrixElement);
+  integratorCtx.ex = malloc(conf.maxNumParticles * sizeof(*integratorCtx.ex));
+  integratorCtx.ey = malloc(conf.maxNumParticles * sizeof(*integratorCtx.ey));
+  integratorCtx.ez = malloc(conf.maxNumParticles * sizeof(*integratorCtx.ez));
 
   if (stat != BL_SUCCESS) return stat;
   simulationState.fieldState.q = 1.0;
@@ -420,23 +421,13 @@ void interactionRHS(double t, int n, const double *x, double *y,
   const double complex fieldAmplitude =
     *((const double complex*)(x + fieldOffset));
 
-  /* For all particles:
-   *   compute polarization
-   *   compute dipole interaction
-   * MPI_Allreduce polarization
-   *
-   * Scalability can be improved by first computing the polarization,
-   * doing an asynchronous all-reduce, then doing the computation of the
-   * dipole interaction, and finally finishing the all-reduce.  However,
-   * this entails traversing the state arrays twice and evaluating the
-   * mode function twice.
-   * */
   double complex polarization = 0;
   blDipoleOperatorApply(integratorCtx->dipoleOperator,
                         ensemble->internalStateSize,
                         numPtcls,
                         integratorCtx->ex, integratorCtx->ey, integratorCtx->ez,
-                        x, y, (double*)&polarization);
+                        (const double complex*)x,
+                        (double complex*)y);
   polarization *= integratorCtx->conf->particleWeight;
 
   BL_MPI_Request polReq =
@@ -456,9 +447,9 @@ void modeFunction(int n,
     const double * restrict x,
     const double * restrict y,
     const double * restrict z,
-    double * restrict fx,
-    double * restrict fy,
-    double * restrict fz) {
+    double complex * restrict fx,
+    double complex * restrict fy,
+    double complex * restrict fz) {
   int i, j;
   for (i = 0; i < n; i += MODE_FUN_CHUNK_SIZE) {
 

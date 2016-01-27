@@ -6,21 +6,18 @@
 
 void blDipoleOperatorApply(struct BLDipoleOperator *op,
     int stride, int numPtcls,
-    const double *ex, const double *ey, const double *ez,
-    const double *psi, double *result, double *polarization) {
-  op->apply(stride, numPtcls, ex, ey, ez, psi, result, polarization, op->ctx);
+    const double complex *ex,
+    const double complex *ey,
+    const double complex *ez,
+    const double complex *psi, double complex *result) {
+  op->apply(stride, numPtcls, ex, ey, ez, psi, result, op->ctx);
 }
 
-void blDipoleOperatorApplyNoPolarization(struct BLDipoleOperator *op,
+void blDipoleOperatorExpectationValue(struct BLDipoleOperator *op,
     int stride, int numPtcls,
-    const double *ex, const double *ey, const double *ez,
-    const double *psi, double *result) {
-  if (op->applyNoPolarization) {
-    op->applyNoPolarization(stride, numPtcls, ex, ey, ez, psi, result, op->ctx);
-  } else { 
-    double polarization[2];
-    op->apply(stride, numPtcls, ex, ey, ez, psi, result, polarization, op->ctx);
-  }
+    const double complex *psi,
+    double complex *dx, double complex *dy, double complex *dz) {
+  op->expectationValue(stride, numPtcls, psi, dx, dy, dz, op->ctx);
 }
 
 void blDipoleOperatorDestroy(struct BLDipoleOperator *op) {
@@ -28,60 +25,35 @@ void blDipoleOperatorDestroy(struct BLDipoleOperator *op) {
   free(op);
 }
 
+
+struct TLACtx {
+  double dipoleMatrixElement;
+};
+
 static void dipoleOperatorTLAApply(int stride, int numPtcls,
-    const double *ex, const double *ey, const double *ez,
-    const double *psi, double *result, double *polarization,
-    void *ctx) {
-  BL_UNUSED(ctx);
+    const double complex *ex,
+    const double complex *ey,
+    const double complex *ez,
+    const double complex *psi, double complex *result,
+    void *c) {
   BL_UNUSED(ez);
   BL_UNUSED(ey);
+  struct TLACtx *ctx = c;
+  double dipoleMatrixElement = ctx->dipoleMatrixElement;
   double complex y[2];
-  double complex pol = 0;
-  double complex *x, *r;
+  const double complex *x;
+  double complex *r;
   int i, j;
   for (i = 0; i < numPtcls; ++i) {
-    x = (double complex*)(psi + i * stride);
-    r = (double complex*)(result + i * stride);
+    x = psi + i * stride;
+    r = result + i * stride;
 
     for (j = 0; j < 2; ++j) {
       y[j] = 0;
     }
 
-    double ep = ex[i];
-    y[0] = ep * x[1];
-    y[1] = ep * x[0];
-
-    for (j = 0; j < 2; ++j) {
-      pol += conj(x[j]) * y[j];
-    }
-
-    for (j = 0; j < 2; ++j) {
-      r[j] = y[j];
-    }
-  }
-  *((double complex*)polarization) = pol;
-}
-
-static void dipoleOperatorTLAApplyNoPolarization(int stride, int numPtcls,
-                                   const double *ex, const double *ey, const double *ez,
-                                   const double *psi, double *result,
-                                   void *ctx) {
-  BL_UNUSED(ctx);
-  BL_UNUSED(ez);
-  BL_UNUSED(ey);
-  double complex y[2];
-  double complex *x, *r;
-  int i, j;
-  for (i = 0; i < numPtcls; ++i) {
-    x = (double complex*)(psi + i * stride);
-    r = (double complex*)(result + i * stride);
-
-    for (j = 0; j < 2; ++j) {
-      y[j] = 0;
-    }
-
-    double ep = ex[i];
-    y[0] = ep * x[1];
+    double complex ep = dipoleMatrixElement * ex[i];
+    y[0] = conj(ep) * x[1];
     y[1] = ep * x[0];
 
     for (j = 0; j < 2; ++j) {
@@ -91,14 +63,15 @@ static void dipoleOperatorTLAApplyNoPolarization(int stride, int numPtcls,
 }
 
 static void dipoleOperatorTLADestroy(void *ctx) {
-  BL_UNUSED(ctx);
+  free(ctx);
 }
 
-struct BLDipoleOperator *blDipoleOperatorTLACreate() {
+struct BLDipoleOperator *blDipoleOperatorTLACreate(double dipoleMatrixElement) {
   struct BLDipoleOperator *op = malloc(sizeof(*op));
   op->apply = dipoleOperatorTLAApply;
-  op->applyNoPolarization = dipoleOperatorTLAApplyNoPolarization;
   op->destroy = dipoleOperatorTLADestroy;
-  op->ctx = 0;
+  struct TLACtx *ctx = malloc(sizeof(*ctx));
+  ctx->dipoleMatrixElement = dipoleMatrixElement;
+  op->ctx = ctx;
   return op;
 }
