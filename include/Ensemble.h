@@ -3,6 +3,7 @@
 
 #include <Errors.h>
 #include <Utilities.h>
+#include <complex.h>
 
 
 struct BLEnsemble {
@@ -15,7 +16,7 @@ struct BLEnsemble {
   double *vx;
   double *vy;
   double *vz;
-  double *internalState;
+  double complex *internalState;
 };
 
 BL_STATUS blEnsembleInitialize(int capacity, int internalStateSize,

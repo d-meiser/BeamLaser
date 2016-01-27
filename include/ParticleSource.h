@@ -2,6 +2,7 @@
 #define PARTICLE_SOURCE_H
 
 #include <Utilities.h>
+#include <complex.h>
 
 
 /* Interface for ParticleSources */
@@ -10,7 +11,8 @@ struct ParticleSource {
   int (*getNumParticles)(void *ctx);
   /* Produce particles */
   void (*createParticles)(double *x, double *y, double *z,
-      double *vx, double *vy, double *vz, double *internalState, void *ctx);
+      double *vx, double *vy, double *vz,
+      double complex *internalState, void *ctx);
   /* Destroy this sources context */
   void (*destroy)(void *ctx);
   /* Data needed by this particle source */
@@ -29,7 +31,7 @@ int blParticleSourceGetNumParticles(struct ParticleSource *particleSource);
 /* Create particles for all sources in this list*/
 void blParticleSourceCreateParticles(struct ParticleSource *particleSource,
     double *x, double *y, double *z, double *vx, double *vy, double *vz,
-    int internalStateSize, double *internalState);
+    int internalStateSize, double complex *internalState);
 
 /* Destroy the sources in the particleSource list */
 void blParticleSourceDestroy(struct ParticleSource *particleSource);
@@ -49,7 +51,7 @@ void blParticleSourceDestroy(struct ParticleSource *particleSource);
 struct ParticleSource *blParticleSourceUniformCreate(
     struct BlBox volume, double nbar,
     double *vbar, double *deltaV,
-    int internalStateSize, double *internalState,
+    int internalStateSize, double complex *internalState,
     struct ParticleSource *next);
 
 #endif

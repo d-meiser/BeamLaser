@@ -18,7 +18,7 @@
 #include <getopt.h>
 
 
-static const int INTERNAL_STATE_DIM = 4;
+static const int INTERNAL_STATE_DIM = 2;
 
 static double Omega = 0.0;
 static const double epsilon0 = 8.85e-12;
@@ -395,14 +395,17 @@ void blFieldAtomInteraction(double dt, struct BLFieldState *fieldState,
   been scattered to each rank we integrate its equations of motion redundantly.
   */
   BL_MPI_Request fieldRequest =
-    blBcastBegin((const double*)fieldState, ensemble->internalState + fieldOffset, 2);
+    blBcastBegin((const double*)fieldState,
+        (double*)(ensemble->internalState + fieldOffset), 2);
   modeFunction(ensemble->numPtcls, ensemble->x, ensemble->y, ensemble->z,
       integratorCtx->ex, integratorCtx->ey, integratorCtx->ez);
-  blBcastEnd(fieldRequest, (const double*)fieldState,
-                  ensemble->internalState + fieldOffset, 2);
+  blBcastEnd(fieldRequest,
+      (const double*)fieldState,
+      (double*)(ensemble->internalState + fieldOffset), 2);
 
   blIntegratorTakeStep(integrator, 0.0, dt, n, interactionRHS,
-                       ensemble->internalState, ensemble->internalState,
+                       (const double*)ensemble->internalState,
+                       (double*)ensemble->internalState,
                        integratorCtx);
 
   fieldState->q = ensemble->internalState[fieldOffset + 0];
@@ -434,7 +437,7 @@ void interactionRHS(double t, int n, const double *x, double *y,
     blAddAllBegin((const double*)&polarization, y + fieldOffset, 2);
   for (i = 0; i < numPtcls; ++i) {
     double complex *yp = (double complex *)(y + i * ensemble->internalStateSize);
-    for (j = 0; j < ensemble->internalStateSize / 2; ++j) {
+    for (j = 0; j < ensemble->internalStateSize; ++j) {
       yp[j] *= fieldAmplitude;
     }
   }
@@ -509,10 +512,12 @@ struct ParticleSource *constructParticleSources(
   double vbar[] = {0, 0, -conf->vbar};
   double deltaV[] = {
     conf->alpha * conf->deltaV, conf->alpha * conf->deltaV, conf->deltaV};
-  double internalState[] = {0, 0, 1, 0};
+  double complex internalState[2];
+  internalState[0] = 0;
+  internalState[1] = 1;
 
   particleSource = blParticleSourceUniformCreate(
-      volume, nbar, vbar, deltaV, 4, internalState, 0);
+      volume, nbar, vbar, deltaV, 2, internalState, 0);
   return particleSource;
 }
 

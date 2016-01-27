@@ -24,15 +24,15 @@ int main(int argn, char **argv) {
   struct BlBox box = {0, 1, 0, 1, 0, 1};
   double vbar[] = {0, 0, 0};
   double deltaV[] = {2.3, 3.5, 7.5};
-  double initialState[] = {1, 0, 0, 0};
-  static const int internalStateSize = 4;
+  double complex initialState[] = {1, 0};
+  static const int internalStateSize = 2;
   struct ParticleSource *particleSource =
     blParticleSourceUniformCreate(box, 1, vbar, deltaV,
         internalStateSize, initialState, 0);
 
   double x[MAX_NUM_PTCLS], y[MAX_NUM_PTCLS], z[MAX_NUM_PTCLS],
          vx[MAX_NUM_PTCLS], vy[MAX_NUM_PTCLS], vz[MAX_NUM_PTCLS];
-  double internalState[4 * MAX_NUM_PTCLS];
+  double complex internalState[2 * MAX_NUM_PTCLS];
 
   blParticleSourceCreateParticles(particleSource,
                                   x, y, z, vx, vy, vz,
@@ -78,6 +78,7 @@ int main(int argn, char **argv) {
 
 #ifdef BL_WITH_MPI
   status = MPI_Finalize();
+  BL_UNUSED(status);
   assert(status == MPI_SUCCESS);
 #endif
   return result;

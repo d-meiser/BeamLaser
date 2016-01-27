@@ -5,7 +5,7 @@
 #include <mpi.h>
 #endif
 
-#define INTERNAL_STATE_SIZE 4
+#define INTERNAL_STATE_SIZE 2
 #define ENSEMBLE_CAPACITY 10
 static double x[ENSEMBLE_CAPACITY];
 static double y[ENSEMBLE_CAPACITY];
@@ -13,11 +13,11 @@ static double z[ENSEMBLE_CAPACITY];
 static double vx[ENSEMBLE_CAPACITY];
 static double vy[ENSEMBLE_CAPACITY];
 static double vz[ENSEMBLE_CAPACITY];
-static double internalState[ENSEMBLE_CAPACITY * INTERNAL_STATE_SIZE];
+static double complex internalState[ENSEMBLE_CAPACITY * INTERNAL_STATE_SIZE];
 static struct BlBox volume = {0.0, 1.0, -1.0, 0.5, -2.5, 3.0};
 static double vbar[3] = {0.0, 0.0, -200.0};
 static double deltaV[3] = {1.0, 1.0, 10.0};
-static double initialState[4] = {0, 0, 1.0, 0};
+static double complex initialState[2] = {0, 1.0};
 static const int numPtcls = 5;
 static struct ParticleSource *particleSource;
 
