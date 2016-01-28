@@ -117,8 +117,9 @@ int main(int argn, char **argv) {
     sqrt(hbar * omega / (epsilon0 * sigmaE * sigmaE *L)) *
     conf.dipoleMatrixElement;
 
-  blIntegratorCreate("RK4", conf.maxNumParticles * INTERNAL_STATE_DIM,
-                     &integrator);
+  blIntegratorCreate("RK4", conf.maxNumParticles *
+      sizeof(double complex) / sizeof(double) * INTERNAL_STATE_DIM,
+      &integrator);
 
   stat = blEnsembleInitialize(conf.maxNumParticles, INTERNAL_STATE_DIM,
       &simulationState.ensemble);

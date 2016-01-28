@@ -29,7 +29,7 @@ dt = 1.0e-9
 num_steps = 401
 
 phase_space = []
-for i in range(8):
+for i in range(3):
     print dt / (2**i)
     output = subprocess.Popen([beam_laser_tla_exec,
                                "--nbar", str(nbar),
