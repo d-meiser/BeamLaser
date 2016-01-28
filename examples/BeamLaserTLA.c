@@ -18,7 +18,7 @@
 #include <getopt.h>
 
 
-static const int INTERNAL_STATE_DIM = 4;
+static const int INTERNAL_STATE_DIM = 2;
 
 static double Omega = 0.0;
 static const double epsilon0 = 8.85e-12;
@@ -51,9 +51,15 @@ struct IntegratorCtx {
   const struct Configuration *conf;
   struct BLEnsemble *ensemble;
   struct BLDipoleOperator *dipoleOperator;
-  double *ex;
-  double *ey;
-  double *ez;
+  double complex *ex;
+  double complex *ey;
+  double complex *ez;
+  double complex *dx;
+  double complex *dy;
+  double complex *dz;
+  double complex *phix;
+  double complex *phiy;
+  double complex *phiz;
 };
 
 void setDefaults(struct Configuration *conf);
@@ -75,9 +81,9 @@ static void modeFunction(int n,
     const double * restrict x,
     const double * restrict y,
     const double * restrict z,
-    double * restrict fx,
-    double * restrict fy,
-    double * restrict fz);
+    double complex * restrict fx,
+    double complex * restrict fy,
+    double complex * restrict fz);
 
 
 int main(int argn, char **argv) {
@@ -118,10 +124,20 @@ int main(int argn, char **argv) {
       &simulationState.ensemble);
   integratorCtx.conf = &conf;
   integratorCtx.ensemble = &simulationState.ensemble;
-  integratorCtx.dipoleOperator = blDipoleOperatorTLACreate();
-  integratorCtx.ex = malloc(conf.maxNumParticles * sizeof(double));
-  integratorCtx.ey = malloc(conf.maxNumParticles * sizeof(double));
-  integratorCtx.ez = malloc(conf.maxNumParticles * sizeof(double));
+  integratorCtx.dipoleOperator = blDipoleOperatorTLACreate(
+      conf.dipoleMatrixElement);
+  integratorCtx.ex = malloc(conf.maxNumParticles * sizeof(*integratorCtx.ex));
+  integratorCtx.ey = malloc(conf.maxNumParticles * sizeof(*integratorCtx.ey));
+  integratorCtx.ez = malloc(conf.maxNumParticles * sizeof(*integratorCtx.ez));
+  integratorCtx.dx = malloc(conf.maxNumParticles * sizeof(*integratorCtx.dx));
+  integratorCtx.dy = malloc(conf.maxNumParticles * sizeof(*integratorCtx.dy));
+  integratorCtx.dz = malloc(conf.maxNumParticles * sizeof(*integratorCtx.dz));
+  integratorCtx.phix =
+    malloc(conf.maxNumParticles * sizeof(*integratorCtx.phix));
+  integratorCtx.phiy =
+    malloc(conf.maxNumParticles * sizeof(*integratorCtx.phiy));
+  integratorCtx.phiz =
+    malloc(conf.maxNumParticles * sizeof(*integratorCtx.phiz));
 
   if (stat != BL_SUCCESS) return stat;
   simulationState.fieldState.q = 1.0;
@@ -154,6 +170,12 @@ int main(int argn, char **argv) {
   free(integratorCtx.ex);
   free(integratorCtx.ey);
   free(integratorCtx.ez);
+  free(integratorCtx.dx);
+  free(integratorCtx.dy);
+  free(integratorCtx.dz);
+  free(integratorCtx.phix);
+  free(integratorCtx.phiy);
+  free(integratorCtx.phiz);
   blIntegratorDestroy(&integrator);
   blEnsembleFree(&simulationState.ensemble);
 
@@ -394,14 +416,17 @@ void blFieldAtomInteraction(double dt, struct BLFieldState *fieldState,
   been scattered to each rank we integrate its equations of motion redundantly.
   */
   BL_MPI_Request fieldRequest =
-    blBcastBegin((const double*)fieldState, ensemble->internalState + fieldOffset, 2);
+    blBcastBegin((const double*)fieldState,
+        (double*)(ensemble->internalState + fieldOffset), 2);
   modeFunction(ensemble->numPtcls, ensemble->x, ensemble->y, ensemble->z,
-      integratorCtx->ex, integratorCtx->ey, integratorCtx->ez);
-  blBcastEnd(fieldRequest, (const double*)fieldState,
-                  ensemble->internalState + fieldOffset, 2);
+      integratorCtx->phix, integratorCtx->phiy, integratorCtx->phiz);
+  blBcastEnd(fieldRequest,
+      (const double*)fieldState,
+      (double*)(ensemble->internalState + fieldOffset), 2);
 
   blIntegratorTakeStep(integrator, 0.0, dt, n, interactionRHS,
-                       ensemble->internalState, ensemble->internalState,
+                       (const double*)ensemble->internalState,
+                       (double*)ensemble->internalState,
                        integratorCtx);
 
   fieldState->q = ensemble->internalState[fieldOffset + 0];
@@ -414,39 +439,48 @@ void interactionRHS(double t, int n, const double *x, double *y,
   BL_UNUSED(n);
   struct IntegratorCtx *integratorCtx = ctx;
   struct BLEnsemble *ensemble = integratorCtx->ensemble;
-  int i, j;
+  int i;
   const int numPtcls = ensemble->numPtcls;
   const int fieldOffset = numPtcls * ensemble->internalStateSize;
-  const double complex fieldAmplitude =
-    *((const double complex*)(x + fieldOffset));
 
-  /* For all particles:
-   *   compute polarization
-   *   compute dipole interaction
-   * MPI_Allreduce polarization
-   *
-   * Scalability can be improved by first computing the polarization,
-   * doing an asynchronous all-reduce, then doing the computation of the
-   * dipole interaction, and finally finishing the all-reduce.  However,
-   * this entails traversing the state arrays twice and evaluating the
-   * mode function twice.
-   * */
+  blDipoleOperatorComputeD(integratorCtx->dipoleOperator,
+      ensemble->internalStateSize, numPtcls, (const double complex*)x,
+      integratorCtx->dx, integratorCtx->dy, integratorCtx->dz);
+
   double complex polarization = 0;
-  blDipoleOperatorApply(integratorCtx->dipoleOperator,
-                        ensemble->internalStateSize,
-                        numPtcls,
-                        integratorCtx->ex, integratorCtx->ey, integratorCtx->ez,
-                        x, y, (double*)&polarization);
+  for (i = 0; i < numPtcls; ++i) {
+    polarization += conj(integratorCtx->phix[i]) * integratorCtx->dx[i];
+  }
+  for (i = 0; i < numPtcls; ++i) {
+    polarization += conj(integratorCtx->phiy[i]) * integratorCtx->dy[i];
+  }
+  for (i = 0; i < numPtcls; ++i) {
+    polarization += conj(integratorCtx->phiz[i]) * integratorCtx->dz[i];
+  }
   polarization *= integratorCtx->conf->particleWeight;
 
   BL_MPI_Request polReq =
     blAddAllBegin((const double*)&polarization, y + fieldOffset, 2);
+
+  const double complex fieldAmplitude =
+    *((const double complex*)(x + fieldOffset));
   for (i = 0; i < numPtcls; ++i) {
-    double complex *yp = (double complex *)(y + i * ensemble->internalStateSize);
-    for (j = 0; j < ensemble->internalStateSize / 2; ++j) {
-      yp[j] *= fieldAmplitude;
-    }
+    integratorCtx->ex[i] = fieldAmplitude * integratorCtx->phix[i];
   }
+  for (i = 0; i < numPtcls; ++i) {
+    integratorCtx->ey[i] = fieldAmplitude * integratorCtx->phiy[i];
+  }
+  for (i = 0; i < numPtcls; ++i) {
+    integratorCtx->ez[i] = fieldAmplitude * integratorCtx->phiz[i];
+  }
+
+  blDipoleOperatorApply(integratorCtx->dipoleOperator,
+                        ensemble->internalStateSize,
+                        numPtcls,
+                        integratorCtx->ex, integratorCtx->ey, integratorCtx->ez,
+                        (const double complex*)x,
+                        (double complex*)y);
+
   blAddAllEnd(polReq, (const double*)&polarization, y + fieldOffset, 2);
 }
 
@@ -456,9 +490,9 @@ void modeFunction(int n,
     const double * restrict x,
     const double * restrict y,
     const double * restrict z,
-    double * restrict fx,
-    double * restrict fy,
-    double * restrict fz) {
+    double complex * restrict fx,
+    double complex * restrict fy,
+    double complex * restrict fz) {
   int i, j;
   for (i = 0; i < n; i += MODE_FUN_CHUNK_SIZE) {
 
@@ -479,7 +513,7 @@ void modeFunction(int n,
     }
 
     for (j = 0; j < MODE_FUN_CHUNK_SIZE; ++j) {
-      fx[i + j] = Omega * gaussianTerm[j] * sineTerm[j];
+      fy[i + j] = Omega * gaussianTerm[j] * sineTerm[j];
     }
   }
 
@@ -489,12 +523,12 @@ void modeFunction(int n,
     for (; i < n; ++i) {
       double arge = -(y[i] * y[i] + z[i] * z[i] / (sigmaE * sigmaE));
       double args = -(waveNumber * x[i]);
-      fx[i] = Omega * exp(arge) * sin(args);
+      fy[i] = Omega * exp(arge) * sin(args);
     }
   }
 
   for (i = 0; i < n; ++i) {
-    fy[i] = 0;
+    fx[i] = 0;
   }
 
   for (i = 0; i < n; ++i) {
@@ -518,10 +552,12 @@ struct ParticleSource *constructParticleSources(
   double vbar[] = {0, 0, -conf->vbar};
   double deltaV[] = {
     conf->alpha * conf->deltaV, conf->alpha * conf->deltaV, conf->deltaV};
-  double internalState[] = {0, 0, 1, 0};
+  double complex internalState[2];
+  internalState[0] = 0;
+  internalState[1] = 1;
 
   particleSource = blParticleSourceUniformCreate(
-      volume, nbar, vbar, deltaV, 4, internalState, 0);
+      volume, nbar, vbar, deltaV, 2, internalState, 0);
   return particleSource;
 }
 

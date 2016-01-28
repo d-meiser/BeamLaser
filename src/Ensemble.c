@@ -12,20 +12,20 @@ BL_STATUS blEnsembleInitialize(int capacity, int internalStateSize,
 
   ensemble->internalStateSize = internalStateSize;
 
-  ensemble->x = malloc(capacity * sizeof(ensemble->x));
+  ensemble->x = malloc(capacity * sizeof(*ensemble->x));
   if (!ensemble->x) { return BL_OUT_OF_MEMORY; }
-  ensemble->y = malloc(capacity * sizeof(ensemble->y));
+  ensemble->y = malloc(capacity * sizeof(*ensemble->y));
   if (!ensemble->y) { return BL_OUT_OF_MEMORY; }
-  ensemble->z = malloc(capacity * sizeof(ensemble->z));
+  ensemble->z = malloc(capacity * sizeof(*ensemble->z));
   if (!ensemble->z) { return BL_OUT_OF_MEMORY; }
-  ensemble->vx = malloc(capacity * sizeof(ensemble->vx));
+  ensemble->vx = malloc(capacity * sizeof(*ensemble->vx));
   if (!ensemble->vx) { return BL_OUT_OF_MEMORY; }
-  ensemble->vy = malloc(capacity * sizeof(ensemble->vy));
+  ensemble->vy = malloc(capacity * sizeof(*ensemble->vy));
   if (!ensemble->vy) { return BL_OUT_OF_MEMORY; }
-  ensemble->vz = malloc(capacity * sizeof(ensemble->vz));
+  ensemble->vz = malloc(capacity * sizeof(*ensemble->vz));
   if (!ensemble->vz) { return BL_OUT_OF_MEMORY; }
   ensemble->internalState = malloc(capacity * internalStateSize *
-                                   sizeof(ensemble->internalState));
+                                   sizeof(*ensemble->internalState));
   if (!ensemble->internalState) { return BL_OUT_OF_MEMORY; }
   return BL_SUCCESS;
 }
@@ -61,8 +61,11 @@ static void ensembleSwap_(int i, int j, void *ctx) {
     SWAP(ensemble->vy[i], ensemble->vy[j]);
     SWAP(ensemble->vz[i], ensemble->vz[j]);
     for (m = 0; m < ensemble->internalStateSize; ++m) {
-      SWAP(ensemble->internalState[ensemble->internalStateSize * i + m],
-           ensemble->internalState[ensemble->internalStateSize * j + m]);
+      double complex ctmp =
+        ensemble->internalState[ensemble->internalStateSize * i + m];
+      ensemble->internalState[ensemble->internalStateSize * i + m] =
+        ensemble->internalState[ensemble->internalStateSize * j + m];
+      ensemble->internalState[ensemble->internalStateSize * j + m] = ctmp;
     }
   }
 }
@@ -109,6 +112,7 @@ void blEnsembleCreateSpace(int numParticles, struct BLEnsemble *ensemble) {
       ensemble->numPtcls * sizeof(*ensemble->vz));
   memmove(ensemble->internalState + numParticles * ensemble->internalStateSize,
       ensemble->internalState,
-      ensemble->numPtcls * sizeof(double) * ensemble->internalStateSize);
+      ensemble->numPtcls * sizeof(*ensemble->internalState) *
+      ensemble->internalStateSize);
   ensemble->numPtcls += numParticles;
 }

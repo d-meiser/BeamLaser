@@ -150,8 +150,10 @@ static void blDiagnosticsInternalStateProcess(int i,
     int j, k;
     for (j = 0; j < ensemble->numPtcls; ++j) {
       for (k = 0; k < ensemble->internalStateSize; ++k) {
-        fprintf(f, "%e ",
-            ensemble->internalState[j * ensemble->internalStateSize + k]);
+        fprintf(f, "%e %e ",
+            creal(ensemble->internalState[j * ensemble->internalStateSize + k]),
+            cimag(ensemble->internalState[j * ensemble->internalStateSize + k])
+            );
       }
       fprintf(f, "\n");
     }

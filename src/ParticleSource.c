@@ -17,7 +17,7 @@ int blParticleSourceGetNumParticles(struct ParticleSource *particleSource) {
 
 void blParticleSourceCreateParticles(struct ParticleSource *particleSource,
     double *x, double *y, double *z, double *vx, double *vy, double *vz,
-    int internalStateSize, double *internalState) {
+    int internalStateSize, double complex *internalState) {
   if (particleSource) {
     particleSource->createParticles(x, y, z, vx, vy, vz, internalState,
         particleSource->ctx);
@@ -55,7 +55,7 @@ struct UniformCtx {
   double vbar[3];
   double deltaV[3];
   int internalStateSize;
-  double *internalState;
+  double complex *internalState;
 };
 
 static int uniformGetNumParticles(void *ctx) {
@@ -67,7 +67,8 @@ static int uniformGetNumParticles(void *ctx) {
 }
 
 static void uniformCreateParticles(double *x, double *y, double *z,
-      double *vx, double *vy, double *vz, double *internalState, void *ctx) {
+      double *vx, double *vy, double *vz,
+      double complex *internalState, void *ctx) {
   struct UniformCtx *uctx = ctx;
   const struct BlBox *box = &uctx->volume;
   int i;
@@ -84,7 +85,8 @@ static void uniformCreateParticles(double *x, double *y, double *z,
     vy[i] = blGenerateGaussianNoise(uctx->vbar[1], uctx->deltaV[1]);
     vz[i] = blGenerateGaussianNoise(uctx->vbar[2], uctx->deltaV[2]);
     memcpy(&internalState[i * uctx->internalStateSize],
-        uctx->internalState, uctx->internalStateSize * sizeof(double));
+        uctx->internalState,
+        uctx->internalStateSize * sizeof(*uctx->internalState));
   }
 
   uctx->nextNumPtcls = -1;
@@ -98,7 +100,7 @@ void uniformDestroy(void *ctx) {
 
 struct ParticleSource *blParticleSourceUniformCreate(
     struct BlBox volume, double nbar, double *vbar, double *deltaV,
-    int internalStateSize, double *internalState,
+    int internalStateSize, double complex *internalState,
     struct ParticleSource *next) {
   struct ParticleSource *self;
   blParticleSourceCreate(next, &self);
