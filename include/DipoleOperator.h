@@ -10,7 +10,7 @@ struct BLDipoleOperator {
       const double complex *ey,
       const double complex *ez,
       const double complex *psi, double complex *result, void *ctx);
-  void (*expectationValue)(int stride, int numPtcls,
+  void (*computeD)(int stride, int numPtcls,
       const double complex *psi,
       double complex *dx, double complex *dy, double complex *dz,
       void *ctx);
@@ -24,6 +24,10 @@ void blDipoleOperatorApply(struct BLDipoleOperator *op,
     const double complex *ey,
     const double complex *ez,
     const double complex *psi, double complex *result);
+
+void blDipoleOperatorComputeD(struct BLDipoleOperator *op,
+    int stride, int numPtcls, const double complex *psi,
+    double complex *dx, double complex *dy, double complex *dz);
 
 void blDipoleOperatorExpectationValue(struct BLDipoleOperator *op,
     int stride, int numPtcls,

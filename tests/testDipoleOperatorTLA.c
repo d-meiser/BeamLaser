@@ -1,6 +1,7 @@
 #include <cgreen/cgreen.h>
 #include <DipoleOperator.h>
 #include <complex.h>
+#include <math.h>
 
 static struct BLDipoleOperator *dipoleOperator;
 #define MAX_NUM_PTCLS 10
@@ -8,6 +9,9 @@ static struct BLDipoleOperator *dipoleOperator;
 static double complex ex[MAX_NUM_PTCLS];
 static double complex ey[MAX_NUM_PTCLS];
 static double complex ez[MAX_NUM_PTCLS];
+static double complex dx[MAX_NUM_PTCLS];
+static double complex dy[MAX_NUM_PTCLS];
+static double complex dz[MAX_NUM_PTCLS];
 static double complex psi[MAX_NUM_PTCLS * DOF_PER_PTCL];
 static double complex result[MAX_NUM_PTCLS * DOF_PER_PTCL];
 
@@ -73,6 +77,43 @@ Ensure(DipoleOperatorTLA, hasRightMatrixElementAlongX) {
   blDipoleOperatorDestroy(dipoleOperator);
 }
 
+Ensure(DipoleOperatorTLA, hasNoDipoleAlongY) {
+  dipoleOperator = blDipoleOperatorTLACreate(1.0);
+  psi[0] = 1.0 / sqrt(2.0);
+  psi[1] = 1.0 / sqrt(2.0);
+  blDipoleOperatorComputeD(dipoleOperator, 2, 1, psi, dx, dy, dz);
+  assert_that_double(dy[0], is_equal_to_double(0.0));
+  assert_that_double(dz[0], is_equal_to_double(0.0));
+}
+
+Ensure(DipoleOperatorTLA, hasRightDipoleAlongX) {
+  dipoleOperator = blDipoleOperatorTLACreate(1.0);
+  psi[0] = 1.0 / sqrt(2.0);
+  psi[1] = 1.0 / sqrt(2.0);
+  blDipoleOperatorComputeD(dipoleOperator, 2, 1, psi, dx, dy, dz);
+  assert_that_double(dx[0], is_equal_to_double(0.5));
+}
+
+Ensure(DipoleOperatorTLA, spinUpHasZeroDipole) {
+  dipoleOperator = blDipoleOperatorTLACreate(1.0);
+  psi[0] = 1.0;
+  psi[1] = 0.0;
+  blDipoleOperatorComputeD(dipoleOperator, 2, 1, psi, dx, dy, dz);
+  assert_that_double(dx[0], is_equal_to_double(0.0));
+  assert_that_double(dy[0], is_equal_to_double(0.0));
+  assert_that_double(dz[0], is_equal_to_double(0.0));
+}
+
+Ensure(DipoleOperatorTLA, normalizationDoesntMatter) {
+  dipoleOperator = blDipoleOperatorTLACreate(1.0);
+  psi[0] = 8.0;
+  psi[1] = 8.0;
+  blDipoleOperatorComputeD(dipoleOperator, 2, 1, psi, dx, dy, dz);
+  assert_that_double(dx[0], is_equal_to_double(0.5));
+  assert_that_double(dy[0], is_equal_to_double(0.0));
+  assert_that_double(dz[0], is_equal_to_double(0.0));
+}
+
 
 int main()
 {
@@ -81,6 +122,10 @@ int main()
   add_test_with_context(suite, DipoleOperatorTLA,
                         doesNotHaveMatrixElementAlongZ);
   add_test_with_context(suite, DipoleOperatorTLA, hasRightMatrixElementAlongX);
+  add_test_with_context(suite, DipoleOperatorTLA, hasNoDipoleAlongY);
+  add_test_with_context(suite, DipoleOperatorTLA, hasRightMatrixElementAlongX);
+  add_test_with_context(suite, DipoleOperatorTLA, spinUpHasZeroDipole);
+  add_test_with_context(suite, DipoleOperatorTLA, normalizationDoesntMatter);
   int result = run_test_suite(suite, create_text_reporter());
   destroy_test_suite(suite);
   return result;
