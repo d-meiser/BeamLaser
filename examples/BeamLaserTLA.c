@@ -54,6 +54,12 @@ struct IntegratorCtx {
   double complex *ex;
   double complex *ey;
   double complex *ez;
+  double complex *dx;
+  double complex *dy;
+  double complex *dz;
+  double complex *phix;
+  double complex *phiy;
+  double complex *phiz;
 };
 
 void setDefaults(struct Configuration *conf);
@@ -123,6 +129,15 @@ int main(int argn, char **argv) {
   integratorCtx.ex = malloc(conf.maxNumParticles * sizeof(*integratorCtx.ex));
   integratorCtx.ey = malloc(conf.maxNumParticles * sizeof(*integratorCtx.ey));
   integratorCtx.ez = malloc(conf.maxNumParticles * sizeof(*integratorCtx.ez));
+  integratorCtx.dx = malloc(conf.maxNumParticles * sizeof(*integratorCtx.dx));
+  integratorCtx.dy = malloc(conf.maxNumParticles * sizeof(*integratorCtx.dy));
+  integratorCtx.dz = malloc(conf.maxNumParticles * sizeof(*integratorCtx.dz));
+  integratorCtx.phix =
+    malloc(conf.maxNumParticles * sizeof(*integratorCtx.phix));
+  integratorCtx.phiy =
+    malloc(conf.maxNumParticles * sizeof(*integratorCtx.phiy));
+  integratorCtx.phiz =
+    malloc(conf.maxNumParticles * sizeof(*integratorCtx.phiz));
 
   if (stat != BL_SUCCESS) return stat;
   simulationState.fieldState.q = 1.0;
@@ -155,6 +170,12 @@ int main(int argn, char **argv) {
   free(integratorCtx.ex);
   free(integratorCtx.ey);
   free(integratorCtx.ez);
+  free(integratorCtx.dx);
+  free(integratorCtx.dy);
+  free(integratorCtx.dz);
+  free(integratorCtx.phix);
+  free(integratorCtx.phiy);
+  free(integratorCtx.phiz);
   blIntegratorDestroy(&integrator);
   blEnsembleFree(&simulationState.ensemble);
 
@@ -398,7 +419,7 @@ void blFieldAtomInteraction(double dt, struct BLFieldState *fieldState,
     blBcastBegin((const double*)fieldState,
         (double*)(ensemble->internalState + fieldOffset), 2);
   modeFunction(ensemble->numPtcls, ensemble->x, ensemble->y, ensemble->z,
-      integratorCtx->ex, integratorCtx->ey, integratorCtx->ez);
+      integratorCtx->phix, integratorCtx->phiy, integratorCtx->phiz);
   blBcastEnd(fieldRequest,
       (const double*)fieldState,
       (double*)(ensemble->internalState + fieldOffset), 2);
@@ -418,29 +439,48 @@ void interactionRHS(double t, int n, const double *x, double *y,
   BL_UNUSED(n);
   struct IntegratorCtx *integratorCtx = ctx;
   struct BLEnsemble *ensemble = integratorCtx->ensemble;
-  int i, j;
+  int i;
   const int numPtcls = ensemble->numPtcls;
   const int fieldOffset = numPtcls * ensemble->internalStateSize;
-  const double complex fieldAmplitude =
-    *((const double complex*)(x + fieldOffset));
+
+  blDipoleOperatorComputeD(integratorCtx->dipoleOperator,
+      ensemble->internalStateSize, numPtcls, (const double complex*)x,
+      integratorCtx->dx, integratorCtx->dy, integratorCtx->dz);
 
   double complex polarization = 0;
+  for (i = 0; i < numPtcls; ++i) {
+    polarization += conj(integratorCtx->phix[i]) * integratorCtx->dx[i];
+  }
+  for (i = 0; i < numPtcls; ++i) {
+    polarization += conj(integratorCtx->phiy[i]) * integratorCtx->dy[i];
+  }
+  for (i = 0; i < numPtcls; ++i) {
+    polarization += conj(integratorCtx->phiz[i]) * integratorCtx->dz[i];
+  }
+  polarization *= integratorCtx->conf->particleWeight;
+
+  BL_MPI_Request polReq =
+    blAddAllBegin((const double*)&polarization, y + fieldOffset, 2);
+
+  const double complex fieldAmplitude =
+    *((const double complex*)(x + fieldOffset));
+  for (i = 0; i < numPtcls; ++i) {
+    integratorCtx->ex[i] = fieldAmplitude * integratorCtx->phix[i];
+  }
+  for (i = 0; i < numPtcls; ++i) {
+    integratorCtx->ey[i] = fieldAmplitude * integratorCtx->phiy[i];
+  }
+  for (i = 0; i < numPtcls; ++i) {
+    integratorCtx->ez[i] = fieldAmplitude * integratorCtx->phiz[i];
+  }
+
   blDipoleOperatorApply(integratorCtx->dipoleOperator,
                         ensemble->internalStateSize,
                         numPtcls,
                         integratorCtx->ex, integratorCtx->ey, integratorCtx->ez,
                         (const double complex*)x,
                         (double complex*)y);
-  polarization *= integratorCtx->conf->particleWeight;
 
-  BL_MPI_Request polReq =
-    blAddAllBegin((const double*)&polarization, y + fieldOffset, 2);
-  for (i = 0; i < numPtcls; ++i) {
-    double complex *yp = (double complex *)(y + i * ensemble->internalStateSize);
-    for (j = 0; j < ensemble->internalStateSize; ++j) {
-      yp[j] *= fieldAmplitude;
-    }
-  }
   blAddAllEnd(polReq, (const double*)&polarization, y + fieldOffset, 2);
 }
 
