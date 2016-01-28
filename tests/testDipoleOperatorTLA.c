@@ -49,10 +49,10 @@ Ensure(DipoleOperatorTLA, doesNotHaveMatrixElementAlongZ) {
   blDipoleOperatorDestroy(dipoleOperator);
 }
 
-Ensure(DipoleOperatorTLA, hasRightMatrixElementAlongX) {
+Ensure(DipoleOperatorTLA, hasRightMatrixElementAlongY) {
   dipoleOperator = blDipoleOperatorTLACreate(1.0);
-  ex[0] = 1.0;
-  ey[0] = 3.0;
+  ex[0] = 3.0;
+  ey[0] = 1.0;
   ez[0] = -1.7;
 
   psi[0] = 1.0;
@@ -77,21 +77,21 @@ Ensure(DipoleOperatorTLA, hasRightMatrixElementAlongX) {
   blDipoleOperatorDestroy(dipoleOperator);
 }
 
-Ensure(DipoleOperatorTLA, hasNoDipoleAlongY) {
+Ensure(DipoleOperatorTLA, hasNoDipoleAlongX) {
   dipoleOperator = blDipoleOperatorTLACreate(1.0);
   psi[0] = 1.0 / sqrt(2.0);
   psi[1] = 1.0 / sqrt(2.0);
   blDipoleOperatorComputeD(dipoleOperator, 2, 1, psi, dx, dy, dz);
-  assert_that_double(dy[0], is_equal_to_double(0.0));
+  assert_that_double(dx[0], is_equal_to_double(0.0));
   assert_that_double(dz[0], is_equal_to_double(0.0));
 }
 
-Ensure(DipoleOperatorTLA, hasRightDipoleAlongX) {
+Ensure(DipoleOperatorTLA, hasRightDipoleAlongY) {
   dipoleOperator = blDipoleOperatorTLACreate(1.0);
   psi[0] = 1.0 / sqrt(2.0);
   psi[1] = 1.0 / sqrt(2.0);
   blDipoleOperatorComputeD(dipoleOperator, 2, 1, psi, dx, dy, dz);
-  assert_that_double(dx[0], is_equal_to_double(0.5));
+  assert_that_double(dy[0], is_equal_to_double(0.5));
 }
 
 Ensure(DipoleOperatorTLA, spinUpHasZeroDipole) {
@@ -109,8 +109,8 @@ Ensure(DipoleOperatorTLA, normalizationDoesntMatter) {
   psi[0] = 8.0;
   psi[1] = 8.0;
   blDipoleOperatorComputeD(dipoleOperator, 2, 1, psi, dx, dy, dz);
-  assert_that_double(dx[0], is_equal_to_double(0.5));
-  assert_that_double(dy[0], is_equal_to_double(0.0));
+  assert_that_double(dx[0], is_equal_to_double(0.0));
+  assert_that_double(dy[0], is_equal_to_double(0.5));
   assert_that_double(dz[0], is_equal_to_double(0.0));
 }
 
@@ -121,9 +121,9 @@ int main()
   add_test_with_context(suite, DipoleOperatorTLA, canBeCreated);
   add_test_with_context(suite, DipoleOperatorTLA,
                         doesNotHaveMatrixElementAlongZ);
-  add_test_with_context(suite, DipoleOperatorTLA, hasRightMatrixElementAlongX);
-  add_test_with_context(suite, DipoleOperatorTLA, hasNoDipoleAlongY);
-  add_test_with_context(suite, DipoleOperatorTLA, hasRightMatrixElementAlongX);
+  add_test_with_context(suite, DipoleOperatorTLA, hasRightMatrixElementAlongY);
+  add_test_with_context(suite, DipoleOperatorTLA, hasNoDipoleAlongX);
+  add_test_with_context(suite, DipoleOperatorTLA, hasRightDipoleAlongY);
   add_test_with_context(suite, DipoleOperatorTLA, spinUpHasZeroDipole);
   add_test_with_context(suite, DipoleOperatorTLA, normalizationDoesntMatter);
   int result = run_test_suite(suite, create_text_reporter());

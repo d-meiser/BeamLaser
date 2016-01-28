@@ -36,8 +36,8 @@ static void dipoleOperatorTLAApply(int stride, int numPtcls,
     const double complex *ez,
     const double complex *psi, double complex *result,
     void *c) {
+  BL_UNUSED(ex);
   BL_UNUSED(ez);
-  BL_UNUSED(ey);
   struct TLACtx *ctx = c;
   double dipoleMatrixElement = ctx->dipoleMatrixElement;
   double complex y[2];
@@ -51,7 +51,7 @@ static void dipoleOperatorTLAApply(int stride, int numPtcls,
     y[0] = 0;
     y[1] = 0;
 
-    double complex ep = dipoleMatrixElement * ex[i];
+    double complex ep = dipoleMatrixElement * ey[i];
     y[0] = conj(ep) * x[1];
     y[1] = ep * x[0];
 
@@ -70,16 +70,16 @@ static void dipoleOperatorTLAComputeD(int stride, int numPtcls,
   const double complex *x;
   int i, j;
   for (i = 0; i < numPtcls; ++i) {
+    dx[i] = 0;
+  }
+  for (i = 0; i < numPtcls; ++i) {
     x = psi + i * stride;
     const double *xr = (const double*)x;
     double nrmSquared = 0;
     for (j = 0; j < 4; ++j) {
       nrmSquared += xr[j] * xr[j];
     }
-    dx[i] = conj(x[0]) * dipoleMatrixElement * x[1] / nrmSquared;
-  }
-  for (i = 0; i < numPtcls; ++i) {
-    dy[i] = 0;
+    dy[i] = conj(x[0]) * dipoleMatrixElement * x[1] / nrmSquared;
   }
   for (i = 0; i < numPtcls; ++i) {
     dz[i] = 0;

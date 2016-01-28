@@ -513,7 +513,7 @@ void modeFunction(int n,
     }
 
     for (j = 0; j < MODE_FUN_CHUNK_SIZE; ++j) {
-      fx[i + j] = Omega * gaussianTerm[j] * sineTerm[j];
+      fy[i + j] = Omega * gaussianTerm[j] * sineTerm[j];
     }
   }
 
@@ -523,12 +523,12 @@ void modeFunction(int n,
     for (; i < n; ++i) {
       double arge = -(y[i] * y[i] + z[i] * z[i] / (sigmaE * sigmaE));
       double args = -(waveNumber * x[i]);
-      fx[i] = Omega * exp(arge) * sin(args);
+      fy[i] = Omega * exp(arge) * sin(args);
     }
   }
 
   for (i = 0; i < n; ++i) {
-    fy[i] = 0;
+    fx[i] = 0;
   }
 
   for (i = 0; i < n; ++i) {
