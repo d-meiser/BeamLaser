@@ -12,6 +12,7 @@ set(BeamLaserLibSources
     DipoleOperator.c
     Ensemble.c
     Integrator.c
+    ModeFunction.c
     ParticleSource.c
     Partition.c
     Utilities.c
