@@ -95,6 +95,25 @@ Ensure(ModeFunction, fallsOffToOneOverEAtWaist) {
   blModeFunctionDestroy(modeFunction);
 }
 
+Ensure(ModeFunction, uniformCanBeCreated) {
+  struct BLModeFunction *modeFunction =
+    blModeFunctionUniformCreate(1.3, 0.0, 2.9);
+  assert_that(modeFunction, is_not_null);
+  blModeFunctionDestroy(modeFunction);
+}
+
+Ensure(ModeFunction, uniformHasRightAmplitude) {
+  struct BLModeFunction *modeFunction =
+    blModeFunctionUniformCreate(1.3, -0.4, 2.3);
+  x[0] = 1.3;
+  y[0] = 2.7;
+  z[0] = -1.5;
+  blModeFunctionEvaluate(modeFunction, 1, x, y, z, fx, fy, fz);
+  assert_that_double(fx[0], is_equal_to_double(1.3));
+  assert_that_double(fy[0], is_equal_to_double(-0.4));
+  assert_that_double(fz[0], is_equal_to_double(2.3));
+  blModeFunctionDestroy(modeFunction);
+}
 
 int main()
 {
@@ -104,6 +123,8 @@ int main()
   add_test_with_context(suite, ModeFunction, hasAntiNodeAtQuarterLambda);
   add_test_with_context(suite, ModeFunction, hasHalfAmplitudeAtLambdaOverEight);
   add_test_with_context(suite, ModeFunction, fallsOffToOneOverEAtWaist);
+  add_test_with_context(suite, ModeFunction, uniformCanBeCreated);
+  add_test_with_context(suite, ModeFunction, uniformHasRightAmplitude);
   int result = run_test_suite(suite, create_text_reporter());
   destroy_test_suite(suite);
   return result;

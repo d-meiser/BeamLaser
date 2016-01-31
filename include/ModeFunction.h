@@ -29,6 +29,7 @@ void blModeFunctionDestroy(struct BLModeFunction *modeFunction);
 struct BLModeFunction *blModeFunctionSimplifiedGaussianCreate(
     double waist, double lambda, double length);
 
+struct BLModeFunction *blModeFunctionUniformCreate(double fx, double fy, double fz);
 
 #endif
 

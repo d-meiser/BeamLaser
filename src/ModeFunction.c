@@ -1,6 +1,7 @@
 #include <ModeFunction.h>
 #include <stdlib.h>
 #include <math.h>
+#include <Utilities.h>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -94,7 +95,7 @@ static void modeFunctionSimplifiedGaussianEvaluate(int n,
   }
 }
 
-void modeFunctionSimplifiedGaussianDestroy(void *ctx) {
+static void modeFunctionSimplifiedGaussianDestroy(void *ctx) {
   free(ctx);
 }
 
@@ -110,5 +111,52 @@ struct BLModeFunction *blModeFunctionSimplifiedGaussianCreate(
   double veff = waist * waist * length;
   double omega = ctx->k * SPEED_OF_LIGHT;
   ctx->amplitude = sqrt(omega / (2.0 * H_BAR * EPSILON_0 * veff));
+  return this;
+}
+
+
+struct ModeFunctionUniformCtx {
+  double fx;
+  double fy;
+  double fz;
+};
+
+static void modeFunctionUniformEvaluate(int n,
+    const double * restrict x,
+    const double * restrict y,
+    const double * restrict z,
+    double complex * restrict fx,
+    double complex * restrict fy,
+    double complex * restrict fz,
+    void *c) {
+  BL_UNUSED(x);
+  BL_UNUSED(y);
+  BL_UNUSED(z);
+  struct ModeFunctionUniformCtx *ctx = (struct ModeFunctionUniformCtx*)c;
+  int i;
+  for (i = 0; i < n; ++i) {
+    fx[i] = ctx->fx;
+  }
+  for (i = 0; i < n; ++i) {
+    fy[i] = ctx->fy;
+  }
+  for (i = 0; i < n; ++i) {
+    fz[i] = ctx->fz;
+  }
+}
+
+static void modeFunctionUniformDestroy(void *ctx) {
+  free(ctx);
+}
+
+struct BLModeFunction *blModeFunctionUniformCreate(double fx, double fy, double fz) {
+  struct BLModeFunction *this = malloc(sizeof(*this));
+  this->evaluate = modeFunctionUniformEvaluate;
+  this->destroy = modeFunctionUniformDestroy;
+  struct ModeFunctionUniformCtx *ctx = malloc(sizeof(*ctx));
+  this->ctx = ctx;
+  ctx->fx = fx;
+  ctx->fy = fy;
+  ctx->fz = fz;
   return this;
 }
