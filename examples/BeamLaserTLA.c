@@ -493,7 +493,7 @@ void interactionRHS(double t, int n, const double *x, double *y,
   for (i = 0; i < numPtcls; ++i) {
     polarization += conj(integratorCtx->phiz[i]) * integratorCtx->dz[i];
   }
-  polarization *= integratorCtx->conf->particleWeight;
+  polarization *= -I * integratorCtx->conf->particleWeight;
 
   BL_MPI_Request polReq =
     blAddAllBegin((const double*)&polarization, y + fieldOffset, 2);
@@ -510,17 +510,16 @@ void interactionRHS(double t, int n, const double *x, double *y,
     integratorCtx->ez[i] = fieldAmplitude * integratorCtx->phiz[i];
   }
 
+  double complex *yc = (double complex*)y;
   blDipoleOperatorApply(integratorCtx->dipoleOperator,
                         ensemble->internalStateSize,
                         numPtcls,
                         integratorCtx->ex, integratorCtx->ey, integratorCtx->ez,
-                        (const double complex*)x,
-                        (double complex*)y);
+                        (const double complex*)x, yc);
   for (i = 0; i < numPtcls * integratorCtx->ensemble->internalStateSize; ++i) {
-    y[i] *= -I;
+    yc[i] *= -I;
   }
 
-  polarization *= -I;
   blAddAllEnd(polReq, (const double*)&polarization, y + fieldOffset, 2);
 }
 
