@@ -516,7 +516,11 @@ void interactionRHS(double t, int n, const double *x, double *y,
                         integratorCtx->ex, integratorCtx->ey, integratorCtx->ez,
                         (const double complex*)x,
                         (double complex*)y);
+  for (i = 0; i < numPtcls * integratorCtx->ensemble->internalStateSize; ++i) {
+    y[i] *= -I;
+  }
 
+  polarization *= -I;
   blAddAllEnd(polReq, (const double*)&polarization, y + fieldOffset, 2);
 }
 
