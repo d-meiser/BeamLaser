@@ -6,6 +6,7 @@
 #include <Ensemble.h>
 #include <Errors.h>
 #include <Integrator.h>
+#include <ModeFunction.h>
 #include <ParticleSource.h>
 #include <Partition.h>
 #include <SimulationState.h>

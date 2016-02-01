@@ -11,6 +11,7 @@ set(TESTS
     testDipoleOperatorTLA
     testEnsemble
     testIntegrator
+    testModeFunction
     testParticleSource
     testPartition
     testPoissonDist

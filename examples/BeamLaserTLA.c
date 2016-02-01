@@ -25,7 +25,6 @@ static const double epsilon0 = 8.85e-12;
 static const double hbar = 1.0e-34;
 static const double speedOfLight = 3.0e8;
 
-static const double waveNumber = 2.0 * M_PI / 1.0e-6;
 static const double sigmaE = 3.0e-5;
 static double L = 1.0e-2;
 
@@ -44,6 +43,10 @@ struct Configuration {
   double deltaV;
   double alpha;
   double kappa;
+  int uniform;
+  double waist;
+  double lambda;
+  double length;
   struct BlBox simulationDomain;
 };
 
@@ -51,6 +54,7 @@ struct IntegratorCtx {
   const struct Configuration *conf;
   struct BLEnsemble *ensemble;
   struct BLDipoleOperator *dipoleOperator;
+  struct BLModeFunction *modeFunction;
   double complex *ex;
   double complex *ey;
   double complex *ez;
@@ -72,18 +76,12 @@ void processParticleSources(struct ParticleSource *particleSource,
 struct ParticleSource *constructParticleSources(
     const struct Configuration *conf);
 struct BLDiagnostics *constructDiagnostics(const struct Configuration *conf);
+struct BLModeFunction *constructModeFunction( const struct Configuration *conf);
 void blFieldUpdate(double dt, double kappa, struct BLFieldState *fieldState);
 void blFieldAtomInteraction(double dt, struct BLFieldState *fieldState,
         struct IntegratorCtx *integratorCtx, BLIntegrator integrator);
 void interactionRHS(double t, int n, const double *x, double *y,
                     void *ctx);
-static void modeFunction(int n,
-    const double * restrict x,
-    const double * restrict y,
-    const double * restrict z,
-    double complex * restrict fx,
-    double complex * restrict fy,
-    double complex * restrict fz);
 
 
 int main(int argn, char **argv) {
@@ -127,6 +125,7 @@ int main(int argn, char **argv) {
   integratorCtx.ensemble = &simulationState.ensemble;
   integratorCtx.dipoleOperator = blDipoleOperatorTLACreate(
       conf.dipoleMatrixElement);
+  integratorCtx.modeFunction = constructModeFunction(&conf);
   integratorCtx.ex = malloc(conf.maxNumParticles * sizeof(*integratorCtx.ex));
   integratorCtx.ey = malloc(conf.maxNumParticles * sizeof(*integratorCtx.ey));
   integratorCtx.ez = malloc(conf.maxNumParticles * sizeof(*integratorCtx.ez));
@@ -165,6 +164,7 @@ int main(int argn, char **argv) {
   }
 
 
+  blModeFunctionDestroy(integratorCtx.modeFunction);
   blDiagnosticsDestroy(diagnostics);
   blParticleSourceDestroy(particleSource);
   blDipoleOperatorDestroy(integratorCtx.dipoleOperator);
@@ -207,6 +207,10 @@ void setDefaults(struct Configuration *conf) {
   conf->simulationDomain.ymax = 1.0e-4;
   conf->simulationDomain.zmin = -1.0e-4;
   conf->simulationDomain.zmax = 1.0e-4;
+  conf->uniform = 0;
+  conf->waist = 1.0e-4;
+  conf->lambda = 1.0e-6;
+  conf->length = 1.0e-2;
 }
 
 void processCommandLineArgs(struct Configuration *conf, int argn, char **argv) {
@@ -231,11 +235,15 @@ void processCommandLineArgs(struct Configuration *conf, int argn, char **argv) {
           {"alpha",                required_argument, 0, 'a'},
           {"kappa",                required_argument, 0, 'K'},
           {"help",                 no_argument,       0, 'h'},
+          {"uniform",              no_argument,       0, 'u'},
+          {"waist",                required_argument, 0, 'W'},
+          {"lambda",               required_argument, 0, 'l'},
+          {"length",               required_argument, 0, 'L'},
           {0, 0, 0, 0}
         };
       int option_index = 0;
 
-      c = getopt_long(argn, argv, "n:p:fsid:N:m:w:D:v:V:a:K:h",
+      c = getopt_long(argn, argv, "n:p:fsid:N:m:w:D:v:V:a:K:huw:l:L:",
                       long_options, &option_index);
 
       if (c == -1)
@@ -317,6 +325,27 @@ void processCommandLineArgs(struct Configuration *conf, int argn, char **argv) {
           exit(-1);
         }
         break;
+      case 'u':
+        conf->uniform = 1;
+        break;
+      case 'W':
+        if (sscanf(optarg, "%lf", &conf->waist) != 1) {
+          printUsage("Unable to parse argument to option -W, --waist\n");
+          exit(-1);
+        }
+        break;
+      case 'l':
+        if (sscanf(optarg, "%lf", &conf->lambda) != 1) {
+          printUsage("Unable to parse argument to option -l, --lambda\n");
+          exit(-1);
+        }
+        break;
+      case 'L':
+        if (sscanf(optarg, "%lf", &conf->length) != 1) {
+          printUsage("Unable to parse argument to option -L, --length\n");
+          exit(-1);
+        }
+        break;
       case 'h':
         printUsage(0);
         exit(0);
@@ -369,6 +398,10 @@ void printUsage(const char* errorMessage) {
            "-V, --deltaV              Longitudinal velocity spread.\n"
            "-a, --alpha               Beam divergence.\n"
            "-K, --kappa               Cavity damping rate.\n"
+           "-u, --uniform             Use uniform mode function.\n"
+           "-w, --waist               1/e radius of mode.\n"
+           "-l, --lambda              Wave length of the mode.\n"
+           "-L, --length              Length of the mode.\n"
            "-h, --help                Print this message.\n"
            "\n"
            );
@@ -408,6 +441,7 @@ void blFieldUpdate(double dt, double kappa, struct BLFieldState *fieldState) {
 void blFieldAtomInteraction(double dt, struct BLFieldState *fieldState,
         struct IntegratorCtx *integratorCtx, BLIntegrator integrator) {
   struct BLEnsemble *ensemble = integratorCtx->ensemble;
+  struct BLModeFunction *modeFunction = integratorCtx->modeFunction;
   const int numPtcls = ensemble->numPtcls;
   const int fieldOffset = numPtcls * ensemble->internalStateSize;
   int n = numPtcls * ensemble->internalStateSize + 2;
@@ -419,7 +453,8 @@ void blFieldAtomInteraction(double dt, struct BLFieldState *fieldState,
   BL_MPI_Request fieldRequest =
     blBcastBegin((const double*)fieldState,
         (double*)(ensemble->internalState + fieldOffset), 2);
-  modeFunction(ensemble->numPtcls, ensemble->x, ensemble->y, ensemble->z,
+  blModeFunctionEvaluate(modeFunction, ensemble->numPtcls,
+      ensemble->x, ensemble->y, ensemble->z,
       integratorCtx->phix, integratorCtx->phiy, integratorCtx->phiz);
   blBcastEnd(fieldRequest,
       (const double*)fieldState,
@@ -485,58 +520,6 @@ void interactionRHS(double t, int n, const double *x, double *y,
   blAddAllEnd(polReq, (const double*)&polarization, y + fieldOffset, 2);
 }
 
-#define MODE_FUN_CHUNK_SIZE 16
-
-void modeFunction(int n,
-    const double * restrict x,
-    const double * restrict y,
-    const double * restrict z,
-    double complex * restrict fx,
-    double complex * restrict fy,
-    double complex * restrict fz) {
-  int i, j;
-  for (i = 0; i < n; i += MODE_FUN_CHUNK_SIZE) {
-
-    double gaussianTerm[MODE_FUN_CHUNK_SIZE];
-    for (j = 0; j < MODE_FUN_CHUNK_SIZE; ++j) {
-      gaussianTerm[j] = -(y[i + j] * y[i + j] + z[i + j] * z[i + j] / (sigmaE * sigmaE));
-    }
-    for (j = 0; j < MODE_FUN_CHUNK_SIZE; ++j) {
-      gaussianTerm[j] = exp(gaussianTerm[j]);
-    }
-
-    double sineTerm[MODE_FUN_CHUNK_SIZE];
-    for (j = 0; j < MODE_FUN_CHUNK_SIZE; ++j) {
-      sineTerm[j] = waveNumber * x[i + j];
-    }
-    for (j = 0; j < MODE_FUN_CHUNK_SIZE; ++j) {
-      sineTerm[j] = sin(sineTerm[j]);
-    }
-
-    for (j = 0; j < MODE_FUN_CHUNK_SIZE; ++j) {
-      fy[i + j] = Omega * gaussianTerm[j] * sineTerm[j];
-    }
-  }
-
-  /* clean up of peeled loop */
-  if (i != n) {
-    i -= MODE_FUN_CHUNK_SIZE;
-    for (; i < n; ++i) {
-      double arge = -(y[i] * y[i] + z[i] * z[i] / (sigmaE * sigmaE));
-      double args = -(waveNumber * x[i]);
-      fy[i] = Omega * exp(arge) * sin(args);
-    }
-  }
-
-  for (i = 0; i < n; ++i) {
-    fx[i] = 0;
-  }
-
-  for (i = 0; i < n; ++i) {
-    fz[i] = 0;
-  }
-}
-
 struct ParticleSource *constructParticleSources(
     const struct Configuration *conf) {
   struct ParticleSource *particleSource;
@@ -577,4 +560,16 @@ struct BLDiagnostics *constructDiagnostics(
         "internal_state", diagnostics);
   }
   return diagnostics;
+}
+
+struct BLModeFunction *constructModeFunction(
+    const struct Configuration *conf) {
+  struct BLModeFunction *modeFunction = 0;
+  if (conf->uniform) {
+    modeFunction = blModeFunctionUniformCreate(0, 1.0, 0.0);
+  } else {
+    modeFunction = blModeFunctionSimplifiedGaussianCreate(
+        conf->waist, conf->lambda, conf->length);
+  }
+  return modeFunction;
 }
