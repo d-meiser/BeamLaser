@@ -43,6 +43,10 @@ struct Configuration {
   double deltaV;
   double alpha;
   double kappa;
+  int uniform;
+  double waist;
+  double lambda;
+  double length;
   struct BlBox simulationDomain;
 };
 
@@ -203,6 +207,10 @@ void setDefaults(struct Configuration *conf) {
   conf->simulationDomain.ymax = 1.0e-4;
   conf->simulationDomain.zmin = -1.0e-4;
   conf->simulationDomain.zmax = 1.0e-4;
+  conf->uniform = 0;
+  conf->waist = 1.0e-4;
+  conf->lambda = 1.0e-6;
+  conf->length = 1.0e-2;
 }
 
 void processCommandLineArgs(struct Configuration *conf, int argn, char **argv) {
@@ -227,11 +235,15 @@ void processCommandLineArgs(struct Configuration *conf, int argn, char **argv) {
           {"alpha",                required_argument, 0, 'a'},
           {"kappa",                required_argument, 0, 'K'},
           {"help",                 no_argument,       0, 'h'},
+          {"uniform",              no_argument,       0, 'u'},
+          {"waist",                required_argument, 0, 'W'},
+          {"lambda",               required_argument, 0, 'l'},
+          {"length",               required_argument, 0, 'L'},
           {0, 0, 0, 0}
         };
       int option_index = 0;
 
-      c = getopt_long(argn, argv, "n:p:fsid:N:m:w:D:v:V:a:K:h",
+      c = getopt_long(argn, argv, "n:p:fsid:N:m:w:D:v:V:a:K:huw:l:L:",
                       long_options, &option_index);
 
       if (c == -1)
@@ -313,6 +325,27 @@ void processCommandLineArgs(struct Configuration *conf, int argn, char **argv) {
           exit(-1);
         }
         break;
+      case 'u':
+        conf->uniform = 1;
+        break;
+      case 'W':
+        if (sscanf(optarg, "%lf", &conf->waist) != 1) {
+          printUsage("Unable to parse argument to option -W, --waist\n");
+          exit(-1);
+        }
+        break;
+      case 'l':
+        if (sscanf(optarg, "%lf", &conf->lambda) != 1) {
+          printUsage("Unable to parse argument to option -l, --lambda\n");
+          exit(-1);
+        }
+        break;
+      case 'L':
+        if (sscanf(optarg, "%lf", &conf->length) != 1) {
+          printUsage("Unable to parse argument to option -L, --length\n");
+          exit(-1);
+        }
+        break;
       case 'h':
         printUsage(0);
         exit(0);
@@ -365,6 +398,10 @@ void printUsage(const char* errorMessage) {
            "-V, --deltaV              Longitudinal velocity spread.\n"
            "-a, --alpha               Beam divergence.\n"
            "-K, --kappa               Cavity damping rate.\n"
+           "-u, --uniform             Use uniform mode function.\n"
+           "-w, --waist               1/e radius of mode.\n"
+           "-l, --lambda              Wave length of the mode.\n"
+           "-L, --length              Length of the mode.\n"
            "-h, --help                Print this message.\n"
            "\n"
            );
@@ -527,8 +564,12 @@ struct BLDiagnostics *constructDiagnostics(
 
 struct BLModeFunction *constructModeFunction(
     const struct Configuration *conf) {
-  BL_UNUSED(conf);
   struct BLModeFunction *modeFunction = 0;
-  modeFunction = blModeFunctionSimplifiedGaussianCreate(sigmaE, 1.0e-6, L);
+  if (conf->uniform) {
+    modeFunction = blModeFunctionUniformCreate(0, 1.0, 0.0);
+  } else {
+    modeFunction = blModeFunctionSimplifiedGaussianCreate(
+        conf->waist, conf->lambda, conf->length);
+  }
   return modeFunction;
 }
