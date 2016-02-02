@@ -157,6 +157,7 @@ static void blDiagnosticsInternalStateProcess(int i,
       }
       fprintf(f, "\n");
     }
+    fclose(f);
   }
 }
 
