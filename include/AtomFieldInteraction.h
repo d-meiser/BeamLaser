@@ -13,7 +13,7 @@ struct BLAtomFieldInteraction* blAtomFieldInteractionCreate(int maxNumParticles,
     int internalStateSize, struct BLDipoleOperator *dipoleOperator,
     struct BLModeFunction *modeFunction);
 void blAtomFieldInteractionDestroy(struct BLAtomFieldInteraction* atomFieldInteraction);
-void blFieldAtomInteractionTakeStep(struct BLAtomFieldInteraction *atomFieldInteraction,
+void blAtomFieldInteractionTakeStep(struct BLAtomFieldInteraction *atomFieldInteraction,
                                     double dt,
                                     struct BLFieldState *fieldState,
                                     struct BLEnsemble *ensemble);

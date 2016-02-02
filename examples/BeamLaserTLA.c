@@ -121,7 +121,7 @@ int main(int argn, char **argv) {
     processParticleSources(particleSource, &simulationState.ensemble);
     blEnsemblePush(0.5 * conf.dt, &simulationState.ensemble);
     blFieldUpdate(0.5 * conf.dt, conf.kappa, &simulationState.fieldState);
-    blFieldAtomInteractionTakeStep(atomFieldInteraction,
+    blAtomFieldInteractionTakeStep(atomFieldInteraction,
         conf.dt, &simulationState.fieldState, &simulationState.ensemble);
     blFieldUpdate(0.5 * conf.dt, conf.kappa, &simulationState.fieldState);
     blEnsemblePush(0.5 * conf.dt, &simulationState.ensemble);

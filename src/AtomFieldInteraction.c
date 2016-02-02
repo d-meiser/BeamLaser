@@ -64,7 +64,7 @@ void blAtomFieldInteractionDestroy(struct BLAtomFieldInteraction* atomFieldInter
   free(atomFieldInteraction);
 }
 
-void blFieldAtomInteractionTakeStep(struct BLAtomFieldInteraction *atomFieldInteraction,
+void blAtomFieldInteractionTakeStep(struct BLAtomFieldInteraction *atomFieldInteraction,
                                     double dt,
                                     struct BLFieldState *fieldState,
                                     struct BLEnsemble *ensemble) {
