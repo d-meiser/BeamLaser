@@ -162,6 +162,7 @@ void setDefaults(struct Configuration *conf) {
 
 void processCommandLineArgs(struct Configuration *conf, int argn, char **argv) {
   int c;
+  double tmp;
 
   while (1)
     {
@@ -231,10 +232,11 @@ void processCommandLineArgs(struct Configuration *conf, int argn, char **argv) {
         }
         break;
       case 'm':
-        if (sscanf(optarg, "%d", &conf->maxNumParticles) != 1) {
+        if (sscanf(optarg, "%lf", &tmp) != 1) {
           printUsage("Unable to parse argument to option -m, --maxNumPtcls\n");
           exit(-1);
         }
+        conf->maxNumParticles = (int)tmp;
         break;
       case 'w':
         if (sscanf(optarg, "%lf", &conf->ptclWeight) != 1) {
