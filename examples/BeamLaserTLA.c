@@ -199,16 +199,18 @@ void processCommandLineArgs(struct Configuration *conf, int argn, char **argv) {
 
       switch (c) {
       case 'n':
-        if (sscanf(optarg, "%d", &conf->numSteps) != 1) {
+        if (sscanf(optarg, "%lf", &tmp) != 1) {
           printUsage("Unable to parse argument to option -n, --numSteps\n");
           exit(-1);
         }
+        conf->numSteps = tmp;
         break;
       case 'p':
-        if (sscanf(optarg, "%d", &conf->dumpPeriod) != 1) {
+        if (sscanf(optarg, "%lf", &tmp) != 1) {
           printUsage("Unable to parse argument to option -p, --dumpPeriod\n");
           exit(-1);
         }
+        conf->dumpPeriod = tmp;
         break;
       case 'f':
         conf->dumpField = 1;
