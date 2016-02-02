@@ -5,8 +5,11 @@
 \usepackage{float}
 \usepackage{graphicx}
 \usepackage{hyperref}
+\usepackage{siunitx}
 
 \renewcommand\vec{\mathbf}
+\newcommand\gitrevision[1]{{\tt #1}}
+\newcommand\note[1]{{\bf #1}}
 
 
 \begin{document}
@@ -371,6 +374,98 @@ Demonstrate Rabi oscillations with the correct Rabi frequency.
 \subsection{Convergence study}
 
 
+\section{Experiments}
+
+
+\subsection{Determination of threshold}
+
+In this run I increase the atom flux trying to get to threshold.
+The following data was obtained using git revision
+\gitrevision{55bb8f6ef3aca6191f9870552f1d27225583417a}.  The
+parameters used are listed in table~\ref{tab:Run1Params}.  The
+simulation state is dumped every 100 steps corresponding to a
+time interval of $\SI{1.0e-7}{s}$.  We run the simulation for
+$10^4$ steps corresponding to a total time of $\SI{1.0e-5}{s}$.
+During this time the particles cross the simulation domain
+approximately 5 times.
+
+\begin{table}
+  \begin{tabular}{|l|l|}
+    \hline
+    parameter       & value\\
+    \hline
+    \hline
+    $\bar v$        & $\SI{1.0e2}{m/s}$\\
+    \hline
+    $dt$            & $\SI{1.0e-9}{s}$\\
+    \hline
+    $\kappa$        & $\SI{1.0e8}{rad/s}$\\
+    \hline
+    $\wp$           & $\SI{1.0e-31}{Cm}$\\
+    \hline
+    particle weight & $1$\\
+    \hline
+  \end{tabular}
+  \caption{Parameters used in first run of threshold experiment.
+    Default values were used for the parameters not explicitly
+    listed here.}
+  \label{tab:Run1Params}
+\end{table}
+
+In this simulation we use a $1/e$-radius of the cavity mode of $w=\SI{100}{\micro m}$.  The Rabi frequency for these parameters is approximately
+\begin{equation}
+  \Omega =
+  \sqrt{\frac{2\pi c}{\hbar 2 \epsilon_0 V_{\rm eff}\lambda}} \wp \approx
+  \SI{1.0e4}{rad/s}\;.
+\end{equation}
+The collective emission frequency for $N=10^5$ atoms in the mode
+volume is on the order of
+\begin{equation}
+  N\Omega^2/\kappa \approx \SI{1.0e5}{rad/s}\;.
+\end{equation}
+This emission rate does \emph{not} outweigh the transit time
+broadening.  Therefore not all atoms are contributing to the
+collective emission.
+
+\note{Apparently there is an issue with the evolution of the
+  internal state of the atoms.  The probability amplitude of the
+  excited state is constant at 1.  This must be fixed.}
+
+Let's have a look at the data despite this state evolution issue.
+
+The intra-cavity intensities are shown in
+Fig.~\ref{fig:FieldIntensities}.  Initially the intensities drop
+at the field decay rate $\kappa$.  Once particles enter the
+cavity the decay slows down, perhaps it even comes to a halt.
+Eventually the decay continues.  The larger the flux the slower
+the decay during this final stage.  At the largest flux
+considered the system appears to be getting close to threshold,
+but it's still below threshold.
+\begin{figure}
+  \includegraphics{threshold/field_intensities}
+  \caption{Intra-cavity intensities.}
+  \label{fig:FieldIntensities}
+\end{figure}
+
+I tried to compute the polarizations but they are too small to be
+meaningful.
+
+
+\subsection{Determination of threshold II}
+
+To get to threshold I take two measures compared to the first
+run:
+\begin{itemize}
+
+\item Increase $\Omega$
+
+\item Decrease particle velocity
+
+\end{itemize}
+This run is based on
+\gitrevision{c9d7a330b22abe935bd26c5d2298678ed9bc816c}.
+
+
 \section{TODO list}
 
 \subsection{Near term}
@@ -431,9 +526,9 @@ increase.  Options include a declarative configuration language
 guile).
 
 
-\subsubsection{Uniform mode function}
+\subsubsection{Uniform mode function{\bf [done]}}
 
- Primarily for unit tests.
+Primarily for unit tests.
 
 
 \subsubsection{Particle sources for initialization}
