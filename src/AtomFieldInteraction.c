@@ -71,7 +71,7 @@ void blAtomFieldInteractionTakeStep(struct BLAtomFieldInteraction *atomFieldInte
   struct BLModeFunction *modeFunction = atomFieldInteraction->modeFunction;
   const int numPtcls = ensemble->numPtcls;
   const int fieldOffset = numPtcls * ensemble->internalStateSize;
-  int n = numPtcls * ensemble->internalStateSize + 2;
+  int n = 2 * numPtcls * ensemble->internalStateSize + 2;
 
   /* Pack field into internal state buffer. Note that the internalState array
   needs to have room for at least two additional doubles. After the field has
@@ -98,8 +98,8 @@ void blAtomFieldInteractionTakeStep(struct BLAtomFieldInteraction *atomFieldInte
       (double*)ensemble->internalState,
       &integratorCtx);
 
-  fieldState->q = ensemble->internalState[fieldOffset + 0];
-  fieldState->p = ensemble->internalState[fieldOffset + 1];
+  fieldState->q = creal(ensemble->internalState[fieldOffset]);
+  fieldState->p = cimag(ensemble->internalState[fieldOffset]);
 }
 
 void interactionRHS(double t, int n, const double *x, double *y,
@@ -130,13 +130,13 @@ void interactionRHS(double t, int n, const double *x, double *y,
   for (i = 0; i < numPtcls; ++i) {
     polarization += conj(atomFieldInteraction->phiz[i]) * atomFieldInteraction->dz[i];
   }
-  polarization *= -I;
+  polarization /= I;
 
   BL_MPI_Request polReq =
-    blAddAllBegin((const double*)&polarization, y + fieldOffset, 2);
+    blAddAllBegin((const double*)&polarization, y + 2 * fieldOffset, 2);
 
   const double complex fieldAmplitude =
-    *((const double complex*)(x + fieldOffset));
+    *((const double complex*)(x + 2 * fieldOffset));
   for (i = 0; i < numPtcls; ++i) {
     atomFieldInteraction->ex[i] = fieldAmplitude * atomFieldInteraction->phix[i];
   }
@@ -157,5 +157,5 @@ void interactionRHS(double t, int n, const double *x, double *y,
     yc[i] *= -I;
   }
 
-  blAddAllEnd(polReq, (const double*)&polarization, y + fieldOffset, 2);
+  blAddAllEnd(polReq, (const double*)&polarization, y + 2 * fieldOffset, 2);
 }
