@@ -17,7 +17,7 @@ kappa = 1.0e8
 dipole_matrix_elemen = 1.0e-31
 ptcl_weight = 1.0e0
 
-for i in range(5):
+for i in range(6):
     run_dir = top_dir + '/run' + str(i)
     try:
         os.mkdir(run_dir)
