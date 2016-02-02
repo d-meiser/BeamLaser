@@ -89,14 +89,23 @@ Ensure(AtomFieldInteraction, producesRabiOscillations) {
 }
 
 
-int main()
+int main(int argn, char **argv)
 {
+#ifdef BL_WITH_MPI
+  MPI_Init(&argn, &argv);
+#else
+  BL_UNUSED(argn);
+  BL_UNUSED(argv);
+#endif
   TestSuite *suite = create_test_suite();
   add_test_with_context(suite, AtomFieldInteraction, canBeCreated);
   add_test_with_context(suite, AtomFieldInteraction, isNormConserving);
   add_test_with_context(suite, AtomFieldInteraction, producesRabiOscillations);
   int result = run_test_suite(suite, create_text_reporter());
   destroy_test_suite(suite);
+#ifdef BL_WITH_MPI
+  MPI_Finalize();
+#endif
   return result;
 }
 
