@@ -60,7 +60,7 @@ Ensure(AtomFieldInteraction, isNormConserving) {
     blAtomFieldInteractionTakeStep(atomFieldInteraction,
         1.0e-3, &fieldState, &ensemble);
   }
-  double nrm;
+  double nrm = 0;
   for (i = 0; i < 2; ++i) {
     nrm += nrm_squared(ensemble.internalState[i]);
   }
