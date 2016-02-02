@@ -20,14 +20,6 @@
 
 static const int INTERNAL_STATE_DIM = 2;
 
-static double Omega = 0.0;
-static const double epsilon0 = 8.85e-12;
-static const double hbar = 1.0e-34;
-static const double speedOfLight = 3.0e8;
-
-static const double sigmaE = 3.0e-5;
-static double L = 1.0e-2;
-
 struct Configuration {
   int numSteps;
   int dumpPeriod;
@@ -94,14 +86,9 @@ int main(int argn, char **argv) {
   processCommandLineArgs(&conf, argn, argv);
   adjustNumPtclsForNumRanks(&conf);
 
-  double omega = 2.0 * M_PI * speedOfLight / 1.0e-6;
-  Omega = (1.0 / hbar) *
-    sqrt(hbar * omega / (epsilon0 * sigmaE * sigmaE *L)) *
-    conf.dipoleMatrixElement;
-
-
   stat = blEnsembleInitialize(conf.maxNumParticles, INTERNAL_STATE_DIM,
       &simulationState.ensemble);
+  simulationState.ensemble.ptclWeight = conf.ptclWeight;
 
   if (stat != BL_SUCCESS) return stat;
   simulationState.fieldState.q = 1.0;
