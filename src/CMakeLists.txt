@@ -8,6 +8,7 @@ if(BL_WITH_MPI)
 endif()
 
 set(BeamLaserLibSources
+    AtomFieldInteraction.c
     Diagnostics.c
     DipoleOperator.c
     Ensemble.c
