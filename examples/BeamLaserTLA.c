@@ -38,6 +38,7 @@ struct Configuration {
   double nbar;
   int maxNumParticles;
   double dipoleMatrixElement;
+  double ptclWeight;
   double vbar;
   double deltaV;
   double alpha;
@@ -152,6 +153,7 @@ void setDefaults(struct Configuration *conf) {
   conf->dumpPhaseSpace = 0;
   conf->dumpInternalState = 0;
   conf->dipoleMatrixElement = 1.0e-29;
+  conf->ptclWeight = 1.0e0;
   conf->nbar = 1.0e3;
   conf->maxNumParticles = 2000;
   conf->dt = 1.0e-8;
@@ -186,6 +188,7 @@ void processCommandLineArgs(struct Configuration *conf, int argn, char **argv) {
           {"dt",                   required_argument, 0, 'd'},
           {"nbar",                 required_argument, 0, 'N'},
           {"maxNumPtcls",          required_argument, 0, 'm'},
+          {"ptclWeight",           required_argument, 0, 'w'},
           {"dipoleMatrixElement",  required_argument, 0, 'D'},
           {"vbar",                 required_argument, 0, 'v'},
           {"deltaV",               required_argument, 0, 'V'},
@@ -246,6 +249,12 @@ void processCommandLineArgs(struct Configuration *conf, int argn, char **argv) {
           exit(-1);
         }
         break;
+      case 'w':
+        if (sscanf(optarg, "%lf", &conf->ptclWeight) != 1) {
+          printUsage("Unable to parse argument to option -w, --ptclWeight\n");
+          exit(-1);
+        }
+        break;
       case 'D':
         if (sscanf(optarg, "%lf", &conf->dipoleMatrixElement) != 1) {
           printUsage("Unable to parse argument to option -D, --dipoleMatrixElement\n");
@@ -301,7 +310,7 @@ void processCommandLineArgs(struct Configuration *conf, int argn, char **argv) {
         printUsage(0);
         exit(0);
       case '?':
-        /* getopt_long already printed an error message. */
+/* getopt_long already printed an error message. */
         break;
       default:
         abort();
@@ -341,6 +350,8 @@ void printUsage(const char* errorMessage) {
            "-d, --dt:                 Time step size.\n"
            "-N, --nbar:               Mean number of particles in simulation domain.\n"
            "-m, --maxNumPtcl          Maximum number of particles.\n"
+           "-w, --ptclWeight          Number of physical particles represented by each\n"
+           "                          simulation particle.\n"
            "-D, --dipoleMatrixElement Dipole matrix element of transition with\n"
            "                          Clebsch-Gordan coefficient of one.\n"
            "-v, --vbar                Mean velocity of atoms.\n"

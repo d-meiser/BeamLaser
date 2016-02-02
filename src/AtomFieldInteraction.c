@@ -130,7 +130,7 @@ void interactionRHS(double t, int n, const double *x, double *y,
   for (i = 0; i < numPtcls; ++i) {
     polarization += conj(atomFieldInteraction->phiz[i]) * atomFieldInteraction->dz[i];
   }
-  polarization /= I;
+  polarization *= -I * ensemble->ptclWeight;
 
   BL_MPI_Request polReq =
     blAddAllBegin((const double*)&polarization, y + 2 * fieldOffset, 2);

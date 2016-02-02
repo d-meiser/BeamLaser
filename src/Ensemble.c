@@ -11,6 +11,7 @@ BL_STATUS blEnsembleInitialize(int capacity, int internalStateSize,
   ensemble->maxNumPtcls = capacity;
 
   ensemble->internalStateSize = internalStateSize;
+  ensemble->ptclWeight = 1.0;
 
   ensemble->x = malloc(capacity * sizeof(*ensemble->x));
   if (!ensemble->x) { return BL_OUT_OF_MEMORY; }
