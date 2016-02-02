@@ -37,7 +37,6 @@ struct Configuration {
   double dt;
   double nbar;
   int maxNumParticles;
-  double particleWeight;
   double dipoleMatrixElement;
   double vbar;
   double deltaV;
@@ -50,21 +49,6 @@ struct Configuration {
   struct BlBox simulationDomain;
 };
 
-struct IntegratorCtx {
-  const struct Configuration *conf;
-  struct BLEnsemble *ensemble;
-  struct BLDipoleOperator *dipoleOperator;
-  struct BLModeFunction *modeFunction;
-  double complex *ex;
-  double complex *ey;
-  double complex *ez;
-  double complex *dx;
-  double complex *dy;
-  double complex *dz;
-  double complex *phix;
-  double complex *phiy;
-  double complex *phiz;
-};
 
 void setDefaults(struct Configuration *conf);
 void processCommandLineArgs(struct Configuration *conf, int argn, char **argv);
@@ -78,8 +62,6 @@ struct ParticleSource *constructParticleSources(
 struct BLDiagnostics *constructDiagnostics(const struct Configuration *conf);
 struct BLModeFunction *constructModeFunction( const struct Configuration *conf);
 void blFieldUpdate(double dt, double kappa, struct BLFieldState *fieldState);
-void blFieldAtomInteraction(double dt, struct BLFieldState *fieldState,
-        struct IntegratorCtx *integratorCtx, BLIntegrator integrator);
 void interactionRHS(double t, int n, const double *x, double *y,
                     void *ctx);
 
@@ -93,9 +75,10 @@ int main(int argn, char **argv) {
 #endif
   struct BLSimulationState simulationState;
   struct Configuration conf;
-  struct IntegratorCtx integratorCtx;
+  struct BLAtomFieldInteraction* atomFieldInteraction;
   struct ParticleSource *particleSource;
-  BLIntegrator integrator;
+  struct BLDipoleOperator *dipoleOperator;
+  struct BLModeFunction *modeFunction;
   struct BLDiagnostics *diagnostics = 0;
   BL_STATUS stat;
   int i, rank;
@@ -115,29 +98,9 @@ int main(int argn, char **argv) {
     sqrt(hbar * omega / (epsilon0 * sigmaE * sigmaE *L)) *
     conf.dipoleMatrixElement;
 
-  blIntegratorCreate("RK4", conf.maxNumParticles *
-      sizeof(double complex) / sizeof(double) * INTERNAL_STATE_DIM,
-      &integrator);
 
   stat = blEnsembleInitialize(conf.maxNumParticles, INTERNAL_STATE_DIM,
       &simulationState.ensemble);
-  integratorCtx.conf = &conf;
-  integratorCtx.ensemble = &simulationState.ensemble;
-  integratorCtx.dipoleOperator = blDipoleOperatorTLACreate(
-      conf.dipoleMatrixElement);
-  integratorCtx.modeFunction = constructModeFunction(&conf);
-  integratorCtx.ex = malloc(conf.maxNumParticles * sizeof(*integratorCtx.ex));
-  integratorCtx.ey = malloc(conf.maxNumParticles * sizeof(*integratorCtx.ey));
-  integratorCtx.ez = malloc(conf.maxNumParticles * sizeof(*integratorCtx.ez));
-  integratorCtx.dx = malloc(conf.maxNumParticles * sizeof(*integratorCtx.dx));
-  integratorCtx.dy = malloc(conf.maxNumParticles * sizeof(*integratorCtx.dy));
-  integratorCtx.dz = malloc(conf.maxNumParticles * sizeof(*integratorCtx.dz));
-  integratorCtx.phix =
-    malloc(conf.maxNumParticles * sizeof(*integratorCtx.phix));
-  integratorCtx.phiy =
-    malloc(conf.maxNumParticles * sizeof(*integratorCtx.phiy));
-  integratorCtx.phiz =
-    malloc(conf.maxNumParticles * sizeof(*integratorCtx.phiz));
 
   if (stat != BL_SUCCESS) return stat;
   simulationState.fieldState.q = 1.0;
@@ -146,14 +109,20 @@ int main(int argn, char **argv) {
 
   particleSource = constructParticleSources(&conf);
   diagnostics = constructDiagnostics(&conf);
+  dipoleOperator = blDipoleOperatorTLACreate(conf.dipoleMatrixElement);
+  modeFunction = constructModeFunction(&conf);
+  atomFieldInteraction = blAtomFieldInteractionCreate(
+      simulationState.ensemble.maxNumPtcls,
+      simulationState.ensemble.internalStateSize, 
+      dipoleOperator, modeFunction);
 
   for (i = 0; i < conf.numSteps; ++i) {
     particleSink(&conf, &simulationState.ensemble);
     processParticleSources(particleSource, &simulationState.ensemble);
     blEnsemblePush(0.5 * conf.dt, &simulationState.ensemble);
     blFieldUpdate(0.5 * conf.dt, conf.kappa, &simulationState.fieldState);
-    blFieldAtomInteraction(conf.dt, &simulationState.fieldState,
-        &integratorCtx, integrator);
+    blFieldAtomInteractionTakeStep(atomFieldInteraction,
+        conf.dt, &simulationState.fieldState, &simulationState.ensemble);
     blFieldUpdate(0.5 * conf.dt, conf.kappa, &simulationState.fieldState);
     blEnsemblePush(0.5 * conf.dt, &simulationState.ensemble);
     blDiagnosticsProcess(diagnostics, i, &simulationState);
@@ -163,21 +132,11 @@ int main(int argn, char **argv) {
         simulationState.fieldState.q, simulationState.fieldState.p);
   }
 
-
-  blModeFunctionDestroy(integratorCtx.modeFunction);
+  blAtomFieldInteractionDestroy(atomFieldInteraction);
+  blModeFunctionDestroy(modeFunction);
+  blDipoleOperatorDestroy(dipoleOperator);
   blDiagnosticsDestroy(diagnostics);
   blParticleSourceDestroy(particleSource);
-  blDipoleOperatorDestroy(integratorCtx.dipoleOperator);
-  free(integratorCtx.ex);
-  free(integratorCtx.ey);
-  free(integratorCtx.ez);
-  free(integratorCtx.dx);
-  free(integratorCtx.dy);
-  free(integratorCtx.dz);
-  free(integratorCtx.phix);
-  free(integratorCtx.phiy);
-  free(integratorCtx.phiz);
-  blIntegratorDestroy(&integrator);
   blEnsembleFree(&simulationState.ensemble);
 
 #ifdef BL_WITH_MPI
@@ -192,7 +151,6 @@ void setDefaults(struct Configuration *conf) {
   conf->dumpField = 0;
   conf->dumpPhaseSpace = 0;
   conf->dumpInternalState = 0;
-  conf->particleWeight = 1.0e0;
   conf->dipoleMatrixElement = 1.0e-29;
   conf->nbar = 1.0e3;
   conf->maxNumParticles = 2000;
@@ -228,7 +186,6 @@ void processCommandLineArgs(struct Configuration *conf, int argn, char **argv) {
           {"dt",                   required_argument, 0, 'd'},
           {"nbar",                 required_argument, 0, 'N'},
           {"maxNumPtcls",          required_argument, 0, 'm'},
-          {"ptclWeight",           required_argument, 0, 'w'},
           {"dipoleMatrixElement",  required_argument, 0, 'D'},
           {"vbar",                 required_argument, 0, 'v'},
           {"deltaV",               required_argument, 0, 'V'},
@@ -286,12 +243,6 @@ void processCommandLineArgs(struct Configuration *conf, int argn, char **argv) {
       case 'm':
         if (sscanf(optarg, "%d", &conf->maxNumParticles) != 1) {
           printUsage("Unable to parse argument to option -m, --maxNumPtcls\n");
-          exit(-1);
-        }
-        break;
-      case 'w':
-        if (sscanf(optarg, "%lf", &conf->particleWeight) != 1) {
-          printUsage("Unable to parse argument to option -w, --ptclWeight\n");
           exit(-1);
         }
         break;
@@ -390,8 +341,6 @@ void printUsage(const char* errorMessage) {
            "-d, --dt:                 Time step size.\n"
            "-N, --nbar:               Mean number of particles in simulation domain.\n"
            "-m, --maxNumPtcl          Maximum number of particles.\n"
-           "-w, --ptclWeight          Number of physical particles represented by each\n"
-           "                          simulation particle.\n"
            "-D, --dipoleMatrixElement Dipole matrix element of transition with\n"
            "                          Clebsch-Gordan coefficient of one.\n"
            "-v, --vbar                Mean velocity of atoms.\n"
@@ -436,91 +385,6 @@ void processParticleSources(struct ParticleSource *particleSource,
 void blFieldUpdate(double dt, double kappa, struct BLFieldState *fieldState) {
   fieldState->q = fieldState->q * exp(-0.5 * kappa * dt);
   fieldState->p = fieldState->p * exp(-0.5 * kappa * dt);
-}
-
-void blFieldAtomInteraction(double dt, struct BLFieldState *fieldState,
-        struct IntegratorCtx *integratorCtx, BLIntegrator integrator) {
-  struct BLEnsemble *ensemble = integratorCtx->ensemble;
-  struct BLModeFunction *modeFunction = integratorCtx->modeFunction;
-  const int numPtcls = ensemble->numPtcls;
-  const int fieldOffset = numPtcls * ensemble->internalStateSize;
-  int n = numPtcls * ensemble->internalStateSize + 2;
-
-  /* Pack field into internal state buffer. Note that the internalState array
-  needs to have room for at least two additional doubles. After the field has
-  been scattered to each rank we integrate its equations of motion redundantly.
-  */
-  BL_MPI_Request fieldRequest =
-    blBcastBegin((const double*)fieldState,
-        (double*)(ensemble->internalState + fieldOffset), 2);
-  blModeFunctionEvaluate(modeFunction, ensemble->numPtcls,
-      ensemble->x, ensemble->y, ensemble->z,
-      integratorCtx->phix, integratorCtx->phiy, integratorCtx->phiz);
-  blBcastEnd(fieldRequest,
-      (const double*)fieldState,
-      (double*)(ensemble->internalState + fieldOffset), 2);
-
-  blIntegratorTakeStep(integrator, 0.0, dt, n, interactionRHS,
-                       (const double*)ensemble->internalState,
-                       (double*)ensemble->internalState,
-                       integratorCtx);
-
-  fieldState->q = ensemble->internalState[fieldOffset + 0];
-  fieldState->p = ensemble->internalState[fieldOffset + 1];
-}
-
-void interactionRHS(double t, int n, const double *x, double *y,
-                    void *ctx) {
-  BL_UNUSED(t);
-  BL_UNUSED(n);
-  struct IntegratorCtx *integratorCtx = ctx;
-  struct BLEnsemble *ensemble = integratorCtx->ensemble;
-  int i;
-  const int numPtcls = ensemble->numPtcls;
-  const int fieldOffset = numPtcls * ensemble->internalStateSize;
-
-  blDipoleOperatorComputeD(integratorCtx->dipoleOperator,
-      ensemble->internalStateSize, numPtcls, (const double complex*)x,
-      integratorCtx->dx, integratorCtx->dy, integratorCtx->dz);
-
-  double complex polarization = 0;
-  for (i = 0; i < numPtcls; ++i) {
-    polarization += conj(integratorCtx->phix[i]) * integratorCtx->dx[i];
-  }
-  for (i = 0; i < numPtcls; ++i) {
-    polarization += conj(integratorCtx->phiy[i]) * integratorCtx->dy[i];
-  }
-  for (i = 0; i < numPtcls; ++i) {
-    polarization += conj(integratorCtx->phiz[i]) * integratorCtx->dz[i];
-  }
-  polarization *= -I * integratorCtx->conf->particleWeight;
-
-  BL_MPI_Request polReq =
-    blAddAllBegin((const double*)&polarization, y + fieldOffset, 2);
-
-  const double complex fieldAmplitude =
-    *((const double complex*)(x + fieldOffset));
-  for (i = 0; i < numPtcls; ++i) {
-    integratorCtx->ex[i] = fieldAmplitude * integratorCtx->phix[i];
-  }
-  for (i = 0; i < numPtcls; ++i) {
-    integratorCtx->ey[i] = fieldAmplitude * integratorCtx->phiy[i];
-  }
-  for (i = 0; i < numPtcls; ++i) {
-    integratorCtx->ez[i] = fieldAmplitude * integratorCtx->phiz[i];
-  }
-
-  double complex *yc = (double complex*)y;
-  blDipoleOperatorApply(integratorCtx->dipoleOperator,
-                        ensemble->internalStateSize,
-                        numPtcls,
-                        integratorCtx->ex, integratorCtx->ey, integratorCtx->ez,
-                        (const double complex*)x, yc);
-  for (i = 0; i < numPtcls * integratorCtx->ensemble->internalStateSize; ++i) {
-    yc[i] *= -I;
-  }
-
-  blAddAllEnd(polReq, (const double*)&polarization, y + fieldOffset, 2);
 }
 
 struct ParticleSource *constructParticleSources(

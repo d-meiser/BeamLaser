@@ -1,6 +1,7 @@
 #ifndef BEAM_LASER_H
 #define BEAM_LASER_H
 
+#include <AtomFieldInteraction.h>
 #include <Diagnostics.h>
 #include <DipoleOperator.h>
 #include <Ensemble.h>

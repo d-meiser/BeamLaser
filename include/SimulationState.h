@@ -2,11 +2,7 @@
 #define SIMULATION_STATE_H
 
 #include <Ensemble.h>
-
-struct BLFieldState {
-  double q;
-  double p;
-};
+#include <FieldState.h>
 
 struct BLSimulationState {
   double t;

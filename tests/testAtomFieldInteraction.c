@@ -7,7 +7,7 @@ AfterEach(AtomFieldInteraction) {}
 
 Ensure(AtomFieldInteraction, canBeCreated) {
   struct BLAtomFieldInteraction *atomFieldInteraction =
-    blAtomFieldInteractionCreate();
+    blAtomFieldInteractionCreate(10, 2, 0, 0);
   blAtomFieldInteractionDestroy(atomFieldInteraction);
 }
 
