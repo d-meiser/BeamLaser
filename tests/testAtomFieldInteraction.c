@@ -1,5 +1,6 @@
 #include <cgreen/cgreen.h>
 #include <AtomFieldInteraction.h>
+#include <math.h>
 
 
 #define MAX_NUM_PTCLS 10
@@ -67,6 +68,8 @@ Ensure(AtomFieldInteraction, isNormConserving) {
 }
 
 Ensure(AtomFieldInteraction, producesRabiOscillations) {
+  /* Use zero weight particles to produce a constant field */
+  ensemble.ptclWeight = 0.0;
   for (i = 0; i < 10000; ++i) {
     blAtomFieldInteractionTakeStep(atomFieldInteraction,
         1.0e-3, &fieldState, &ensemble);
@@ -78,6 +81,18 @@ Ensure(AtomFieldInteraction, producesRabiOscillations) {
         fieldState.q,
         fieldState.p);
   }
+  assert_that_double(fieldState.q, is_equal_to_double(1.0));
+  assert_that_double(fieldState.p, is_equal_to_double(0.0));
+
+  /* Have to check phase factors here */
+  assert_that_double(creal(ensemble.internalState[0]),
+      is_equal_to_double(0.0));
+  assert_that_double(cimag(ensemble.internalState[0]),
+      is_equal_to_double(-sin(10.0)));
+  assert_that_double(creal(ensemble.internalState[1]),
+      is_equal_to_double(cos(10.0)));
+  assert_that_double(cimag(ensemble.internalState[1]),
+      is_equal_to_double(0.0));
 }
 
 
