@@ -73,13 +73,6 @@ Ensure(AtomFieldInteraction, producesRabiOscillations) {
   for (i = 0; i < 10000; ++i) {
     blAtomFieldInteractionTakeStep(atomFieldInteraction,
         1.0e-3, &fieldState, &ensemble);
-    printf("%le %le %le %le %le %le\n",
-        creal(ensemble.internalState[0]),
-        cimag(ensemble.internalState[0]),
-        creal(ensemble.internalState[1]),
-        cimag(ensemble.internalState[1]),
-        fieldState.q,
-        fieldState.p);
   }
   assert_that_double(fieldState.q, is_equal_to_double(1.0));
   assert_that_double(fieldState.p, is_equal_to_double(0.0));
