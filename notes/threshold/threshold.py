@@ -9,13 +9,15 @@ beam_laser_tla_exec = beam_laser_tla_path + 'BeamLaserTLA'
 mpi_exec = top_dir + '/../../mpich/bin/mpirun'
 
 nbar_base = 10
-vbar = 1.0e2
+vbar = 1.0e1
+deltaV = 1.0e-1
 dt = 1.0e-9
 dump_period = 1.0e2
 num_steps = 10001
 kappa = 1.0e8
 dipole_matrix_elemen = 1.0e-31
 ptcl_weight = 1.0e0
+waist = 3.0e-5
 
 for i in range(6):
     run_dir = top_dir + '/run' + str(i)
@@ -34,7 +36,9 @@ for i in range(6):
             "--nbar", str(nbar),
             "--maxNumPtcl", str(100 * nbar),
             "--vbar", str(vbar),
+            "--deltaV", str(deltaV),
             "--kappa", str(kappa),
+            "--waist", str(waist),
             "--dt", str(dt),
             "--numSteps", str(num_steps),
             "--dumpPeriod", str(dump_period),
