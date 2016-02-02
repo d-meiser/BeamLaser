@@ -6,6 +6,7 @@ include_directories(
     )
 
 set(TESTS
+    testAtomFieldInteraction
     testBSP
     testDiagnostics
     testDipoleOperatorTLA

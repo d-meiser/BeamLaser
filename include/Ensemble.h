@@ -10,6 +10,7 @@ struct BLEnsemble {
   int numPtcls;
   int maxNumPtcls;
   int internalStateSize;
+  double ptclWeight;
   double *x;
   double *y;
   double *z;
