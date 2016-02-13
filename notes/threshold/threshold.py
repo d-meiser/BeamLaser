@@ -9,11 +9,11 @@ beam_laser_tla_exec = beam_laser_tla_path + 'BeamLaserTLA'
 mpi_exec = top_dir + '/../../mpich/bin/mpirun'
 
 nbar_base = 10
-vbar = 1.0e1
-deltaV = 1.0e-1
-dt = 1.0e-8
-dump_period = 1.0e2
-num_steps = 10001
+vbar = 1.0e-1
+deltaV = 1.0e-4
+dt = 1.0e-7
+dump_period = 1.0e4
+num_steps = 50001
 kappa = 1.0e8
 dipole_matrix_elemen = 1.0e-31
 ptcl_weight = 1.0e0
