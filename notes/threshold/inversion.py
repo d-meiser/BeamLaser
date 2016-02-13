@@ -22,16 +22,17 @@ plt.rcParams.update(params)
 internal_state = []
 phase_space = []
 
-i_min = 4
+i_min = 2
 i_max = 6
 
-for i in range(i_min, i_max):
+for i in reversed(range(i_min, i_max)):
     internal_state.append(
             np.loadtxt('run' + str(i) + '/internal_state_' +
-                    str(0) + '_2000.txt'))
+                    str(0) + '_20000.txt'))
     phase_space.append(
             np.transpose(np.loadtxt('run' + str(i) + '/ptcls_' +
-                    str(0) + '_2000.txt')))
+                    str(0) + '_20000.txt')))
+
 
 for i in range(i_min, i_max):
     inversion = 0.5 * (
@@ -40,8 +41,11 @@ for i in range(i_min, i_max):
             internal_state[i-i_min][:,0]**2 -
             internal_state[i-i_min][:,1]**2)
     print np.mean(inversion)
-    plt.plot(1.0e6*phase_space[i-i_min][::1000,2], inversion[::1000], '.')
+    plt.plot(1.0e6*phase_space[i-i_min][::10,2], inversion[::10], '.', ms=1)
 plt.xlabel(r'$z/\mu{\rm m}$')
 plt.ylabel(r'$w$')
 plt.gcf().subplots_adjust(left=0.2, bottom=0.2)
 plt.savefig('inversion.pdf')
+
+
+
