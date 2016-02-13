@@ -34,7 +34,9 @@ for i in range(i_max):
 
 for i in range(i_max):
     polarization = np.abs(internal_state[i][:,0] * internal_state[i][:,2] +
-            internal_state[i][:,1] * internal_state[i][:,3])
+            internal_state[i][:,1] * internal_state[i][:,3])**2 + np.abs(
+                internal_state[i][:,1] * internal_state[i][:,2] +
+                internal_state[i][:,0] * internal_state[i][:,3])**2 
     print np.mean(polarization)
     plt.plot(phase_space[i][:,2], polarization)
 plt.savefig('polarizations.pdf')
