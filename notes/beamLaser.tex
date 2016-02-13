@@ -429,7 +429,11 @@ collective emission.
 
 \note{Apparently there is an issue with the evolution of the
   internal state of the atoms.  The probability amplitude of the
-  excited state is constant at 1.  This must be fixed.}
+  excited state is constant at 1.  This must be fixed.  Update:
+  It's possible that this was just a underflow issue.  When the
+  atomic dipole is being tilted appreciably the norm is equal to
+  1 to a level of approximation that is consistent with the
+  accuracy of the integrator.}
 
 Let's have a look at the data despite this state evolution issue.
 
@@ -442,7 +446,7 @@ the decay during this final stage.  At the largest flux
 considered the system appears to be getting close to threshold,
 but it's still below threshold.
 \begin{figure}
-  \includegraphics{threshold/field_intensities}
+  \includegraphics{threshold/field_intensities_run0}
   \caption{Intra-cavity intensities.}
   \label{fig:FieldIntensities}
 \end{figure}
@@ -457,13 +461,64 @@ To get to threshold I take two measures compared to the first
 run:
 \begin{itemize}
 
-\item Increase $\Omega$
+\item Increase $\Omega$ by decreasing the waist $w$ of the mode.
 
 \item Decrease particle velocity
 
 \end{itemize}
+The parameters are summarized in table~\ref{tab:Run2Params}
+\begin{table}
+  \begin{tabular}{|l|l|}
+    \hline
+    parameter       & value\\
+    \hline
+    \hline
+    $\bar v$        & $\SI{1.0e1}{m/s}$\\
+    \hline
+    $dt$            & $\SI{1.0e-9}{s}$\\
+    \hline
+    $\kappa$        & $\SI{1.0e8}{rad/s}$\\
+    \hline
+    $\wp$           & $\SI{1.0e-31}{Cm}$\\
+    \hline
+    $w$             & $\SI{30}{\micro m}$\\
+    \hline
+    particle weight & $1$\\
+    \hline
+  \end{tabular}
+  \caption{Parameters used in first run of threshold experiment.
+    Default values were used for the parameters not explicitly
+    listed here.}
+  \label{tab:Run2Params}
+\end{table}
+
 This run is based on
-\gitrevision{c9d7a330b22abe935bd26c5d2298678ed9bc816c}.
+\gitrevision{2f67a58fb1fd102a67fc40637b582e2ba5d8c910}.
+
+The reduction of the waist leads to a linear loss in number of
+particles crossing the mode.  But for threshold we need to look
+at $N\Omega^2/\kappa\propto 1/w^2$.  This means we gain faster by
+reducing $w$ than we are loosing.  In this case we gain about by
+a factor of 3 compared to the previous run.
+
+It turns out that, with these parameters, we're able to reach
+threshold.  The intracavity intensities for the different fluxes
+are shown in Fig.~\ref{fig:FieldIntensitiesRun1} and
+Fig.~\ref{fig:FieldIntensitiesAboveThresholdRun1} shows a plot of
+the field intensity on a linear scale.  The latter figure shows
+relaxation oscillations.
+
+\begin{figure}
+  \includegraphics{threshold/field_intensities_run1}
+  \caption{Intra-cavity intensities.}
+  \label{fig:FieldIntensitiesRun1}
+\end{figure}
+
+\begin{figure}
+  \includegraphics{threshold/field_intensity_above_threshold_run1}
+  \caption{Intra-cavity intensity above threshold.}
+  \label{fig:FieldIntensitiesRun1}
+\end{figure}
 
 
 \section{TODO list}
