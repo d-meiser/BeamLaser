@@ -34,15 +34,14 @@ for i in range(i_min, i_max):
                     str(0) + '_2000.txt')))
 
 for i in range(i_min, i_max):
-    polarization = np.abs(internal_state[i-i_min][:,0] *
-            internal_state[i-i_min][:,2] +
-            internal_state[i-i_min][:,1] * internal_state[i-i_min][:,3])**2 + np.abs(
-                internal_state[i-i_min][:,1] * internal_state[i-i_min][:,2] +
-                internal_state[i-i_min][:,0] * internal_state[i-i_min][:,3])**2 
-    print np.mean(polarization)
-    plt.plot(1.0e6*phase_space[i-i_min][::100,2], polarization[::100], '.')
+    inversion = 0.5 * (
+            internal_state[i-i_min][:,2]**2 +
+            internal_state[i-i_min][:,3]**2 -
+            internal_state[i-i_min][:,0]**2 -
+            internal_state[i-i_min][:,1]**2)
+    print np.mean(inversion)
+    plt.plot(1.0e6*phase_space[i-i_min][::1000,2], inversion[::1000], '.')
 plt.xlabel(r'$z/\mu{\rm m}$')
-plt.ylabel(r'$P$')
-plt.xlim([-100,100])
+plt.ylabel(r'$w$')
 plt.gcf().subplots_adjust(left=0.2, bottom=0.2)
-plt.savefig('polarizations.pdf')
+plt.savefig('inversion.pdf')
