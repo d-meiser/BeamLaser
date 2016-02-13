@@ -148,10 +148,10 @@ void setDefaults(struct Configuration *conf) {
   conf->deltaV = 1.0e1;
   conf->alpha = 1.0e-2;
   conf->kappa = 2.0 * M_PI * 1.0e6;
-  conf->simulationDomain.xmin = -1.0e-4;
-  conf->simulationDomain.xmax = 1.0e-4;
-  conf->simulationDomain.ymin = -1.0e-4;
-  conf->simulationDomain.ymax = 1.0e-4;
+  conf->simulationDomain.xmin = -5.0e-5;
+  conf->simulationDomain.xmax = 5.0e-5;
+  conf->simulationDomain.ymin = -5.0e-5;
+  conf->simulationDomain.ymax = 5.0e-5;
   conf->simulationDomain.zmin = -1.0e-4;
   conf->simulationDomain.zmax = 1.0e-4;
   conf->uniform = 0;
