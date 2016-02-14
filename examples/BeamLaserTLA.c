@@ -131,14 +131,10 @@ int main(int argn, char **argv) {
     blUpdateTakeStep(fieldUpdate, i * conf.dt, 0.5 * conf.dt, &simulationState);
     blAtomFieldInteractionTakeStep(atomFieldInteraction,
         conf.dt, &simulationState.fieldState, &simulationState.ensemble);
-    blUpdateTakeStep(fieldUpdate, (i + 0.5) * conf.dt, 0.5 * conf.dt,
+    blUpdateTakeStep(fieldUpdate, (i + 1) * conf.dt, 0.5 * conf.dt,
         &simulationState);
-    blUpdateTakeStep(atomPush, (i + 0.5) * conf.dt, 0.5 * conf.dt, &simulationState);
+    blUpdateTakeStep(atomPush, (i + 1) * conf.dt, 0.5 * conf.dt, &simulationState);
     blDiagnosticsProcess(diagnostics, i, &simulationState);
-  }
-  if (rank == 0) {
-    printf("%9d  %9d  %le  %le\n", i, simulationState.ensemble.numPtcls,
-        simulationState.fieldState.q, simulationState.fieldState.p);
   }
 
   blUpdateDestroy(atomPush);
