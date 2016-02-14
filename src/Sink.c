@@ -16,23 +16,28 @@ for more details.
 You should have received a copy of the GNU General Public License along
 with BeamLaser.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef BEAM_LASER_H
-#define BEAM_LASER_H
-
-#include <AtomFieldInteraction.h>
-#include <Diagnostics.h>
-#include <DipoleOperator.h>
-#include <Ensemble.h>
-#include <Errors.h>
-#include <FieldUpdate.h>
-#include <Integrator.h>
-#include <ModeFunction.h>
-#include <ParticleSource.h>
-#include <Partition.h>
-#include <PushUpdate.h>
-#include <SimulationState.h>
 #include <Sink.h>
-#include <Update.h>
 
-#endif
+struct SinkBelowCtx {
+  double zmin;
+};
+
+static void sinkBelowTakeStep(double t, double dt, struct BLSimulationState *simulationState, void *c) {
+  struct SinkBelowCtx *ctx = (struct SinkBelowCtx*)c;
+  blEnsembleRemoveBelow(ctx->zmin, simulationState->ensemble.z, &simulationState->ensemble);
+}
+
+static void sinkBelowDestroy(void *c) {
+  free(c);
+}
+
+struct BLUpdate *blSinkBelowCreate(double zmin) {
+  struct BLUpdate *this = malloc(sizeof(*this));
+  this->takeStep = sinkBelowTakeStep;
+  this->destroy = sinkBelowDestroy;
+  struct SinkBelowCtx *ctx = malloc(sizeof(*ctx));
+  ctx->zmin = zmin;
+  this->ctx = ctx;
+  return this;
+}
 

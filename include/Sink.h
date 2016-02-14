@@ -16,23 +16,12 @@ for more details.
 You should have received a copy of the GNU General Public License along
 with BeamLaser.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef BEAM_LASER_H
-#define BEAM_LASER_H
+#ifndef SINK_H
+#define SINK_H
 
-#include <AtomFieldInteraction.h>
-#include <Diagnostics.h>
-#include <DipoleOperator.h>
-#include <Ensemble.h>
-#include <Errors.h>
-#include <FieldUpdate.h>
-#include <Integrator.h>
-#include <ModeFunction.h>
-#include <ParticleSource.h>
-#include <Partition.h>
-#include <PushUpdate.h>
-#include <SimulationState.h>
-#include <Sink.h>
 #include <Update.h>
 
-#endif
 
+struct BLUpdate *blSinkBelowCreate(double zmin);
+
+#endif

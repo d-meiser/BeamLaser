@@ -18,6 +18,7 @@ set(BeamLaserLibSources
     ParticleSource.c
     Partition.c
     PushUpdate.c
+    Sink.c
     Update.c
     Utilities.c
    )

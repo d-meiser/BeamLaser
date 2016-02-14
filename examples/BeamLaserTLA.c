@@ -65,7 +65,6 @@ void setDefaults(struct Configuration *conf);
 void processCommandLineArgs(struct Configuration *conf, int argn, char **argv);
 void printUsage(const char* errorMessage);
 void adjustNumPtclsForNumRanks(struct Configuration *conf);
-void particleSink(const struct Configuration *conf, struct BLEnsemble *ensemble);
 void processParticleSources(struct ParticleSource *particleSource,
                             struct BLEnsemble *ensemble);
 struct ParticleSource *constructParticleSources(
@@ -123,9 +122,10 @@ int main(int argn, char **argv) {
       simulationState.ensemble.maxNumPtcls,
       simulationState.ensemble.internalStateSize,
       dipoleOperator, modeFunction);
+  struct BLUpdate *sinks = blSinkBelowCreate(conf.simulationDomain.zmin);
 
   for (i = 0; i < conf.numSteps; ++i) {
-    particleSink(&conf, &simulationState.ensemble);
+    blUpdateTakeStep(sinks, i * conf.dt, conf.dt, &simulationState);
     processParticleSources(particleSource, &simulationState.ensemble);
     blUpdateTakeStep(atomPush, i * conf.dt, 0.5 * conf.dt, &simulationState);
     blUpdateTakeStep(fieldUpdate, i * conf.dt, 0.5 * conf.dt, &simulationState);
@@ -135,6 +135,7 @@ int main(int argn, char **argv) {
     blDiagnosticsProcess(diagnostics, i, &simulationState);
   }
 
+  blUpdateDestroy(sinks);
   blUpdateDestroy(atomFieldInteraction);
   blUpdateDestroy(atomPush);
   blUpdateDestroy(fieldUpdate);
@@ -383,11 +384,6 @@ void adjustNumPtclsForNumRanks(struct Configuration *conf) {
 #endif
   conf->nbar /= numRanks;
   conf->maxNumParticles /= numRanks;
-}
-
-void particleSink(const struct Configuration *conf,
-                  struct BLEnsemble *ensemble) {
-  blEnsembleRemoveBelow(conf->simulationDomain.zmin, ensemble->z, ensemble);
 }
 
 void processParticleSources(struct ParticleSource *particleSource,
