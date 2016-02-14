@@ -84,7 +84,7 @@ int main(int argn, char **argv) {
     sqrt(2.0 * M_PI * SPEED_OF_LIGHT /
         (lambda * 2.0 * EPSILON_0 * veff * H_BAR)) *
     dipoleMatrixElement;
-  printf("omega == %e\n", omega);
+  printf("# omega == %e\n", omega);
 
   struct BLAtomFieldInteraction *atomFieldInteraction =
     blAtomFieldInteractionCreate(
