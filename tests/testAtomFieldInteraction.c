@@ -22,7 +22,7 @@ BeforeEach(AtomFieldInteraction) {
   fieldState.q = 1.0;
   fieldState.p = 0.0;
 
-  blEnsembleInitialize(MAX_NUM_PTCLS, DOF_PER_PTCL, &ensemble);
+  blEnsembleCreate(MAX_NUM_PTCLS, DOF_PER_PTCL, &ensemble);
   ensemble.numPtcls = 1;
   for (i = 0; i < MAX_NUM_PTCLS; ++i) {
     ensemble.x[i] = 0;
@@ -40,7 +40,7 @@ BeforeEach(AtomFieldInteraction) {
 }
 
 AfterEach(AtomFieldInteraction) {
-  blEnsembleFree(&ensemble);
+  blEnsembleDestroy(&ensemble);
   blAtomFieldInteractionDestroy(atomFieldInteraction);
   blModeFunctionDestroy(modeFunction);
   blDipoleOperatorDestroy(dipoleOperator);

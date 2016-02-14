@@ -5,7 +5,7 @@
 #include <Partition.h>
 
 
-BL_STATUS blEnsembleInitialize(int capacity, int internalStateSize,
+BL_STATUS blEnsembleCreate(int capacity, int internalStateSize,
                                struct BLEnsemble *ensemble) {
   ensemble->numPtcls = 0;
   ensemble->maxNumPtcls = capacity;
@@ -31,7 +31,7 @@ BL_STATUS blEnsembleInitialize(int capacity, int internalStateSize,
   return BL_SUCCESS;
 }
 
-void blEnsembleFree(struct BLEnsemble *ensemble) {
+void blEnsembleDestroy(struct BLEnsemble *ensemble) {
   ensemble->numPtcls = 0;
   ensemble->maxNumPtcls = 0;
 

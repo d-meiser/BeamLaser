@@ -6,7 +6,7 @@ static struct BLEnsemble ensemble;
 Describe(RemoveBelow)
 BeforeEach(RemoveBelow) {
   static const int numPtcls = 20;
-  blEnsembleInitialize(numPtcls + 1, 2, &ensemble);
+  blEnsembleCreate(numPtcls + 1, 2, &ensemble);
   int i;
   for (i = 0; i < numPtcls; ++i) {
     ensemble.x[i] = rand() / (double)RAND_MAX;
@@ -14,7 +14,7 @@ BeforeEach(RemoveBelow) {
   ensemble.numPtcls = numPtcls;
 }
 AfterEach(RemoveBelow) {
-  blEnsembleFree(&ensemble);
+  blEnsembleDestroy(&ensemble);
 }
 
 Ensure(RemoveBelow, doesNotIncreaseNumberOfParticles) {

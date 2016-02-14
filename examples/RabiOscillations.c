@@ -19,7 +19,7 @@ int main() {
   initialState[1] = 1;
 
   struct BLSimulationState simulationState;
-  blEnsembleInitialize(maxNumPtcls, internalStateSize,
+  blEnsembleCreate(maxNumPtcls, internalStateSize,
       &simulationState.ensemble);
   simulationState.ensemble.ptclWeight = 0;
   simulationState.fieldState.q = 1.0;
@@ -84,7 +84,7 @@ int main() {
   blAtomFieldInteractionDestroy(atomFieldInteraction);
   blModeFunctionDestroy(modeFunction);
   blDipoleOperatorDestroy(dipoleOperator);
-  blEnsembleFree(&simulationState.ensemble);
+  blEnsembleDestroy(&simulationState.ensemble);
   blParticleSourceDestroy(src);
   return 0;
 }

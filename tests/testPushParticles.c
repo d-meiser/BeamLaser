@@ -6,7 +6,7 @@ static struct BLEnsemble ensemble;
 Describe(Push)
 BeforeEach(Push) {
   static const int numPtcls = 5;
-  blEnsembleInitialize(numPtcls + 1, 2, &ensemble);
+  blEnsembleCreate(numPtcls + 1, 2, &ensemble);
   int i;
   for (i = 0; i < numPtcls; ++i) {
     ensemble.x[i] = 0;
@@ -19,7 +19,7 @@ BeforeEach(Push) {
   ensemble.numPtcls = numPtcls;
 }
 AfterEach(Push) {
-  blEnsembleFree(&ensemble);
+  blEnsembleDestroy(&ensemble);
 }
 
 Ensure(Push, movesParticlesTheRightDistance) {

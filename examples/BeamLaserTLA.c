@@ -86,7 +86,7 @@ int main(int argn, char **argv) {
   processCommandLineArgs(&conf, argn, argv);
   adjustNumPtclsForNumRanks(&conf);
 
-  stat = blEnsembleInitialize(conf.maxNumParticles, INTERNAL_STATE_DIM,
+  stat = blEnsembleCreate(conf.maxNumParticles, INTERNAL_STATE_DIM,
       &simulationState.ensemble);
   simulationState.ensemble.ptclWeight = conf.ptclWeight;
 
@@ -125,7 +125,7 @@ int main(int argn, char **argv) {
   blDipoleOperatorDestroy(dipoleOperator);
   blDiagnosticsDestroy(diagnostics);
   blParticleSourceDestroy(particleSource);
-  blEnsembleFree(&simulationState.ensemble);
+  blEnsembleDestroy(&simulationState.ensemble);
 
 #ifdef BL_WITH_MPI
   MPI_Finalize();
