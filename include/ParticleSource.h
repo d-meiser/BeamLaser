@@ -54,5 +54,10 @@ struct ParticleSource *blParticleSourceUniformCreate(
     int internalStateSize, double complex *internalState,
     struct ParticleSource *next);
 
+struct ParticleSource *blParticleSourceManualCreate(
+    double x, double y, double z, double vx, double vy, double vz,
+    int internalStateSize, double complex *internalState,
+    struct ParticleSource *next);
+
 #endif
 

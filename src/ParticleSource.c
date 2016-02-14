@@ -125,3 +125,66 @@ struct ParticleSource *blParticleSourceUniformCreate(
   return self;
 }
 
+
+/* Manual particle source */
+
+struct ManualCtx {
+  double x;
+  double y;
+  double z;
+  double vx;
+  double vy;
+  double vz;
+  int internalStateSize;
+  double complex *internalState;
+};
+
+static int manualGetNumParticles(void *ctx) {
+  BL_UNUSED(ctx);
+  return 1;
+}
+
+static void manualCreateParticles(double *x, double *y, double *z,
+      double *vx, double *vy, double *vz,
+      double complex *internalState, void *c) {
+  struct ManualCtx *ctx = (struct ManualCtx*)c;
+  x[0] = ctx->x;
+  y[0] = ctx->y;
+  z[0] = ctx->z;
+  vx[0] = ctx->vx;
+  vy[0] = ctx->vy;
+  vz[0] = ctx->vz;
+  memcpy(internalState, ctx->internalState, ctx->internalStateSize * sizeof(*ctx->internalState));
+}
+
+void manualDestroy(void *c) {
+  struct ManualCtx *ctx = c;
+  free(ctx->internalState);
+  free(ctx);
+}
+
+struct ParticleSource *blParticleSourceManualCreate(
+    double x, double y, double z, double vx, double vy, double vz,
+    int internalStateSize, double complex *internalState,
+    struct ParticleSource *next) {
+  struct ParticleSource *self;
+  blParticleSourceCreate(next, &self);
+  self->getNumParticles = manualGetNumParticles;
+  self->createParticles = manualCreateParticles;
+  self->destroy = manualDestroy;
+  struct ManualCtx *ctx = malloc(sizeof(*ctx));
+  ctx->x = x;
+  ctx->y = y;
+  ctx->z = z;
+  ctx->vx = vx;
+  ctx->vy = vy;
+  ctx->vz = vz;
+  ctx->internalStateSize = internalStateSize;
+  ctx->internalState = malloc(internalStateSize * sizeof(*ctx->internalState));
+  memcpy(ctx->internalState, internalState,
+      internalStateSize * sizeof(*ctx->internalState));
+  self->ctx = ctx;
+  return self;
+}
+
+
