@@ -65,14 +65,10 @@ void setDefaults(struct Configuration *conf);
 void processCommandLineArgs(struct Configuration *conf, int argn, char **argv);
 void printUsage(const char* errorMessage);
 void adjustNumPtclsForNumRanks(struct Configuration *conf);
-void particleSink(const struct Configuration *conf, struct BLEnsemble *ensemble);
-void processParticleSources(struct ParticleSource *particleSource,
-                            struct BLEnsemble *ensemble);
-struct ParticleSource *constructParticleSources(
+struct BLParticleSource *constructParticleSources(
     const struct Configuration *conf);
 struct BLDiagnostics *constructDiagnostics(const struct Configuration *conf);
 struct BLModeFunction *constructModeFunction( const struct Configuration *conf);
-void blFieldUpdate(double dt, double kappa, struct BLFieldState *fieldState);
 void interactionRHS(double t, int n, const double *x, double *y,
                     void *ctx);
 
@@ -86,8 +82,7 @@ int main(int argn, char **argv) {
 #endif
   struct BLSimulationState simulationState;
   struct Configuration conf;
-  struct BLAtomFieldInteraction* atomFieldInteraction;
-  struct ParticleSource *particleSource;
+  struct BLParticleSource *particleSource;
   struct BLDipoleOperator *dipoleOperator;
   struct BLModeFunction *modeFunction;
   struct BLDiagnostics *diagnostics = 0;
@@ -98,6 +93,7 @@ int main(int argn, char **argv) {
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 #else
   rank = 0;
+  BL_UNUSED(rank);
 #endif
 
   setDefaults(&conf);
@@ -117,28 +113,32 @@ int main(int argn, char **argv) {
   diagnostics = constructDiagnostics(&conf);
   dipoleOperator = blDipoleOperatorTLACreate(conf.dipoleMatrixElement);
   modeFunction = constructModeFunction(&conf);
-  atomFieldInteraction = blAtomFieldInteractionCreate(
+
+  struct BLUpdate *fieldUpdate = blFieldUpdateCreate(conf.kappa, conf.kappa);
+  struct BLUpdate *atomPush = blPushUpdateCreate();
+  struct BLUpdate *atomFieldInteraction = blAtomFieldInteractionCreate(
       simulationState.ensemble.maxNumPtcls,
-      simulationState.ensemble.internalStateSize, 
+      simulationState.ensemble.internalStateSize,
       dipoleOperator, modeFunction);
+  struct BLUpdate *sinks = blSinkBelowCreate(conf.simulationDomain.zmin);
+  struct BLUpdate *sources = blSourceCreate(particleSource);
 
   for (i = 0; i < conf.numSteps; ++i) {
-    particleSink(&conf, &simulationState.ensemble);
-    processParticleSources(particleSource, &simulationState.ensemble);
-    blEnsemblePush(0.5 * conf.dt, &simulationState.ensemble);
-    blFieldUpdate(0.5 * conf.dt, conf.kappa, &simulationState.fieldState);
-    blAtomFieldInteractionTakeStep(atomFieldInteraction,
-        conf.dt, &simulationState.fieldState, &simulationState.ensemble);
-    blFieldUpdate(0.5 * conf.dt, conf.kappa, &simulationState.fieldState);
-    blEnsemblePush(0.5 * conf.dt, &simulationState.ensemble);
+    blUpdateTakeStep(sinks, i * conf.dt, conf.dt, &simulationState);
+    blUpdateTakeStep(sources, i * conf.dt, conf.dt, &simulationState);
+    blUpdateTakeStep(atomPush, i * conf.dt, 0.5 * conf.dt, &simulationState);
+    blUpdateTakeStep(fieldUpdate, i * conf.dt, 0.5 * conf.dt, &simulationState);
+    blUpdateTakeStep(atomFieldInteraction, i * conf.dt, conf.dt, &simulationState);
+    blUpdateTakeStep(fieldUpdate, (i + 1) * conf.dt, 0.5 * conf.dt, &simulationState);
+    blUpdateTakeStep(atomPush, (i + 1) * conf.dt, 0.5 * conf.dt, &simulationState);
     blDiagnosticsProcess(diagnostics, i, &simulationState);
   }
-  if (rank == 0) {
-    printf("%9d  %9d  %le  %le\n", i, simulationState.ensemble.numPtcls,
-        simulationState.fieldState.q, simulationState.fieldState.p);
-  }
 
-  blAtomFieldInteractionDestroy(atomFieldInteraction);
+  blUpdateDestroy(sources);
+  blUpdateDestroy(sinks);
+  blUpdateDestroy(atomFieldInteraction);
+  blUpdateDestroy(atomPush);
+  blUpdateDestroy(fieldUpdate);
   blModeFunctionDestroy(modeFunction);
   blDipoleOperatorDestroy(dipoleOperator);
   blDiagnosticsDestroy(diagnostics);
@@ -386,30 +386,9 @@ void adjustNumPtclsForNumRanks(struct Configuration *conf) {
   conf->maxNumParticles /= numRanks;
 }
 
-void particleSink(const struct Configuration *conf,
-                  struct BLEnsemble *ensemble) {
-  blEnsembleRemoveBelow(conf->simulationDomain.zmin, ensemble->z, ensemble);
-}
-
-void processParticleSources(struct ParticleSource *particleSource,
-                           struct BLEnsemble *ensemble) {
-  int numCreate = blParticleSourceGetNumParticles(particleSource);
-  blEnsembleCreateSpace(numCreate, ensemble);
-  blParticleSourceCreateParticles(particleSource,
-                                  ensemble->x, ensemble->y, ensemble->z,
-                                  ensemble->vx, ensemble->vy, ensemble->vz,
-                                  ensemble->internalStateSize,
-                                  ensemble->internalState);
-}
-
-void blFieldUpdate(double dt, double kappa, struct BLFieldState *fieldState) {
-  fieldState->q = fieldState->q * exp(-0.5 * kappa * dt);
-  fieldState->p = fieldState->p * exp(-0.5 * kappa * dt);
-}
-
-struct ParticleSource *constructParticleSources(
+struct BLParticleSource *constructParticleSources(
     const struct Configuration *conf) {
-  struct ParticleSource *particleSource;
+  struct BLParticleSource *particleSource;
   struct BlBox volume = {
     conf->simulationDomain.xmin,
     conf->simulationDomain.xmax,

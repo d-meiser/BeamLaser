@@ -16,15 +16,28 @@ for more details.
 You should have received a copy of the GNU General Public License along
 with BeamLaser.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef ATOM_FIELD_INTERACTION_H
-#define ATOM_FIELD_INTERACTION_H
+#ifndef UPDATE_H
+#define UPDATE_H
 
-#include <ModeFunction.h>
-#include <DipoleOperator.h>
+#include <SimulationState.h>
 
+/*
+ * Implementation notes:
+ *
+ * - Still need to add a compound update
+ *
+ * */
+struct BLUpdate {
+  void (*takeStep)(double t, double dt, struct BLSimulationState *state, void *ctx);
+  void (*destroy)(void *ctx);
+  void *ctx;
+};
 
-struct BLUpdate *blAtomFieldInteractionCreate(int maxNumParticles,
-    int internalStateSize, struct BLDipoleOperator *dipoleOperator,
-    struct BLModeFunction *modeFunction);
+void blUpdateTakeStep(struct BLUpdate *update, double t, double dt,
+    struct BLSimulationState *state);
+void blUpdateDestroy(struct BLUpdate *update);
+
+struct BLUpdate *blUpdateIdentityCreate();
 
 #endif
+

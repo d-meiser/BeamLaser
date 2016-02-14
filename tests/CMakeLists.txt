@@ -11,6 +11,7 @@ set(TESTS
     testDiagnostics
     testDipoleOperatorTLA
     testEnsemble
+    testFieldUpdate
     testIntegrator
     testManualParticleSource
     testModeFunction
@@ -19,6 +20,7 @@ set(TESTS
     testPoissonDist
     testPushParticles
     testRemoveParticles
+    testUpdate
     )
 
 foreach(t ${TESTS})

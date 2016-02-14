@@ -37,7 +37,7 @@ static double vbar[3] = {0.0, 0.0, -200.0};
 static double deltaV[3] = {1.0, 1.0, 10.0};
 static double complex initialState[2] = {0, 1.0};
 static const int numPtcls = 5;
-static struct ParticleSource *particleSource;
+static struct BLParticleSource *particleSource;
 
 Describe(ParticleSource)
 BeforeEach(ParticleSource) {

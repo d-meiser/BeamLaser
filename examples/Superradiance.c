@@ -62,7 +62,7 @@ int main(int argn, char **argv) {
     {-0.5 * lambda, 0.5 * lambda, 1.0e-4, 1.0e-4, 1.0e-4, 1.0e-4};
   double vbar[3] = {0};
   double deltaV[3] = {0};
-  struct ParticleSource* src =
+  struct BLParticleSource* src =
     blParticleSourceUniformCreate(simulationBox, 1.0e4, vbar, deltaV,
                                   internalStateSize, initialState, 0);
 
@@ -93,27 +93,27 @@ int main(int argn, char **argv) {
         (lambda * 2.0 * EPSILON_0 * veff * H_BAR)) *
     dipoleMatrixElement;
 
-  struct BLAtomFieldInteraction *atomFieldInteraction =
-    blAtomFieldInteractionCreate(
+  struct BLUpdate *atomFieldInteraction = blAtomFieldInteractionCreate(
       simulationState.ensemble.maxNumPtcls,
-      simulationState.ensemble.internalStateSize, 
+      simulationState.ensemble.internalStateSize,
       dipoleOperator, modeFunction);
 
   double dt = 1.0e-3 / omega;
   printf("# dt == %le\n", dt);
   int i;
   int dumpPeriodicity = 10;
-  struct BLDiagnostics *diagnostics = blDiagnosticsFieldStateCreate(dumpPeriodicity, 0);
-  diagnostics = blDiagnosticsInternalStateCreate(dumpPeriodicity, "internal_state", diagnostics);
+  struct BLDiagnostics *diagnostics =
+    blDiagnosticsFieldStateCreate(dumpPeriodicity, 0);
+  diagnostics = blDiagnosticsInternalStateCreate(dumpPeriodicity,
+                                                 "internal_state", diagnostics);
   int numSteps = 100;
   for (i = 0; i < numSteps; ++i) {
     blDiagnosticsProcess(diagnostics, i, &simulationState);
-    blAtomFieldInteractionTakeStep(atomFieldInteraction,
-        dt, &simulationState.fieldState, &simulationState.ensemble);
+    blUpdateTakeStep(atomFieldInteraction, i * dt, dt, &simulationState);
   }
 
+  blUpdateDestroy(atomFieldInteraction);
   blDiagnosticsDestroy(diagnostics);
-  blAtomFieldInteractionDestroy(atomFieldInteraction);
   blModeFunctionDestroy(modeFunction);
   blDipoleOperatorDestroy(dipoleOperator);
   blEnsembleDestroy(&simulationState.ensemble);

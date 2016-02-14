@@ -18,6 +18,8 @@ with BeamLaser.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <cgreen/cgreen.h>
 #include <AtomFieldInteraction.h>
+#include <SimulationState.h>
+#include <Update.h>
 #include <math.h>
 
 
@@ -26,9 +28,8 @@ with BeamLaser.  If not, see <http://www.gnu.org/licenses/>.
 
 static struct BLDipoleOperator *dipoleOperator;
 static struct BLModeFunction *modeFunction;
-static struct BLFieldState fieldState;
-static struct BLEnsemble ensemble;
-static struct BLAtomFieldInteraction *atomFieldInteraction;
+static struct BLSimulationState simulationState;
+static struct BLUpdate *atomFieldInteraction;
 static int i, j;
 
 Describe(AtomFieldInteraction)
@@ -37,20 +38,20 @@ BeforeEach(AtomFieldInteraction) {
   dipoleOperator = blDipoleOperatorTLACreate(1.0);
   modeFunction = blModeFunctionUniformCreate(0.0, 1.0, 0.0);
 
-  fieldState.q = 1.0;
-  fieldState.p = 0.0;
+  simulationState.fieldState.q = 1.0;
+  simulationState.fieldState.p = 0.0;
 
-  blEnsembleCreate(MAX_NUM_PTCLS, DOF_PER_PTCL, &ensemble);
-  ensemble.numPtcls = 1;
+  blEnsembleCreate(MAX_NUM_PTCLS, DOF_PER_PTCL, &simulationState.ensemble);
+  simulationState.ensemble.numPtcls = 1;
   for (i = 0; i < MAX_NUM_PTCLS; ++i) {
-    ensemble.x[i] = 0;
-    ensemble.y[i] = 0;
-    ensemble.z[i] = 0;
-    ensemble.vx[i] = 0;
-    ensemble.vy[i] = 0;
-    ensemble.vz[i] = 0;
+    simulationState.ensemble.x[i] = 0;
+    simulationState.ensemble.y[i] = 0;
+    simulationState.ensemble.z[i] = 0;
+    simulationState.ensemble.vx[i] = 0;
+    simulationState.ensemble.vy[i] = 0;
+    simulationState.ensemble.vz[i] = 0;
     for (j = 0; j < DOF_PER_PTCL; ++j) {
-      ensemble.internalState[i * DOF_PER_PTCL + j] = (j == 1) ? 1.0 : 0.0;
+      simulationState.ensemble.internalState[i * DOF_PER_PTCL + j] = (j == 1) ? 1.0 : 0.0;
     }
   }
   atomFieldInteraction =
@@ -58,8 +59,8 @@ BeforeEach(AtomFieldInteraction) {
 }
 
 AfterEach(AtomFieldInteraction) {
-  blEnsembleDestroy(&ensemble);
-  blAtomFieldInteractionDestroy(atomFieldInteraction);
+  blEnsembleDestroy(&simulationState.ensemble);
+  blUpdateDestroy(atomFieldInteraction);
   blModeFunctionDestroy(modeFunction);
   blDipoleOperatorDestroy(dipoleOperator);
 }
@@ -75,34 +76,34 @@ static double nrm_squared(double complex z) {
 
 Ensure(AtomFieldInteraction, isNormConserving) {
   for (i = 0; i < 1000; ++i) {
-    blAtomFieldInteractionTakeStep(atomFieldInteraction,
-        1.0e-3, &fieldState, &ensemble);
+    blUpdateTakeStep(atomFieldInteraction,
+        i * 1.0e-3, 1.0e-3, &simulationState);
   }
   double nrm = 0;
   for (i = 0; i < 2; ++i) {
-    nrm += nrm_squared(ensemble.internalState[i]);
+    nrm += nrm_squared(simulationState.ensemble.internalState[i]);
   }
   assert_that_double(nrm, is_equal_to_double(1.0));
 }
 
 Ensure(AtomFieldInteraction, producesRabiOscillations) {
   /* Use zero weight particles to produce a constant field */
-  ensemble.ptclWeight = 0.0;
+  simulationState.ensemble.ptclWeight = 0.0;
   for (i = 0; i < 10000; ++i) {
-    blAtomFieldInteractionTakeStep(atomFieldInteraction,
-        1.0e-3, &fieldState, &ensemble);
+    blUpdateTakeStep(atomFieldInteraction,
+        i * 1.0e-3, 1.0e-3, &simulationState);
   }
-  assert_that_double(fieldState.q, is_equal_to_double(1.0));
-  assert_that_double(fieldState.p, is_equal_to_double(0.0));
+  assert_that_double(simulationState.fieldState.q, is_equal_to_double(1.0));
+  assert_that_double(simulationState.fieldState.p, is_equal_to_double(0.0));
 
   /* Have to check phase factors here */
-  assert_that_double(creal(ensemble.internalState[0]),
+  assert_that_double(creal(simulationState.ensemble.internalState[0]),
       is_equal_to_double(0.0));
-  assert_that_double(cimag(ensemble.internalState[0]),
+  assert_that_double(cimag(simulationState.ensemble.internalState[0]),
       is_equal_to_double(-sin(10.0)));
-  assert_that_double(creal(ensemble.internalState[1]),
+  assert_that_double(creal(simulationState.ensemble.internalState[1]),
       is_equal_to_double(cos(10.0)));
-  assert_that_double(cimag(ensemble.internalState[1]),
+  assert_that_double(cimag(simulationState.ensemble.internalState[1]),
       is_equal_to_double(0.0));
 }
 

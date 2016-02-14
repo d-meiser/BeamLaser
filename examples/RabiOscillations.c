@@ -57,7 +57,7 @@ int main(int argn, char **argv) {
   simulationState.fieldState.p = 0.0;
 
   double lambda = 1.0e-6;
-  struct ParticleSource* src = blParticleSourceManualCreate(0.25*lambda, 0, 0, 0, 0, 0,
+  struct BLParticleSource* src = blParticleSourceManualCreate(0.25*lambda, 0, 0, 0, 0, 0,
       internalStateSize, initialState, 0);
   blEnsembleCreateSpace(1, &simulationState.ensemble);
   blParticleSourceCreateParticles(src,
@@ -84,12 +84,11 @@ int main(int argn, char **argv) {
     sqrt(2.0 * M_PI * SPEED_OF_LIGHT /
         (lambda * 2.0 * EPSILON_0 * veff * H_BAR)) *
     dipoleMatrixElement;
-  printf("omega == %e\n", omega);
+  printf("# omega == %e\n", omega);
 
-  struct BLAtomFieldInteraction *atomFieldInteraction =
-    blAtomFieldInteractionCreate(
+  struct BLUpdate *atomFieldInteraction = blAtomFieldInteractionCreate(
       simulationState.ensemble.maxNumPtcls,
-      simulationState.ensemble.internalStateSize, 
+      simulationState.ensemble.internalStateSize,
       dipoleOperator, modeFunction);
 
   double dt = 1.0e-2 / omega;
@@ -105,14 +104,13 @@ int main(int argn, char **argv) {
           cimag(simulationState.ensemble.internalState[1]),
           cos(omega * i * dt));
     }
-    blAtomFieldInteractionTakeStep(atomFieldInteraction,
-        dt, &simulationState.fieldState, &simulationState.ensemble);
+    blUpdateTakeStep(atomFieldInteraction, i * dt, dt, &simulationState);
   }
   assert(fabs(
         creal(simulationState.ensemble.internalState[1]) -
         cos(omega * dt * numSteps)) < 1.0e-6);
 
-  blAtomFieldInteractionDestroy(atomFieldInteraction);
+  blUpdateDestroy(atomFieldInteraction);
   blModeFunctionDestroy(modeFunction);
   blDipoleOperatorDestroy(dipoleOperator);
   blEnsembleDestroy(&simulationState.ensemble);

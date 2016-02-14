@@ -16,15 +16,12 @@ for more details.
 You should have received a copy of the GNU General Public License along
 with BeamLaser.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef ATOM_FIELD_INTERACTION_H
-#define ATOM_FIELD_INTERACTION_H
+#ifndef SINK_H
+#define SINK_H
 
-#include <ModeFunction.h>
-#include <DipoleOperator.h>
+#include <Update.h>
 
 
-struct BLUpdate *blAtomFieldInteractionCreate(int maxNumParticles,
-    int internalStateSize, struct BLDipoleOperator *dipoleOperator,
-    struct BLModeFunction *modeFunction);
+struct BLUpdate *blSinkBelowCreate(double zmin);
 
 #endif

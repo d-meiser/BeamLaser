@@ -23,8 +23,8 @@ with BeamLaser.  If not, see <http://www.gnu.org/licenses/>.
 #include <complex.h>
 
 
-/* Interface for ParticleSources */
-struct ParticleSource {
+/* Interface for BLParticleSources */
+struct BLParticleSource {
   /* Number of particles produced by this source */
   int (*getNumParticles)(void *ctx);
   /* Produce particles */
@@ -36,7 +36,7 @@ struct ParticleSource {
   /* Data needed by this particle source */
   void *ctx;
   /* The next particle source */
-  struct ParticleSource *next;
+  struct BLParticleSource *next;
 };
 
 /*
@@ -44,15 +44,15 @@ struct ParticleSource {
 */
 
 /* Returns the total number of particles produced by the particleSource */
-int blParticleSourceGetNumParticles(struct ParticleSource *particleSource);
+int blParticleSourceGetNumParticles(struct BLParticleSource *particleSource);
 
 /* Create particles for all sources in this list*/
-void blParticleSourceCreateParticles(struct ParticleSource *particleSource,
+void blParticleSourceCreateParticles(struct BLParticleSource *particleSource,
     double *x, double *y, double *z, double *vx, double *vy, double *vz,
     int internalStateSize, double complex *internalState);
 
 /* Destroy the sources in the particleSource list */
-void blParticleSourceDestroy(struct ParticleSource *particleSource);
+void blParticleSourceDestroy(struct BLParticleSource *particleSource);
 
 
 /** Constructor for a spatially uniform particle source
@@ -66,16 +66,16 @@ void blParticleSourceDestroy(struct ParticleSource *particleSource);
  * @param next   The next particle source.  Use 0 if there are no other
  *               particle sources.
  */
-struct ParticleSource *blParticleSourceUniformCreate(
+struct BLParticleSource *blParticleSourceUniformCreate(
     struct BlBox volume, double nbar,
     double *vbar, double *deltaV,
     int internalStateSize, double complex *internalState,
-    struct ParticleSource *next);
+    struct BLParticleSource *next);
 
-struct ParticleSource *blParticleSourceManualCreate(
+struct BLParticleSource *blParticleSourceManualCreate(
     double x, double y, double z, double vx, double vy, double vz,
     int internalStateSize, double complex *internalState,
-    struct ParticleSource *next);
+    struct BLParticleSource *next);
 
 #endif
 

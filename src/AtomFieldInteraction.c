@@ -19,6 +19,8 @@ with BeamLaser.  If not, see <http://www.gnu.org/licenses/>.
 #include <AtomFieldInteraction.h>
 #include <stdlib.h>
 #include <Integrator.h>
+#include <SimulationState.h>
+#include <Update.h>
 
 
 struct BLAtomFieldInteraction {
@@ -45,30 +47,10 @@ static void interactionRHS(double t, int n, const double *x, double *y,
                            void *ctx);
 
 
-struct BLAtomFieldInteraction* blAtomFieldInteractionCreate(int maxNumParticles,
-    int internalStateSize,
-    struct BLDipoleOperator *dipoleOperator,
-    struct BLModeFunction *modeFunction) {
-  struct BLAtomFieldInteraction *this = malloc(sizeof(*this));
-  this->dipoleOperator = dipoleOperator;
-  this->modeFunction = modeFunction;
-  this->ex = malloc(maxNumParticles * sizeof(*this->ex));
-  this->ey = malloc(maxNumParticles * sizeof(*this->ey));
-  this->ez = malloc(maxNumParticles * sizeof(*this->ez));
-  this->dx = malloc(maxNumParticles * sizeof(*this->dx));
-  this->dy = malloc(maxNumParticles * sizeof(*this->dy));
-  this->dz = malloc(maxNumParticles * sizeof(*this->dz));
-  this->phix = malloc(maxNumParticles * sizeof(*this->phix));
-  this->phiy = malloc(maxNumParticles * sizeof(*this->phiy));
-  this->phiz = malloc(maxNumParticles * sizeof(*this->phiz));
-  blIntegratorCreate("RK4", maxNumParticles *
-                     sizeof(double complex) / sizeof(double) *
-                     internalStateSize,
-                     &this->integrator);
-  return this;
-}
-
-void blAtomFieldInteractionDestroy(struct BLAtomFieldInteraction* atomFieldInteraction) {
+static void blAtomFieldInteractionDestroy(
+    void *ctx) {
+  struct BLAtomFieldInteraction *atomFieldInteraction =
+    (struct BLAtomFieldInteraction*)ctx;
   free(atomFieldInteraction->ex);
   free(atomFieldInteraction->ey);
   free(atomFieldInteraction->ez);
@@ -82,10 +64,16 @@ void blAtomFieldInteractionDestroy(struct BLAtomFieldInteraction* atomFieldInter
   free(atomFieldInteraction);
 }
 
-void blAtomFieldInteractionTakeStep(struct BLAtomFieldInteraction *atomFieldInteraction,
-                                    double dt,
-                                    struct BLFieldState *fieldState,
-                                    struct BLEnsemble *ensemble) {
+static void blAtomFieldInteractionTakeStep(
+    double t,
+    double dt,
+    struct BLSimulationState *state,
+    void *ctx) {
+  BL_UNUSED(t);
+  struct BLAtomFieldInteraction *atomFieldInteraction = 
+    (struct BLAtomFieldInteraction*)ctx;
+  struct BLEnsemble *ensemble = &state->ensemble;
+  struct BLFieldState *fieldState = &state->fieldState;
   struct BLModeFunction *modeFunction = atomFieldInteraction->modeFunction;
   const int numPtcls = ensemble->numPtcls;
   const int fieldOffset = numPtcls * ensemble->internalStateSize;
@@ -177,3 +165,30 @@ void interactionRHS(double t, int n, const double *x, double *y,
 
   blAddAllEnd(polReq, (const double*)&polarization, y + 2 * fieldOffset, 2);
 }
+
+struct BLUpdate* blAtomFieldInteractionCreate(int maxNumParticles,
+    int internalStateSize, struct BLDipoleOperator *dipoleOperator,
+    struct BLModeFunction *modeFunction) {
+  struct BLUpdate *this = malloc(sizeof(*this));
+  this->takeStep = blAtomFieldInteractionTakeStep;
+  this->destroy = blAtomFieldInteractionDestroy;
+  struct BLAtomFieldInteraction *ctx = malloc(sizeof(*ctx));
+  ctx->dipoleOperator = dipoleOperator;
+  ctx->modeFunction = modeFunction;
+  ctx->ex = malloc(maxNumParticles * sizeof(*ctx->ex));
+  ctx->ey = malloc(maxNumParticles * sizeof(*ctx->ey));
+  ctx->ez = malloc(maxNumParticles * sizeof(*ctx->ez));
+  ctx->dx = malloc(maxNumParticles * sizeof(*ctx->dx));
+  ctx->dy = malloc(maxNumParticles * sizeof(*ctx->dy));
+  ctx->dz = malloc(maxNumParticles * sizeof(*ctx->dz));
+  ctx->phix = malloc(maxNumParticles * sizeof(*ctx->phix));
+  ctx->phiy = malloc(maxNumParticles * sizeof(*ctx->phiy));
+  ctx->phiz = malloc(maxNumParticles * sizeof(*ctx->phiz));
+  blIntegratorCreate("RK4", maxNumParticles *
+                     sizeof(double complex) / sizeof(double) *
+                     internalStateSize,
+                     &ctx->integrator);
+  this->ctx = ctx;
+  return this;
+}
+

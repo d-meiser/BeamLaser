@@ -44,7 +44,7 @@ int main(int argn, char **argv) {
   double deltaV[] = {2.3, 3.5, 7.5};
   double complex initialState[] = {1, 0};
   static const int internalStateSize = 2;
-  struct ParticleSource *particleSource =
+  struct BLParticleSource *particleSource =
     blParticleSourceUniformCreate(box, 1, vbar, deltaV,
         internalStateSize, initialState, 0);
 
