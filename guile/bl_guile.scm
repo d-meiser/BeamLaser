@@ -1,3 +1,16 @@
+(module bl
+        #:export (
+                  ensemble-create
+                  ensemble-push
+                  ensemble-create-space
+                  ensemble-get-num-ptcls
+                  ensemble-set-num-ptcls
+                  ensemble-get-component
+                  ensemble-set-component
+                  ensemble-get-phase-space
+                  ensemble-get-internal-state
+                  ))
+
 (load-extension "./libbl_guile" "init_ensemble")
 
 
