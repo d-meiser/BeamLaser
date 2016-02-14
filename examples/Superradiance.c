@@ -103,8 +103,10 @@ int main(int argn, char **argv) {
   printf("# dt == %le\n", dt);
   int i;
   int dumpPeriodicity = 10;
-  struct BLDiagnostics *diagnostics = blDiagnosticsFieldStateCreate(dumpPeriodicity, 0);
-  diagnostics = blDiagnosticsInternalStateCreate(dumpPeriodicity, "internal_state", diagnostics);
+  struct BLDiagnostics *diagnostics =
+    blDiagnosticsFieldStateCreate(dumpPeriodicity, 0);
+  diagnostics = blDiagnosticsInternalStateCreate(dumpPeriodicity,
+                                                 "internal_state", diagnostics);
   int numSteps = 100;
   for (i = 0; i < numSteps; ++i) {
     blDiagnosticsProcess(diagnostics, i, &simulationState);
