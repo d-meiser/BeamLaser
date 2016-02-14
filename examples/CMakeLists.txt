@@ -18,3 +18,10 @@ if(BL_WITH_MPI)
       ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 2 ./BeamLaserTLA)
 endif()
 
+
+add_executable(RabiOscillations RabiOscillations.c)
+target_link_libraries(RabiOscillations beamlaserlib ${SPRNG_LIB} m)
+if (BL_WITH_MPI)
+  target_link_libraries(RabiOscillations ${MPI_C_LIBRARIES})
+endif ()
+add_test(RabiOscillations RabiOscillations)
