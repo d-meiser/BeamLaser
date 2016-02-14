@@ -40,25 +40,57 @@ ensemble_create_space(SCM numParticles, SCM ensemble_smob)
 }
 
 static SCM
-ensemble_get_component(SCM component, SCM ensemble_smob)
+ensemble_get_num_ptcls(SCM ensemble_smob)
 {
-  BL_UNUSED(component);
-  BL_UNUSED(ensemble_smob);
-  /*
-   * This function requires a fair bit of code to create the arrays.
-   * Would be better to create arrays on scheme side and to fill them on
-   * the c side
-   *
+  struct ensemble *ensemble = (struct ensemble *) SCM_SMOB_DATA (ensemble_smob);
+  return scm_from_int(ensemble->ensemble->numPtcls);
+}
+
+static SCM
+ensemble_set_num_ptcls(SCM n, SCM ensemble_smob)
+{
+  struct ensemble *ensemble = (struct ensemble *) SCM_SMOB_DATA (ensemble_smob);
+  int numPtcls = scm_to_int(n);
+  if (numPtcls < 0 || numPtcls >= ensemble->ensemble->maxNumPtcls) {
+    scm_out_of_range("ensemble_set_num_ptcls", n);
+  }
+  ensemble->ensemble->numPtcls = scm_to_int(n);
+  return ensemble_smob;
+}
+
+static SCM
+ensemble_get_component(SCM component, SCM ensemble_smob, SCM array)
+{
   struct ensemble *ensemble = (struct ensemble *) SCM_SMOB_DATA (ensemble_smob);
 
-  SCM ra = scm_i_make_array(1);
-  SCM_I_ARRAY_BASE(ra) = 0;
-  scm_t_array_dim *s = SCM_I_ARRAY_DIMS (ra);
-  s->lbnd = 0;
-  s->ubnd = ensemble->ensemble->numPtcls;
-  s->inc = 1;
-  SCM a = scm_make_typed_array(scm_from_locale_string("f64"), 0, ra);
-  */
+  int comp = scm_to_int(component);
+  if (comp < 0 || comp > 5) {
+    scm_out_of_range("ensemble_get_component", component);
+  }
+  scm_t_array_handle handle;
+  scm_array_get_handle(array, &handle);
+  double *a = scm_array_handle_f64_writable_elements(&handle);
+  switch (comp) {
+  case 0:
+    memcpy(a, ensemble->ensemble->x, ensemble->ensemble->numPtcls * sizeof(*a));
+    break;
+  case 1:
+    memcpy(a, ensemble->ensemble->y, ensemble->ensemble->numPtcls * sizeof(*a));
+    break;
+  case 2:
+    memcpy(a, ensemble->ensemble->z, ensemble->ensemble->numPtcls * sizeof(*a));
+    break;
+  case 3:
+    memcpy(a, ensemble->ensemble->vx, ensemble->ensemble->numPtcls * sizeof(*a));
+    break;
+  case 4:
+    memcpy(a, ensemble->ensemble->vy, ensemble->ensemble->numPtcls * sizeof(*a));
+    break;
+  case 5:
+    memcpy(a, ensemble->ensemble->vz, ensemble->ensemble->numPtcls * sizeof(*a));
+    break;
+  }
+  scm_array_handle_release(&handle);
   return 0;
 }
 
@@ -107,5 +139,7 @@ void init_ensemble() {
   scm_c_define_gsubr("ensemble-push", 2, 0, 0, ensemble_push);
   scm_c_define_gsubr("ensemble-create-space", 2, 0, 0, ensemble_create_space);
   scm_c_define_gsubr("ensemble-get-component", 2, 0, 0, ensemble_get_component);
+  scm_c_define_gsubr("ensemble-get-num-ptcls", 1, 0, 0, ensemble_get_num_ptcls);
+  scm_c_define_gsubr("ensemble-set-num-ptcls", 2, 0, 0, ensemble_set_num_ptcls);
 }
 
