@@ -25,3 +25,11 @@ if (BL_WITH_MPI)
   target_link_libraries(RabiOscillations ${MPI_C_LIBRARIES})
 endif ()
 add_test(RabiOscillations RabiOscillations)
+
+
+add_executable(Superradiance Superradiance.c)
+target_link_libraries(Superradiance beamlaserlib ${SPRNG_LIB} m)
+if (BL_WITH_MPI)
+  target_link_libraries(Superradiance ${MPI_C_LIBRARIES})
+endif ()
+add_test(Superradiance Superradiance)
