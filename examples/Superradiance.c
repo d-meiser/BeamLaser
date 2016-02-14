@@ -43,8 +43,8 @@ int main(int argn, char **argv) {
   BL_UNUSED(argn);
   BL_UNUSED(argv);
 #endif
-  double nbar = 1.0e3;
-  int maxNumPtcls = 10 * nbar;
+  double nbar = 1.0e2;
+  int maxNumPtcls = 100 * nbar;
   int internalStateSize = 2;
   double complex initialState[2];
   initialState[0] = 0;
@@ -99,13 +99,13 @@ int main(int argn, char **argv) {
       simulationState.ensemble.internalStateSize, 
       dipoleOperator, modeFunction);
 
-  double dt = 1.0e-4 / omega;
+  double dt = 1.0e-3 / omega;
   printf("# dt == %le\n", dt);
   int i;
   int dumpPeriodicity = 10;
   struct BLDiagnostics *diagnostics = blDiagnosticsFieldStateCreate(dumpPeriodicity, 0);
   diagnostics = blDiagnosticsInternalStateCreate(dumpPeriodicity, "internal_state", diagnostics);
-  int numSteps = 1000;
+  int numSteps = 100;
   for (i = 0; i < numSteps; ++i) {
     blDiagnosticsProcess(diagnostics, i, &simulationState);
     blAtomFieldInteractionTakeStep(atomFieldInteraction,
