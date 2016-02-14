@@ -12,6 +12,7 @@ set(BeamLaserLibSources
     Diagnostics.c
     DipoleOperator.c
     Ensemble.c
+    FieldUpdate.c
     Integrator.c
     ModeFunction.c
     ParticleSource.c

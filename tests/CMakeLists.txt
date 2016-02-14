@@ -11,6 +11,7 @@ set(TESTS
     testDiagnostics
     testDipoleOperatorTLA
     testEnsemble
+    testFieldUpdate
     testIntegrator
     testManualParticleSource
     testModeFunction
