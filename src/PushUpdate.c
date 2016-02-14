@@ -17,6 +17,8 @@ You should have received a copy of the GNU General Public License along
 with BeamLaser.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <PushUpdate.h>
+#include <stdlib.h>
+
 
 static void pushUpdateTakeStep(double t, double dt, struct BLSimulationState *state, void *ctx) {
   BL_UNUSED(t);

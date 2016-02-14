@@ -19,21 +19,12 @@ with BeamLaser.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef ATOM_FIELD_INTERACTION_H
 #define ATOM_FIELD_INTERACTION_H
 
-#include <Ensemble.h>
-#include <FieldState.h>
 #include <ModeFunction.h>
 #include <DipoleOperator.h>
 
 
-struct BLAtomFieldInteraction;
-
-struct BLAtomFieldInteraction* blAtomFieldInteractionCreate(int maxNumParticles,
+struct BLUpdate *blAtomFieldInteractionCreate(int maxNumParticles,
     int internalStateSize, struct BLDipoleOperator *dipoleOperator,
     struct BLModeFunction *modeFunction);
-void blAtomFieldInteractionDestroy(struct BLAtomFieldInteraction* atomFieldInteraction);
-void blAtomFieldInteractionTakeStep(struct BLAtomFieldInteraction *atomFieldInteraction,
-                                    double dt,
-                                    struct BLFieldState *fieldState,
-                                    struct BLEnsemble *ensemble);
 
 #endif

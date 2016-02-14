@@ -86,10 +86,9 @@ int main(int argn, char **argv) {
     dipoleMatrixElement;
   printf("# omega == %e\n", omega);
 
-  struct BLAtomFieldInteraction *atomFieldInteraction =
-    blAtomFieldInteractionCreate(
+  struct BLUpdate *atomFieldInteraction = blAtomFieldInteractionCreate(
       simulationState.ensemble.maxNumPtcls,
-      simulationState.ensemble.internalStateSize, 
+      simulationState.ensemble.internalStateSize,
       dipoleOperator, modeFunction);
 
   double dt = 1.0e-2 / omega;
@@ -105,14 +104,13 @@ int main(int argn, char **argv) {
           cimag(simulationState.ensemble.internalState[1]),
           cos(omega * i * dt));
     }
-    blAtomFieldInteractionTakeStep(atomFieldInteraction,
-        dt, &simulationState.fieldState, &simulationState.ensemble);
+    blUpdateTakeStep(atomFieldInteraction, i * dt, dt, &simulationState);
   }
   assert(fabs(
         creal(simulationState.ensemble.internalState[1]) -
         cos(omega * dt * numSteps)) < 1.0e-6);
 
-  blAtomFieldInteractionDestroy(atomFieldInteraction);
+  blUpdateDestroy(atomFieldInteraction);
   blModeFunctionDestroy(modeFunction);
   blDipoleOperatorDestroy(dipoleOperator);
   blEnsembleDestroy(&simulationState.ensemble);

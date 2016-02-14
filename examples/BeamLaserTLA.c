@@ -85,7 +85,6 @@ int main(int argn, char **argv) {
 #endif
   struct BLSimulationState simulationState;
   struct Configuration conf;
-  struct BLAtomFieldInteraction* atomFieldInteraction;
   struct ParticleSource *particleSource;
   struct BLDipoleOperator *dipoleOperator;
   struct BLModeFunction *modeFunction;
@@ -97,6 +96,7 @@ int main(int argn, char **argv) {
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 #else
   rank = 0;
+  BL_UNUSED(rank);
 #endif
 
   setDefaults(&conf);
@@ -116,30 +116,28 @@ int main(int argn, char **argv) {
   diagnostics = constructDiagnostics(&conf);
   dipoleOperator = blDipoleOperatorTLACreate(conf.dipoleMatrixElement);
   modeFunction = constructModeFunction(&conf);
-  atomFieldInteraction = blAtomFieldInteractionCreate(
-      simulationState.ensemble.maxNumPtcls,
-      simulationState.ensemble.internalStateSize, 
-      dipoleOperator, modeFunction);
 
   struct BLUpdate *fieldUpdate = blFieldUpdateCreate(conf.kappa, 0);
   struct BLUpdate *atomPush = blPushUpdateCreate();
+  struct BLUpdate *atomFieldInteraction = blAtomFieldInteractionCreate(
+      simulationState.ensemble.maxNumPtcls,
+      simulationState.ensemble.internalStateSize,
+      dipoleOperator, modeFunction);
 
   for (i = 0; i < conf.numSteps; ++i) {
     particleSink(&conf, &simulationState.ensemble);
     processParticleSources(particleSource, &simulationState.ensemble);
     blUpdateTakeStep(atomPush, i * conf.dt, 0.5 * conf.dt, &simulationState);
     blUpdateTakeStep(fieldUpdate, i * conf.dt, 0.5 * conf.dt, &simulationState);
-    blAtomFieldInteractionTakeStep(atomFieldInteraction,
-        conf.dt, &simulationState.fieldState, &simulationState.ensemble);
-    blUpdateTakeStep(fieldUpdate, (i + 1) * conf.dt, 0.5 * conf.dt,
-        &simulationState);
+    blUpdateTakeStep(atomFieldInteraction, i * conf.dt, conf.dt, &simulationState);
+    blUpdateTakeStep(fieldUpdate, (i + 1) * conf.dt, 0.5 * conf.dt, &simulationState);
     blUpdateTakeStep(atomPush, (i + 1) * conf.dt, 0.5 * conf.dt, &simulationState);
     blDiagnosticsProcess(diagnostics, i, &simulationState);
   }
 
+  blUpdateDestroy(atomFieldInteraction);
   blUpdateDestroy(atomPush);
   blUpdateDestroy(fieldUpdate);
-  blAtomFieldInteractionDestroy(atomFieldInteraction);
   blModeFunctionDestroy(modeFunction);
   blDipoleOperatorDestroy(dipoleOperator);
   blDiagnosticsDestroy(diagnostics);

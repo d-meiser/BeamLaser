@@ -93,10 +93,9 @@ int main(int argn, char **argv) {
         (lambda * 2.0 * EPSILON_0 * veff * H_BAR)) *
     dipoleMatrixElement;
 
-  struct BLAtomFieldInteraction *atomFieldInteraction =
-    blAtomFieldInteractionCreate(
+  struct BLUpdate *atomFieldInteraction = blAtomFieldInteractionCreate(
       simulationState.ensemble.maxNumPtcls,
-      simulationState.ensemble.internalStateSize, 
+      simulationState.ensemble.internalStateSize,
       dipoleOperator, modeFunction);
 
   double dt = 1.0e-3 / omega;
@@ -110,12 +109,11 @@ int main(int argn, char **argv) {
   int numSteps = 100;
   for (i = 0; i < numSteps; ++i) {
     blDiagnosticsProcess(diagnostics, i, &simulationState);
-    blAtomFieldInteractionTakeStep(atomFieldInteraction,
-        dt, &simulationState.fieldState, &simulationState.ensemble);
+    blUpdateTakeStep(atomFieldInteraction, i * dt, dt, &simulationState);
   }
 
+  blUpdateDestroy(atomFieldInteraction);
   blDiagnosticsDestroy(diagnostics);
-  blAtomFieldInteractionDestroy(atomFieldInteraction);
   blModeFunctionDestroy(modeFunction);
   blDipoleOperatorDestroy(dipoleOperator);
   blEnsembleDestroy(&simulationState.ensemble);
