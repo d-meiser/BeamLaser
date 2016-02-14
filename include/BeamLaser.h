@@ -32,6 +32,7 @@ with BeamLaser.  If not, see <http://www.gnu.org/licenses/>.
 #include <PushUpdate.h>
 #include <SimulationState.h>
 #include <Sink.h>
+#include <Source.h>
 #include <Update.h>
 
 #endif

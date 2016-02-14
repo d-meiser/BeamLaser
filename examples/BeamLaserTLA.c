@@ -65,8 +65,6 @@ void setDefaults(struct Configuration *conf);
 void processCommandLineArgs(struct Configuration *conf, int argn, char **argv);
 void printUsage(const char* errorMessage);
 void adjustNumPtclsForNumRanks(struct Configuration *conf);
-void processParticleSources(struct BLParticleSource *particleSource,
-                            struct BLEnsemble *ensemble);
 struct BLParticleSource *constructParticleSources(
     const struct Configuration *conf);
 struct BLDiagnostics *constructDiagnostics(const struct Configuration *conf);
@@ -123,10 +121,11 @@ int main(int argn, char **argv) {
       simulationState.ensemble.internalStateSize,
       dipoleOperator, modeFunction);
   struct BLUpdate *sinks = blSinkBelowCreate(conf.simulationDomain.zmin);
+  struct BLUpdate *sources = blSourceCreate(particleSource);
 
   for (i = 0; i < conf.numSteps; ++i) {
     blUpdateTakeStep(sinks, i * conf.dt, conf.dt, &simulationState);
-    processParticleSources(particleSource, &simulationState.ensemble);
+    blUpdateTakeStep(sources, i * conf.dt, conf.dt, &simulationState);
     blUpdateTakeStep(atomPush, i * conf.dt, 0.5 * conf.dt, &simulationState);
     blUpdateTakeStep(fieldUpdate, i * conf.dt, 0.5 * conf.dt, &simulationState);
     blUpdateTakeStep(atomFieldInteraction, i * conf.dt, conf.dt, &simulationState);
@@ -135,6 +134,7 @@ int main(int argn, char **argv) {
     blDiagnosticsProcess(diagnostics, i, &simulationState);
   }
 
+  blUpdateDestroy(sources);
   blUpdateDestroy(sinks);
   blUpdateDestroy(atomFieldInteraction);
   blUpdateDestroy(atomPush);
@@ -384,17 +384,6 @@ void adjustNumPtclsForNumRanks(struct Configuration *conf) {
 #endif
   conf->nbar /= numRanks;
   conf->maxNumParticles /= numRanks;
-}
-
-void processParticleSources(struct BLParticleSource *particleSource,
-                           struct BLEnsemble *ensemble) {
-  int numCreate = blParticleSourceGetNumParticles(particleSource);
-  blEnsembleCreateSpace(numCreate, ensemble);
-  blParticleSourceCreateParticles(particleSource,
-                                  ensemble->x, ensemble->y, ensemble->z,
-                                  ensemble->vx, ensemble->vy, ensemble->vz,
-                                  ensemble->internalStateSize,
-                                  ensemble->internalState);
 }
 
 struct BLParticleSource *constructParticleSources(

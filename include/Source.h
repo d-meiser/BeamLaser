@@ -16,8 +16,8 @@ for more details.
 You should have received a copy of the GNU General Public License along
 with BeamLaser.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef SINK_H
-#define SINK_H
+#ifndef SOURCE_H
+#define SOURCE_H
 
 #include <Update.h>
 #include <ParticleSource.h>
