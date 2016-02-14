@@ -16,22 +16,13 @@ for more details.
 You should have received a copy of the GNU General Public License along
 with BeamLaser.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef BEAM_LASER_H
-#define BEAM_LASER_H
+#ifndef PUSH_UPDATE_H
+#define PUSH_UPDATE_H
 
-#include <AtomFieldInteraction.h>
-#include <Diagnostics.h>
-#include <DipoleOperator.h>
-#include <Ensemble.h>
-#include <Errors.h>
-#include <FieldUpdate.h>
-#include <Integrator.h>
-#include <ModeFunction.h>
-#include <ParticleSource.h>
-#include <Partition.h>
-#include <PushUpdate.h>
-#include <SimulationState.h>
 #include <Update.h>
 
+struct BLUpdate *blPushUpdateCreate();
+
 #endif
+
 

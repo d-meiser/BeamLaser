@@ -122,17 +122,18 @@ int main(int argn, char **argv) {
       dipoleOperator, modeFunction);
 
   struct BLUpdate *fieldUpdate = blFieldUpdateCreate(conf.kappa, 0);
+  struct BLUpdate *atomPush = blPushUpdateCreate();
 
   for (i = 0; i < conf.numSteps; ++i) {
     particleSink(&conf, &simulationState.ensemble);
     processParticleSources(particleSource, &simulationState.ensemble);
-    blEnsemblePush(0.5 * conf.dt, &simulationState.ensemble);
+    blUpdateTakeStep(atomPush, i * conf.dt, 0.5 * conf.dt, &simulationState);
     blUpdateTakeStep(fieldUpdate, i * conf.dt, 0.5 * conf.dt, &simulationState);
     blAtomFieldInteractionTakeStep(atomFieldInteraction,
         conf.dt, &simulationState.fieldState, &simulationState.ensemble);
     blUpdateTakeStep(fieldUpdate, (i + 0.5) * conf.dt, 0.5 * conf.dt,
         &simulationState);
-    blEnsemblePush(0.5 * conf.dt, &simulationState.ensemble);
+    blUpdateTakeStep(atomPush, (i + 0.5) * conf.dt, 0.5 * conf.dt, &simulationState);
     blDiagnosticsProcess(diagnostics, i, &simulationState);
   }
   if (rank == 0) {
@@ -140,6 +141,7 @@ int main(int argn, char **argv) {
         simulationState.fieldState.q, simulationState.fieldState.p);
   }
 
+  blUpdateDestroy(atomPush);
   blUpdateDestroy(fieldUpdate);
   blAtomFieldInteractionDestroy(atomFieldInteraction);
   blModeFunctionDestroy(modeFunction);

@@ -97,24 +97,6 @@ void blEnsembleRemoveBelow(double cutoff, double *positions,
   ensemble->numPtcls = blBSP(0, ensemble->numPtcls, cutoff, positions, swap);
 }
 
-void blEnsemblePush(double dt, struct BLEnsemble *ensemble) {
-  int i;
-  double * restrict x = ensemble->x;
-  double * restrict y = ensemble->y;
-  double * restrict z = ensemble->z;
-  const double * restrict vx = ensemble->vx;
-  const double * restrict vy = ensemble->vy;
-  const double * restrict vz = ensemble->vz;
-  for (i = 0; i < ensemble->numPtcls; ++i) {
-    x[i] += dt * vx[i];
-  }
-  for (i = 0; i < ensemble->numPtcls; ++i) {
-    y[i] += dt * vy[i];
-  }
-  for (i = 0; i < ensemble->numPtcls; ++i) {
-    z[i] += dt * vz[i];
-  }
-}
 
 void blEnsembleCreateSpace(int numParticles, struct BLEnsemble *ensemble) {
   memmove(ensemble->x + numParticles, ensemble->x,
@@ -135,3 +117,4 @@ void blEnsembleCreateSpace(int numParticles, struct BLEnsemble *ensemble) {
       ensemble->internalStateSize);
   ensemble->numPtcls += numParticles;
 }
+

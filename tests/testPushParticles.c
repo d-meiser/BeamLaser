@@ -18,35 +18,43 @@ with BeamLaser.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <cgreen/cgreen.h>
 #include <Ensemble.h>
+#include <PushUpdate.h>
 
-static struct BLEnsemble ensemble;
+
+static struct BLSimulationState simulationState;
+static struct BLUpdate *push;
 
 Describe(Push)
 BeforeEach(Push) {
+  push = blPushUpdateCreate();
   static const int numPtcls = 5;
-  blEnsembleCreate(numPtcls + 1, 2, &ensemble);
+  blEnsembleCreate(numPtcls + 1, 2, &simulationState.ensemble);
   int i;
   for (i = 0; i < numPtcls; ++i) {
-    ensemble.x[i] = 0;
-    ensemble.y[i] = 0;
-    ensemble.z[i] = 0;
-    ensemble.vx[i] = rand() / (double)RAND_MAX;
-    ensemble.vy[i] = rand() / (double)RAND_MAX;
-    ensemble.vz[i] = rand() / (double)RAND_MAX;
+    simulationState.ensemble.x[i] = 0;
+    simulationState.ensemble.y[i] = 0;
+    simulationState.ensemble.z[i] = 0;
+    simulationState.ensemble.vx[i] = rand() / (double)RAND_MAX;
+    simulationState.ensemble.vy[i] = rand() / (double)RAND_MAX;
+    simulationState.ensemble.vz[i] = rand() / (double)RAND_MAX;
   }
-  ensemble.numPtcls = numPtcls;
+  simulationState.ensemble.numPtcls = numPtcls;
 }
 AfterEach(Push) {
-  blEnsembleDestroy(&ensemble);
+  blEnsembleDestroy(&simulationState.ensemble);
+  blUpdateDestroy(push);
 }
 
 Ensure(Push, movesParticlesTheRightDistance) {
-  blEnsemblePush(0.7, &ensemble);
+  blUpdateTakeStep(push, 0.0, 0.7, &simulationState);
   int i;
-  for (i = 0; i != ensemble.numPtcls; ++i) {
-    assert_that_double(ensemble.x[i], is_equal_to_double(ensemble.vx[i] * 0.7));
-    assert_that_double(ensemble.y[i], is_equal_to_double(ensemble.vy[i] * 0.7));
-    assert_that_double(ensemble.z[i], is_equal_to_double(ensemble.vz[i] * 0.7));
+  for (i = 0; i != simulationState.ensemble.numPtcls; ++i) {
+    assert_that_double(simulationState.ensemble.x[i],
+        is_equal_to_double(simulationState.ensemble.vx[i] * 0.7));
+    assert_that_double(simulationState.ensemble.y[i],
+        is_equal_to_double(simulationState.ensemble.vy[i] * 0.7));
+    assert_that_double(simulationState.ensemble.z[i],
+        is_equal_to_double(simulationState.ensemble.vz[i] * 0.7));
   }
 }
 

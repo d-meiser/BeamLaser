@@ -24,18 +24,10 @@ ensemble_create(SCM name, SCM max_num_ptcls, SCM internal_state_size)
 }
 
 static SCM
-ensemble_push(SCM dt, SCM ensemble_smob)
-{
-  struct ensemble *ensemble = (struct ensemble *) SCM_SMOB_DATA (ensemble_smob);
-  blEnsemblePush(scm_to_double(dt), ensemble->ensemble);
-  return ensemble_smob;
-}
-
-static SCM
 ensemble_create_space(SCM numParticles, SCM ensemble_smob)
 {
   struct ensemble *ensemble = (struct ensemble *) SCM_SMOB_DATA (ensemble_smob);
-  blEnsemblePush(scm_to_int(numParticles), ensemble->ensemble);
+  blEnsembleCreateSpace(scm_to_int(numParticles), ensemble->ensemble);
   return ensemble_smob;
 }
 
@@ -136,7 +128,6 @@ void init_ensemble() {
   scm_set_smob_free(ensemble_tag, ensemble_free);
 
   scm_c_define_gsubr("ensemble-create", 3, 0, 0, ensemble_create);
-  scm_c_define_gsubr("ensemble-push", 2, 0, 0, ensemble_push);
   scm_c_define_gsubr("ensemble-create-space", 2, 0, 0, ensemble_create_space);
   scm_c_define_gsubr("ensemble-get-component", 2, 0, 0, ensemble_get_component);
   scm_c_define_gsubr("ensemble-get-num-ptcls", 1, 0, 0, ensemble_get_num_ptcls);
