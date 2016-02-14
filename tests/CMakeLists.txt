@@ -19,6 +19,7 @@ set(TESTS
     testPoissonDist
     testPushParticles
     testRemoveParticles
+    testUpdate
     )
 
 foreach(t ${TESTS})
