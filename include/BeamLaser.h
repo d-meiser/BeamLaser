@@ -24,11 +24,13 @@ with BeamLaser.  If not, see <http://www.gnu.org/licenses/>.
 #include <DipoleOperator.h>
 #include <Ensemble.h>
 #include <Errors.h>
+#include <FieldUpdate.h>
 #include <Integrator.h>
 #include <ModeFunction.h>
 #include <ParticleSource.h>
 #include <Partition.h>
 #include <SimulationState.h>
+#include <Update.h>
 
 #endif
 

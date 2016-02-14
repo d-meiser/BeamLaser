@@ -72,7 +72,6 @@ struct ParticleSource *constructParticleSources(
     const struct Configuration *conf);
 struct BLDiagnostics *constructDiagnostics(const struct Configuration *conf);
 struct BLModeFunction *constructModeFunction( const struct Configuration *conf);
-void blFieldUpdate(double dt, double kappa, struct BLFieldState *fieldState);
 void interactionRHS(double t, int n, const double *x, double *y,
                     void *ctx);
 
@@ -122,14 +121,17 @@ int main(int argn, char **argv) {
       simulationState.ensemble.internalStateSize, 
       dipoleOperator, modeFunction);
 
+  struct BLUpdate *fieldUpdate = blFieldUpdateCreate(conf.kappa, 0);
+
   for (i = 0; i < conf.numSteps; ++i) {
     particleSink(&conf, &simulationState.ensemble);
     processParticleSources(particleSource, &simulationState.ensemble);
     blEnsemblePush(0.5 * conf.dt, &simulationState.ensemble);
-    blFieldUpdate(0.5 * conf.dt, conf.kappa, &simulationState.fieldState);
+    blUpdateTakeStep(fieldUpdate, i * conf.dt, 0.5 * conf.dt, &simulationState);
     blAtomFieldInteractionTakeStep(atomFieldInteraction,
         conf.dt, &simulationState.fieldState, &simulationState.ensemble);
-    blFieldUpdate(0.5 * conf.dt, conf.kappa, &simulationState.fieldState);
+    blUpdateTakeStep(fieldUpdate, (i + 0.5) * conf.dt, 0.5 * conf.dt,
+        &simulationState);
     blEnsemblePush(0.5 * conf.dt, &simulationState.ensemble);
     blDiagnosticsProcess(diagnostics, i, &simulationState);
   }
@@ -138,6 +140,7 @@ int main(int argn, char **argv) {
         simulationState.fieldState.q, simulationState.fieldState.p);
   }
 
+  blUpdateDestroy(fieldUpdate);
   blAtomFieldInteractionDestroy(atomFieldInteraction);
   blModeFunctionDestroy(modeFunction);
   blDipoleOperatorDestroy(dipoleOperator);
@@ -400,11 +403,6 @@ void processParticleSources(struct ParticleSource *particleSource,
                                   ensemble->vx, ensemble->vy, ensemble->vz,
                                   ensemble->internalStateSize,
                                   ensemble->internalState);
-}
-
-void blFieldUpdate(double dt, double kappa, struct BLFieldState *fieldState) {
-  fieldState->q = fieldState->q * exp(-0.5 * kappa * dt);
-  fieldState->p = fieldState->p * exp(-0.5 * kappa * dt);
 }
 
 struct ParticleSource *constructParticleSources(
