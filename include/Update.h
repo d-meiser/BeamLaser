@@ -21,6 +21,12 @@ with BeamLaser.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <SimulationState.h>
 
+/*
+ * Implementation notes:
+ *
+ * - Still need to add a compound update
+ *
+ * */
 struct BLUpdate {
   void (*takeStep)(double t, double dt, struct BLSimulationState *state, void *ctx);
   void (*destroy)(void *ctx);

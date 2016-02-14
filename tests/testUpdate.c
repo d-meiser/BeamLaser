@@ -32,6 +32,11 @@ Ensure(Update, canBeCreated) {
   blUpdateDestroy(update);
 }
 
+Ensure(Update, takesStep) {
+  update = blUpdateIdentityCreate();
+  blUpdateTakeStep(update, 0, 0.1, 0);
+  blUpdateDestroy(update);
+}
 
 int main(int argn, char **argv)
 {
@@ -43,6 +48,7 @@ int main(int argn, char **argv)
 #endif
   TestSuite *suite = create_test_suite();
   add_test_with_context(suite, Update, canBeCreated);
+  add_test_with_context(suite, Update, takesStep);
   int result = run_test_suite(suite, create_text_reporter());
   destroy_test_suite(suite);
 #ifdef BL_WITH_MPI
