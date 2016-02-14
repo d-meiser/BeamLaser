@@ -4,6 +4,12 @@
 #include <math.h>
 #include <assert.h>
 
+
+#ifdef BL_WITH_MPI
+#include <mpi.h>
+#endif
+
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
@@ -11,7 +17,14 @@
 #define EPSILON_0 8.85e-12
 #define SPEED_OF_LIGHT 299792458.0
 
-int main() {
+
+int main(int argn, char **argv) {
+#ifdef BL_WITH_MPI
+  MPI_Init(&argn, &argv);
+#else
+  BL_UNUSED(argn);
+  BL_UNUSED(argv);
+#endif
   int maxNumPtcls = 100;
   int internalStateSize = 2;
   double complex initialState[2];
@@ -86,6 +99,10 @@ int main() {
   blDipoleOperatorDestroy(dipoleOperator);
   blEnsembleDestroy(&simulationState.ensemble);
   blParticleSourceDestroy(src);
-  return 0;
+
+#ifdef BL_WITH_MPI
+  MPI_Finalize();
+#endif
+  return BL_SUCCESS;
 }
 
