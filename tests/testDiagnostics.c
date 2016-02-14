@@ -10,7 +10,7 @@ static struct BLSimulationState simulationState;
 
 Describe(Diagnostics)
 BeforeEach(Diagnostics) {
-  blEnsembleInitialize(MAX_NUM_PTCLS, INTERNAL_STATE_DIM,
+  blEnsembleCreate(MAX_NUM_PTCLS, INTERNAL_STATE_DIM,
       &simulationState.ensemble);
   int i, j;
   for (i = 0; i < MAX_NUM_PTCLS; ++i) {
@@ -29,7 +29,7 @@ BeforeEach(Diagnostics) {
   simulationState.fieldState.p = 1.7;
 }
 AfterEach(Diagnostics) {
-  blEnsembleFree(&simulationState.ensemble);
+  blEnsembleDestroy(&simulationState.ensemble);
 }
 
 Ensure(Diagnostics, canBeCreated) {

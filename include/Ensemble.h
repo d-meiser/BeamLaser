@@ -20,9 +20,9 @@ struct BLEnsemble {
   double complex *internalState;
 };
 
-BL_STATUS blEnsembleInitialize(int capacity, int internalStateSize,
+BL_STATUS blEnsembleCreate(int capacity, int internalStateSize,
                                struct BLEnsemble *ensemble);
-void blEnsembleFree(struct BLEnsemble *ensemble);
+void blEnsembleDestroy(struct BLEnsemble *ensemble);
 void blEnsembleRemoveBelow(double cutoff, double *positions,
                            struct BLEnsemble *ensemble);
 void blEnsembleCreateSpace(int numParticles, struct BLEnsemble *ensemble);
