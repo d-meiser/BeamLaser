@@ -46,6 +46,21 @@ Ensure(FieldUpdate, givesExponentialDamping) {
   blUpdateDestroy(update);
 }
 
+Ensure(FieldUpdate, givesBoundedEvolutionWithNoise) {
+  double kappa = 3.8;
+  update = blFieldUpdateCreate(kappa, sqrt(kappa));
+  struct BLSimulationState state;
+  state.fieldState.q = 2.3;
+  state.fieldState.p = -1.8;
+  double dt = 1.7;
+  int i;
+  for (i = 0; i < 10000; ++i) {
+    blUpdateTakeStep(update, i * dt, dt, &state);
+  }
+  assert_that_double(fabs(state.fieldState.q), is_less_than_double(10.0));
+  assert_that_double(fabs(state.fieldState.p), is_less_than_double(10.0));
+  blUpdateDestroy(update);
+}
 
 int main(int argn, char **argv)
 {
@@ -58,6 +73,7 @@ int main(int argn, char **argv)
   TestSuite *suite = create_test_suite();
   add_test_with_context(suite, FieldUpdate, canBeCreated);
   add_test_with_context(suite, FieldUpdate, givesExponentialDamping);
+  add_test_with_context(suite, FieldUpdate, givesBoundedEvolutionWithNoise);
   int result = run_test_suite(suite, create_text_reporter());
   destroy_test_suite(suite);
 #ifdef BL_WITH_MPI
