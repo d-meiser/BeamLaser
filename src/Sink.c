@@ -17,12 +17,15 @@ You should have received a copy of the GNU General Public License along
 with BeamLaser.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <Sink.h>
+#include <stdlib.h>
 
 struct SinkBelowCtx {
   double zmin;
 };
 
 static void sinkBelowTakeStep(double t, double dt, struct BLSimulationState *simulationState, void *c) {
+  BL_UNUSED(t);
+  BL_UNUSED(dt);
   struct SinkBelowCtx *ctx = (struct SinkBelowCtx*)c;
   blEnsembleRemoveBelow(ctx->zmin, simulationState->ensemble.z, &simulationState->ensemble);
 }

@@ -19,7 +19,7 @@ with BeamLaser.  If not, see <http://www.gnu.org/licenses/>.
 #include <cgreen/cgreen.h>
 #include <ParticleSource.h>
 
-static struct ParticleSource *particleSource;
+static struct BLParticleSource *particleSource;
 static double complex internalState[2];
 
 Describe(ManualSource)
