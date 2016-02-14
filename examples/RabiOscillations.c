@@ -57,7 +57,7 @@ int main(int argn, char **argv) {
   simulationState.fieldState.p = 0.0;
 
   double lambda = 1.0e-6;
-  struct ParticleSource* src = blParticleSourceManualCreate(0.25*lambda, 0, 0, 0, 0, 0,
+  struct BLParticleSource* src = blParticleSourceManualCreate(0.25*lambda, 0, 0, 0, 0, 0,
       internalStateSize, initialState, 0);
   blEnsembleCreateSpace(1, &simulationState.ensemble);
   blParticleSourceCreateParticles(src,

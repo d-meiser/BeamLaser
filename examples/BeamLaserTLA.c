@@ -65,9 +65,9 @@ void setDefaults(struct Configuration *conf);
 void processCommandLineArgs(struct Configuration *conf, int argn, char **argv);
 void printUsage(const char* errorMessage);
 void adjustNumPtclsForNumRanks(struct Configuration *conf);
-void processParticleSources(struct ParticleSource *particleSource,
+void processParticleSources(struct BLParticleSource *particleSource,
                             struct BLEnsemble *ensemble);
-struct ParticleSource *constructParticleSources(
+struct BLParticleSource *constructParticleSources(
     const struct Configuration *conf);
 struct BLDiagnostics *constructDiagnostics(const struct Configuration *conf);
 struct BLModeFunction *constructModeFunction( const struct Configuration *conf);
@@ -84,7 +84,7 @@ int main(int argn, char **argv) {
 #endif
   struct BLSimulationState simulationState;
   struct Configuration conf;
-  struct ParticleSource *particleSource;
+  struct BLParticleSource *particleSource;
   struct BLDipoleOperator *dipoleOperator;
   struct BLModeFunction *modeFunction;
   struct BLDiagnostics *diagnostics = 0;
@@ -386,7 +386,7 @@ void adjustNumPtclsForNumRanks(struct Configuration *conf) {
   conf->maxNumParticles /= numRanks;
 }
 
-void processParticleSources(struct ParticleSource *particleSource,
+void processParticleSources(struct BLParticleSource *particleSource,
                            struct BLEnsemble *ensemble) {
   int numCreate = blParticleSourceGetNumParticles(particleSource);
   blEnsembleCreateSpace(numCreate, ensemble);
@@ -397,9 +397,9 @@ void processParticleSources(struct ParticleSource *particleSource,
                                   ensemble->internalState);
 }
 
-struct ParticleSource *constructParticleSources(
+struct BLParticleSource *constructParticleSources(
     const struct Configuration *conf) {
-  struct ParticleSource *particleSource;
+  struct BLParticleSource *particleSource;
   struct BlBox volume = {
     conf->simulationDomain.xmin,
     conf->simulationDomain.xmax,

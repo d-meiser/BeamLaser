@@ -24,7 +24,7 @@ with BeamLaser.  If not, see <http://www.gnu.org/licenses/>.
 #include <sprng.h>
 
 
-int blParticleSourceGetNumParticles(struct ParticleSource *particleSource) {
+int blParticleSourceGetNumParticles(struct BLParticleSource *particleSource) {
   if (particleSource) {
     return particleSource->getNumParticles(particleSource->ctx) +
       blParticleSourceGetNumParticles(particleSource->next);
@@ -33,7 +33,7 @@ int blParticleSourceGetNumParticles(struct ParticleSource *particleSource) {
   }
 }
 
-void blParticleSourceCreateParticles(struct ParticleSource *particleSource,
+void blParticleSourceCreateParticles(struct BLParticleSource *particleSource,
     double *x, double *y, double *z, double *vx, double *vy, double *vz,
     int internalStateSize, double complex *internalState) {
   if (particleSource) {
@@ -48,15 +48,15 @@ void blParticleSourceCreateParticles(struct ParticleSource *particleSource,
 
 /* Create a ParticleSource node; concrete implementation has to finish
  * initialization */
-static void blParticleSourceCreate(struct ParticleSource *next,
-                                   struct ParticleSource **particleSource) {
+static void blParticleSourceCreate(struct BLParticleSource *next,
+                                   struct BLParticleSource **particleSource) {
   *particleSource = malloc(sizeof(**particleSource));
   (*particleSource)->next = next;
 }
 
-void blParticleSourceDestroy(struct ParticleSource *particleSource) {
+void blParticleSourceDestroy(struct BLParticleSource *particleSource) {
   if (particleSource) {
-    struct ParticleSource *next = particleSource->next;
+    struct BLParticleSource *next = particleSource->next;
     particleSource->destroy(particleSource->ctx);
     free(particleSource);
     blParticleSourceDestroy(next);
@@ -116,11 +116,11 @@ void uniformDestroy(void *ctx) {
   free(uctx);
 }
 
-struct ParticleSource *blParticleSourceUniformCreate(
+struct BLParticleSource *blParticleSourceUniformCreate(
     struct BlBox volume, double nbar, double *vbar, double *deltaV,
     int internalStateSize, double complex *internalState,
-    struct ParticleSource *next) {
-  struct ParticleSource *self;
+    struct BLParticleSource *next) {
+  struct BLParticleSource *self;
   blParticleSourceCreate(next, &self);
   self->getNumParticles = uniformGetNumParticles;
   self->createParticles = uniformCreateParticles;
@@ -181,11 +181,11 @@ void manualDestroy(void *c) {
   free(ctx);
 }
 
-struct ParticleSource *blParticleSourceManualCreate(
+struct BLParticleSource *blParticleSourceManualCreate(
     double x, double y, double z, double vx, double vy, double vz,
     int internalStateSize, double complex *internalState,
-    struct ParticleSource *next) {
-  struct ParticleSource *self;
+    struct BLParticleSource *next) {
+  struct BLParticleSource *self;
   blParticleSourceCreate(next, &self);
   self->getNumParticles = manualGetNumParticles;
   self->createParticles = manualCreateParticles;

@@ -62,7 +62,7 @@ int main(int argn, char **argv) {
     {-0.5 * lambda, 0.5 * lambda, 1.0e-4, 1.0e-4, 1.0e-4, 1.0e-4};
   double vbar[3] = {0};
   double deltaV[3] = {0};
-  struct ParticleSource* src =
+  struct BLParticleSource* src =
     blParticleSourceUniformCreate(simulationBox, 1.0e4, vbar, deltaV,
                                   internalStateSize, initialState, 0);
 
