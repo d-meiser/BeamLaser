@@ -412,7 +412,9 @@ approximately 5 times.
   \label{tab:Run1Params}
 \end{table}
 
-In this simulation we use a $1/e$-radius of the cavity mode of $w=\SI{100}{\micro m}$.  The Rabi frequency for these parameters is approximately
+In this simulation we use a $1/e$-radius of the cavity mode of
+$w=\SI{100}{\micro m}$.  The single photon Rabi frequency for
+these parameters is approximately
 \begin{equation}
   \Omega =
   \sqrt{\frac{2\pi c}{\hbar 2 \epsilon_0 V_{\rm eff}\lambda}} \wp \approx
@@ -447,8 +449,7 @@ considered the system appears to be getting close to threshold,
 but it's still below threshold.
 \begin{figure}
   \includegraphics{threshold/field_intensities_run0}
-  \caption{Intra-cavity intensities.}
-  \label{fig:FieldIntensities}
+  \caption{Intra-cavity intensities.}\label{fig:FieldIntensities}
 \end{figure}
 
 I tried to compute the polarizations but they are too small to be
@@ -510,17 +511,54 @@ relaxation oscillations.
 
 \begin{figure}
   \includegraphics{threshold/field_intensities_run1}
-  \caption{Intra-cavity intensities.}
-  \label{fig:FieldIntensitiesRun1}
+  \caption{Intra-cavity intensities.\label{fig:FieldIntensitiesRun1}
+  }
 \end{figure}
 
 \begin{figure}
   \includegraphics{threshold/field_intensity_above_threshold_run1}
-  \caption{Intra-cavity intensity above threshold.}
-  \label{fig:FieldIntensitiesRun1}
+  \caption{Intra-cavity intensity above
+    threshold.\label{fig:FieldIntensitiesRun1}}
 \end{figure}
 
 
+\subsection{Determination of threshold III}
+
+In this run I take a slower ensemble of atoms compatible with
+optical molasses.  The mean velocity of the atoms is
+$\overbar{v}=\SI{0.1}{m/s}$.  With this velocity the atoms cross
+the $\sim\SI{100}{\micro m}$ wide cavity in
+$T=\SI{1.0e-4}{m}/\SI{0.1}{m/s}=\SI{1.0e-3}{s}$.
+
+I also reduce the size of the simulation volume to
+$V=\SI{1.0e2}{\micro m}\times\SI{1.0e2}{\micro m}\times
+\SI{2.0e2}{\micro m}$ so that more particles travel through the
+cavity volume.
+
+\begin{table}
+  \begin{tabular}{|l|l|}
+    \hline
+    parameter       & value\\
+    \hline
+    \hline
+    $\bar v$        & $\SI{1.0e-1}{m/s}$\\
+    \hline
+    $dt$            & $\SI{1.0e-7}{s}$\\
+    \hline
+    $\kappa$        & $\SI{1.0e8}{rad/s}$\\
+    \hline
+    $\wp$           & $\SI{1.0e-31}{Cm}$\\
+    \hline
+    $w$             & $\SI{30}{\micro m}$\\
+    \hline
+    particle weight & $1$\\
+    \hline
+  \end{tabular}
+  \caption{Parameters used in first run of threshold experiment.
+    Default values were used for the parameters not explicitly
+    listed here.}
+  \label{tab:Run2Params}
+\end{table}
 \section{TODO list}
 
 \subsection{Near term}
