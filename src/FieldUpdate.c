@@ -13,11 +13,14 @@ static void fieldUpdateTakeStep(
   BL_UNUSED(t);
   struct FieldUpdateCtx *ctx = (struct FieldUpdateCtx*)c;
   
-  state->fieldState.q *= exp(-ctx->damping * dt);
-  state->fieldState.p *= exp(-ctx->damping * dt);
+  state->fieldState.q *= exp(-0.5 * ctx->damping * dt);
+  state->fieldState.p *= exp(-0.5 * ctx->damping * dt);
 
   state->fieldState.q += blGenerateGaussianNoise(0.0, sqrt(dt * ctx->noise));
   state->fieldState.p += blGenerateGaussianNoise(0.0, sqrt(dt * ctx->noise));
+
+  state->fieldState.q *= exp(-0.5 * ctx->damping * dt);
+  state->fieldState.p *= exp(-0.5 * ctx->damping * dt);
 }
 
 static void fieldUpdateDestroy(void *c) {
