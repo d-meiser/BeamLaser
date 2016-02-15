@@ -22,7 +22,8 @@ with BeamLaser.  If not, see <http://www.gnu.org/licenses/>.
 #include <FieldState.h>
 #include <Update.h>
 
-struct BLUpdate *blFieldUpdateCreate(double damping, double noise);
+struct BLUpdate *blFieldUpdateCreate(double detuning, double damping,
+    double noise);
 
 #endif
 

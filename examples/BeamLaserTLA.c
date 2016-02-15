@@ -114,7 +114,7 @@ int main(int argn, char **argv) {
   dipoleOperator = blDipoleOperatorTLACreate(conf.dipoleMatrixElement);
   modeFunction = constructModeFunction(&conf);
 
-  struct BLUpdate *fieldUpdate = blFieldUpdateCreate(conf.kappa, conf.kappa);
+  struct BLUpdate *fieldUpdate = blFieldUpdateCreate(0.0, conf.kappa, conf.kappa);
   struct BLUpdate *atomPush = blPushUpdateCreate();
   struct BLUpdate *atomFieldInteraction = blAtomFieldInteractionCreate(
       simulationState.ensemble.maxNumPtcls,

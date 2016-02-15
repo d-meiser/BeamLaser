@@ -28,14 +28,14 @@ AfterEach(FieldUpdate) {}
 
 
 Ensure(FieldUpdate, canBeCreated) {
-  update = blFieldUpdateCreate(1.0, 0.0);
+  update = blFieldUpdateCreate(0.0, 1.0, 0.0);
   assert_that(update, is_not_null);
   blUpdateDestroy(update);
 }
 
 Ensure(FieldUpdate, givesExponentialDamping) {
   double kappa = 3.8;
-  update = blFieldUpdateCreate(kappa, 0.0);
+  update = blFieldUpdateCreate(0.0, kappa, 0.0);
   struct BLSimulationState state;
   state.fieldState.q = 2.3;
   state.fieldState.p = -1.8;
@@ -48,7 +48,7 @@ Ensure(FieldUpdate, givesExponentialDamping) {
 
 Ensure(FieldUpdate, givesBoundedEvolutionWithNoise) {
   double kappa = 3.8;
-  update = blFieldUpdateCreate(kappa, sqrt(kappa));
+  update = blFieldUpdateCreate(0.0, kappa, sqrt(kappa));
   struct BLSimulationState state;
   state.fieldState.q = 2.3;
   state.fieldState.p = -1.8;
