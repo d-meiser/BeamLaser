@@ -129,7 +129,7 @@ void init_ensemble() {
 
   scm_c_define_gsubr("ensemble-create", 3, 0, 0, ensemble_create);
   scm_c_define_gsubr("ensemble-create-space", 2, 0, 0, ensemble_create_space);
-  scm_c_define_gsubr("ensemble-get-component", 2, 0, 0, ensemble_get_component);
+  scm_c_define_gsubr("ensemble-get-comp", 3, 0, 0, ensemble_get_component);
   scm_c_define_gsubr("ensemble-get-num-ptcls", 1, 0, 0, ensemble_get_num_ptcls);
   scm_c_define_gsubr("ensemble-set-num-ptcls", 2, 0, 0, ensemble_set_num_ptcls);
 }
