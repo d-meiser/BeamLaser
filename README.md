@@ -112,4 +112,5 @@ cmake \
 
 ## License
 
-BeamLaser is licensed under the GPLv3.  See LICENSE for details.
+BeamLaser is licensed under the GPLv3.  See [LICENSE](./LICENSE)
+for details.
