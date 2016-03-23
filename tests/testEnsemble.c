@@ -50,6 +50,24 @@ Ensure(Ensemble, createSpace) {
   blEnsembleDestroy(&ensemble);
 }
 
+Ensure(Ensemble, growsWhenOutOfSpace) {
+  blEnsembleCreate(5, 4, &ensemble);
+  blEnsembleCreateSpace(10, &ensemble);
+  int i, j;
+  for (i = 0; i < 10; ++i) {
+    ensemble.x[i] = 0;
+    ensemble.y[i] = 0;
+    ensemble.z[i] = 0;
+    ensemble.vx[i] = 0;
+    ensemble.vy[i] = 0;
+    ensemble.vz[i] = 0;
+    for (j = 0; j < ensemble.internalStateSize; ++j) {
+      ensemble.internalState[i * ensemble.internalStateSize + j] = 0;
+    }
+  }
+  blEnsembleDestroy(&ensemble);
+}
+
 int main()
 {
   TestSuite *suite = create_test_suite();
@@ -57,6 +75,7 @@ int main()
   add_test_with_context(suite, Ensemble, hasRequestedCapacity);
   add_test_with_context(suite, Ensemble, canBeDestroyd);
   add_test_with_context(suite, Ensemble, createSpace);
+  add_test_with_context(suite, Ensemble, growsWhenOutOfSpace);
   int result = run_test_suite(suite, create_text_reporter());
   destroy_test_suite(suite);
   return result;
