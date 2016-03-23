@@ -22,6 +22,9 @@ with BeamLaser.  If not, see <http://www.gnu.org/licenses/>.
 #include <string.h>
 #include <Partition.h>
 
+static BL_STATUS ensureSufficientSpace(int numParticles,
+    struct BLEnsemble *ensemble);
+
 
 BL_STATUS blEnsembleCreate(int capacity, int internalStateSize,
                                struct BLEnsemble *ensemble) {
@@ -98,7 +101,12 @@ void blEnsembleRemoveBelow(double cutoff, double *positions,
 }
 
 
-void blEnsembleCreateSpace(int numParticles, struct BLEnsemble *ensemble) {
+BL_STATUS blEnsembleCreateSpace(int numParticles, struct BLEnsemble *ensemble) {
+  BL_STATUS stat;
+
+  stat = ensureSufficientSpace(numParticles, ensemble);
+  if (stat != BL_SUCCESS) return stat;
+
   memmove(ensemble->x + numParticles, ensemble->x,
       ensemble->numPtcls * sizeof(*ensemble->x));
   memmove(ensemble->y + numParticles, ensemble->y,
@@ -116,5 +124,30 @@ void blEnsembleCreateSpace(int numParticles, struct BLEnsemble *ensemble) {
       ensemble->numPtcls * sizeof(*ensemble->internalState) *
       ensemble->internalStateSize);
   ensemble->numPtcls += numParticles;
+
+  return BL_SUCCESS;
 }
 
+static BL_STATUS ensureSufficientSpace(int numParticles,
+    struct BLEnsemble *ensemble) {
+  int newNumPtcls = numParticles + ensemble->numPtcls;
+  if (newNumPtcls > ensemble->maxNumPtcls) {
+    ensemble->x = realloc(ensemble->x, newNumPtcls * sizeof(*ensemble->x));
+    if (!ensemble->x) return BL_OUT_OF_MEMORY;
+    ensemble->y = realloc(ensemble->y, newNumPtcls * sizeof(*ensemble->y));
+    if (!ensemble->y) return BL_OUT_OF_MEMORY;
+    ensemble->z = realloc(ensemble->z, newNumPtcls * sizeof(*ensemble->z));
+    if (!ensemble->z) return BL_OUT_OF_MEMORY;
+    ensemble->vx = realloc(ensemble->vx, newNumPtcls * sizeof(*ensemble->vx));
+    if (!ensemble->vx) return BL_OUT_OF_MEMORY;
+    ensemble->vy = realloc(ensemble->vy, newNumPtcls * sizeof(*ensemble->vy));
+    if (!ensemble->vy) return BL_OUT_OF_MEMORY;
+    ensemble->vz = realloc(ensemble->vz, newNumPtcls * sizeof(*ensemble->vz));
+    if (!ensemble->vz) return BL_OUT_OF_MEMORY;
+    ensemble->internalState = realloc(ensemble->internalState,
+        newNumPtcls * ensemble->internalStateSize *
+        sizeof(*ensemble->internalState));
+    if (!ensemble->internalState) return BL_OUT_OF_MEMORY;
+  }
+  return BL_SUCCESS;
+}

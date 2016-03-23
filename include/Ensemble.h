@@ -43,7 +43,7 @@ BL_STATUS blEnsembleCreate(int capacity, int internalStateSize,
 void blEnsembleDestroy(struct BLEnsemble *ensemble);
 void blEnsembleRemoveBelow(double cutoff, double *positions,
                            struct BLEnsemble *ensemble);
-void blEnsembleCreateSpace(int numParticles, struct BLEnsemble *ensemble);
+BL_STATUS blEnsembleCreateSpace(int numParticles, struct BLEnsemble *ensemble);
 
 
 #endif
