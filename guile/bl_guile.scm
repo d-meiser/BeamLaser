@@ -1,4 +1,4 @@
-(module bl
+(define-module (bl)
         #:export (
                   ensemble-create
                   ensemble-push
