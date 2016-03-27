@@ -10,7 +10,6 @@ addons:
     packages:
     - cmake
     - lcov
-    - libzmq-dev
     - libgmp-dev
     - libunistring-dev
     - libgc-dev
