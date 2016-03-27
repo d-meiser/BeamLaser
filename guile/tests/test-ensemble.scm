@@ -1,5 +1,6 @@
 (define-module (test-ensemble)
   #:use-module (srfi srfi-64)
+  #:use-module (beam-laser)
   )
 
 (test-begin "ensemble")
