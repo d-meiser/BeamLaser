@@ -39,8 +39,8 @@ FIND_LIBRARY(GUILE_LIBRARY NAMES guile-2.2 guile-2.0 guile PATHS
   /usr/local/lib
   /opt/local/lib
 )
-message(status "GUILE_LIBRARY == ${GUILE_LIBRARY}")
-message(status "GUILE_INCLUDE_DIR == ${GUILE_INCLUDE_DIR}")
+message(STATUS "GUILE_LIBRARY == ${GUILE_LIBRARY}")
+message(STATUS "GUILE_INCLUDE_DIR == ${GUILE_INCLUDE_DIR}")
 
 # Copy the results to the output variables.
 IF(GUILE_INCLUDE_DIR AND GUILE_LIBRARY)
