@@ -10,20 +10,31 @@ addons:
     packages:
     - cmake
     - lcov
+    - libzmq-dev
+    - libgmp-dev
+    - libunistring-dev
+    - libgc-dev
+    - texinfo
 cache:
   directories:
   - mpich
   - mpich-3.2
+  - guile
+  - guile-2.0.11
 before_install:
   - gem install coveralls-lcov
   - sh ./utilities/get_cgreen.sh
   - sh ./utilities/get_mpich.sh
   - sh ./utilities/get_sprng.sh
+  - sh ./utilities/get_guile.sh
+  - export PKG_CONFIG_PATH=`pwd`/guile/lib/pkgconfig
+  - export LD_LIBRARY_PATH=`pwd`/guile/lib:$LD_LIBRARY_PATH
+  - export PATH=`pwd`/guile/bin:$PATH
 script:
   - export CGREEN_CHILD_EXIT_WITH_FLUSH=TRUE
   - mkdir -p build
   - cd build
-  - cmake -DCGREEN_WITH_CXX=OFF -DCGREEN_WITH_UNIT_TESTS=OFF -DBL_BUILD_TESTS=ON -DBL_ENABLE_COVERAGE=ON -DBL_WITH_PEDANTIC_FLAGS=OFF -DBL_WITH_WALL_FLAGS=ON -DBL_WITH_MPI=$WITH_MPI -DMPI_C_COMPILER=`pwd`/../mpich/bin/mpicc -DMPI_C_INCLUDE_PATH=`pwd`/../mpich/include -DMPIEXEC=`pwd`/../mpich/bin/mpirun ..
+  - cmake -DCGREEN_WITH_CXX=OFF -DCGREEN_WITH_UNIT_TESTS=OFF -DBL_BUILD_TESTS=ON -DBL_ENABLE_COVERAGE=ON -DBL_WITH_GUILE=ON -DBL_WITH_PEDANTIC_FLAGS=OFF -DBL_WITH_WALL_FLAGS=ON -DBL_WITH_MPI=$WITH_MPI -DMPI_C_COMPILER=`pwd`/../mpich/bin/mpicc -DMPI_C_INCLUDE_PATH=`pwd`/../mpich/include -DMPIEXEC=`pwd`/../mpich/bin/mpirun ..
   - make -j4
   - ctest -j2 --output-on-failure
 after_success:
