@@ -15,4 +15,6 @@ add_library(guile_beam_laser SHARED guile_beam_laser.c)
 target_link_libraries(guile_beam_laser beamlaserlib ${GUILE_LIBRARIES})
 install(TARGETS guile_beam_laser DESTINATION lib)
 
-add_subdirectory(tests)
+if(BL_BUILD_TESTS)
+  add_subdirectory(tests)
+endif()
