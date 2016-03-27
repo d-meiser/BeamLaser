@@ -29,8 +29,8 @@ before_install:
   - export PKG_CONFIG_PATH=`pwd`/guile/lib/pkgconfig
   - export LD_LIBRARY_PATH=`pwd`/guile/lib:$LD_LIBRARY_PATH
   - export PATH=`pwd`/guile/bin:$PATH
-  - find guile
 script:
+  - cmake --version
   - export CGREEN_CHILD_EXIT_WITH_FLUSH=TRUE
   - mkdir -p build
   - cd build
