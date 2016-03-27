@@ -18,7 +18,6 @@ cache:
   directories:
   - mpich
   - mpich-3.2
-  - guile
   - guile-2.0.11
 before_install:
   - gem install coveralls-lcov
