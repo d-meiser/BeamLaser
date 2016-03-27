@@ -24,5 +24,6 @@ set(BeamLaserLibSources
     Utilities.c
    )
 
+message(STATUS "CMAKE_POSITION_INDEPENDENT_CODE == ${CMAKE_POSITION_INDEPENDENT_CODE}")
 add_library(beamlaserlib ${BeamLaserLibSources})
 
