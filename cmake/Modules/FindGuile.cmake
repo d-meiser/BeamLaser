@@ -14,7 +14,7 @@
 # Look for guile-2.2 first, then 2.0, then 1.8
 # Macports for OSX puts things in /opt/local
 FIND_PATH(GUILE_INCLUDE_DIR libguile.h
-  ${GUILE_ROOT_DIR}/include
+  ${GUILE_ROOT_DIR}/include/guile/2.0
 
   /usr/include/guile/2.2
   /usr/local/include/guile/2.2
