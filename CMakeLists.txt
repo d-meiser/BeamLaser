@@ -7,7 +7,7 @@ project(BeamLaser C)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
 
 enable_testing()
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 
 include(CheckCCompilerFlag)
 
