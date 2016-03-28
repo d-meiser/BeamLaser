@@ -1,4 +1,4 @@
-(module bl
+(define-module (beam-laser)
         #:export (
                   ensemble-create
                   ensemble-push
@@ -11,7 +11,7 @@
                   ensemble-get-internal-state
                   ))
 
-(load-extension "libbl_guile" "init_ensemble")
+(load-extension "libguile_beam_laser" "init_ensemble")
 
 
 (define (ensemble-get-component component ensemble)
