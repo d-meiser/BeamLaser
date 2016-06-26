@@ -78,4 +78,5 @@ if (BL_BUILD_DOCS)
   add_subdirectory(doc)
 endif ()
 
-configure_file(config.h.in ${PROJECT_BINARY_DIR}/config.h)
+configure_file(BeamLaserConfig.h.in ${PROJECT_BINARY_DIR}/BeamLaserConfig.h)
+

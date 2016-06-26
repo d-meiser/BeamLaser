@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License along
 with BeamLaser.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <ParticleSource.h>
-#include <config.h>
+#include <BeamLaserConfig.h>
 #ifdef BL_WITH_MPI
 #include <mpi.h>
 #endif
