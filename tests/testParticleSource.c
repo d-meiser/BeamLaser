@@ -18,7 +18,7 @@ with BeamLaser.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <cgreen/cgreen.h>
 #include <ParticleSource.h>
-#include <config.h>
+#include <BeamLaserConfig.h>
 #ifdef BL_WITH_MPI
 #include <mpi.h>
 #endif

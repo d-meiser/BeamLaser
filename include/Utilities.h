@@ -19,7 +19,7 @@ with BeamLaser.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef UTILITIES_H
 #define UTILITIES_H
 
-#include <config.h>
+#include <BeamLaserConfig.h>
 #ifdef BL_WITH_MPI
 #include <mpi.h>
 #endif
