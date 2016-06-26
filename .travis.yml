@@ -33,10 +33,11 @@ script:
   - export CGREEN_CHILD_EXIT_WITH_FLUSH=TRUE
   - mkdir -p build
   - cd build
-  - cmake -DCGREEN_WITH_CXX=OFF -DCGREEN_WITH_UNIT_TESTS=OFF -DBL_BUILD_TESTS=ON -DBL_ENABLE_COVERAGE=ON -DBL_WITH_GUILE=ON -DGUILE_ROOT_DIR=`pwd`/../guile -DBL_WITH_PEDANTIC_FLAGS=OFF -DBL_WITH_WALL_FLAGS=ON -DBL_WITH_MPI=$WITH_MPI -DMPI_C_COMPILER=`pwd`/../mpich/bin/mpicc -DMPI_C_INCLUDE_PATH=`pwd`/../mpich/include -DMPIEXEC=`pwd`/../mpich/bin/mpirun ..
+  - cmake -DCMAKE_INSTALL_PREFIX=`pwd`/../blinstall -DCGREEN_WITH_CXX=OFF -DCGREEN_WITH_UNIT_TESTS=OFF -DBL_BUILD_TESTS=ON -DBL_ENABLE_COVERAGE=ON -DBL_WITH_GUILE=ON -DGUILE_ROOT_DIR=`pwd`/../guile -DBL_WITH_PEDANTIC_FLAGS=OFF -DBL_WITH_WALL_FLAGS=ON -DBL_WITH_MPI=$WITH_MPI -DMPI_C_COMPILER=`pwd`/../mpich/bin/mpicc -DMPI_C_INCLUDE_PATH=`pwd`/../mpich/include -DMPIEXEC=`pwd`/../mpich/bin/mpirun ..
   - make -j4
   - export LD_LIBRARY_PATH=`pwd`/guile:$LD_LIBRARY_PATH
   - ctest -j2 --output-on-failure
+  - make install
 after_success:
   - lcov -d tests -d src -base-directory .. -c -o coverage.info
   - lcov --remove coverage.info '/usr/*' -o coverage.info
