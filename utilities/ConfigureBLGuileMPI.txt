@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# Configure the BeamLaser package with Guile and MPI support.
+
+cmake \
+  -DCGREEN_WITH_CXX=OFF \
+  -DCGREEN_WITH_UNIT_TESTS=OFF \
+  -DBL_BUILD_TESTS=ON \
+  -DBL_WITH_GUILE=ON \
+  -DGUILE_ROOT_DIR=`pwd`/../guile \
+  -DBL_WITH_PEDANTIC_FLAGS=OFF \
+  -DBL_WITH_WALL_FLAGS=ON \
+  -DBL_WITH_MPI=ON \
+  -DMPI_C_COMPILER=`pwd`/../mpich/bin/mpicc \
+  -DMPI_C_INCLUDE_PATH=`pwd`/../mpich/include \
+  -DMPIEXEC=`pwd`/../mpich/bin/mpirun \
+  ..
