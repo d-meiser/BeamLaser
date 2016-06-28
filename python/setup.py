@@ -1,6 +1,9 @@
 from setuptools import setup, find_packages
 from codecs import open
 from os import path
+from distutils.extension import Extension
+from Cython.Build import cythonize
+
 
 here = path.abspath(path.dirname(__file__))
 
@@ -52,6 +55,9 @@ setup(
     keywords='laser',
 
     packages=find_packages(), 
+    ext_modules = [Extension("beamlaser", ["beamlaser.pyx"],
+       include_dirs=["../include", "../build-guile-mpi/", "../mpich/include"],
+       extra_compile_args=["-std=c99"])],
 
     install_requires=['cython', 'numpy'],
 )
