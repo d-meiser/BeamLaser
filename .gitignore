@@ -9,3 +9,4 @@ mpich*
 *.log
 *.pdf
 *.toc
+beamlaser.egg-info
